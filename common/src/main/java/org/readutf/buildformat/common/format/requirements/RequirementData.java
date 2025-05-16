@@ -1,4 +1,4 @@
-package org.readutf.buildformat.common.requirements;
+package org.readutf.buildformat.common.format.requirements;
 
 import org.jetbrains.annotations.NotNull;
 

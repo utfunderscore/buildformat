@@ -1,13 +1,16 @@
 package org.readutf.buildformat.common.format;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.readutf.buildformat.common.exception.BuildFormatException;
+import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.markers.Position;
-import org.readutf.buildformat.common.requirements.Requirement;
+import org.readutf.buildformat.common.format.requirements.Requirement;
 
 class BuildFormatManagerTest {
 
@@ -25,12 +28,12 @@ class BuildFormatManagerTest {
     }
 
     @Test
-    void getValidators() {
+    void getValidators() throws BuildFormatException {
         System.out.println(BuildFormatManager.getValidators(TestFormat.class));
     }
 
     @Test
-    void successfullyConstructBuildFormat() {
+    void successfullyConstructBuildFormat() throws BuildFormatException {
 
         var single = List.of(new Marker("test-a", new Position(1, 0, 0), new Position(0, 0, 0)));
         var startsWith = List.of(
@@ -58,7 +61,7 @@ class BuildFormatManagerTest {
     }
 
     @Test
-    void testPositionData() {
+    void testPositionData() throws BuildFormatException {
 
         record PositionDataFormat(
                 @Requirement(name = "test-a") Position position
@@ -127,6 +130,22 @@ class BuildFormatManagerTest {
             BuildFormatManager.constructBuildFormat(List.of(), InvalidFormat.class);
         });
         assertEquals("Not enough markers found for parameter: list", exception.getMessage());
+    }
+
+    @Test
+    void testExportSuccess() throws BuildFormatException, IOException {
+
+        record SimpleTestFormat(
+                @Requirement(name = "test-b", minimum = 2) List<Marker> list
+        ) implements BuildFormat {
+        }
+
+        List<RequirementData> validators = BuildFormatManager.getValidators(SimpleTestFormat.class);
+        File workDir = new File(System.getProperty("user.dir"));
+        BuildFormatManager.save(workDir, "simple-format", validators);
+
+        List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "simple-format.json"));
+        assertEquals(validators, loadedValidators);
     }
 
 }

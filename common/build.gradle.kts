@@ -15,6 +15,7 @@ dependencies {
 
     implementation("org.jetbrains:annotations:26.0.2")
     implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
 }
 
 tasks.test {

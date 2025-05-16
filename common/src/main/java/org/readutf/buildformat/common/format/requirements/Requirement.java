@@ -1,4 +1,4 @@
-package org.readutf.buildformat.common.requirements;
+package org.readutf.buildformat.common.format.requirements;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,5 +15,5 @@ public @interface Requirement {
 
     String regex() default "";
 
-    int minimum() default 0;
+    int minimum() default 1;
 }
