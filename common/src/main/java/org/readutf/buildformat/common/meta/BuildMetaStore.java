@@ -14,4 +14,9 @@ public interface BuildMetaStore {
 
     void setFormats(String name, List<BuildFormatChecksum> formats) throws BuildFormatException;
 
+    @NotNull List<String> getBuilds() throws BuildFormatException;
+
+    @NotNull List<String> getBuildsByFormat(@NotNull String formatName) throws BuildFormatException;
+
+
 }

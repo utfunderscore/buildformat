@@ -2,11 +2,9 @@ package org.readutf.buildformat.plugin.commands;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitPlayer;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.session.ClipboardHolder;
-import com.sk89q.worldedit.world.block.BaseBlock;
-import com.sk89q.worldedit.world.block.BlockState;
 import dev.rollczi.litecommands.annotations.argument.Arg;
+import dev.rollczi.litecommands.annotations.async.Async;
 import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
 import dev.rollczi.litecommands.annotations.execute.Execute;
@@ -15,14 +13,11 @@ import dev.rollczi.litecommands.annotations.join.Join;
 import dev.rollczi.litecommands.annotations.varargs.Varargs;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
-import org.enginehub.linbus.tree.LinCompoundTag;
-import org.enginehub.linbus.tree.LinListTag;
-import org.enginehub.linbus.tree.LinStringTag;
-import org.enginehub.linbus.tree.LinTagType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
@@ -32,6 +27,7 @@ import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.meta.BuildMeta;
 import org.readutf.buildformat.common.meta.BuildMetaStore;
+import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.formats.BuildFormatCache;
 import org.readutf.buildformat.plugin.marker.MarkerScanner;
 import org.slf4j.Logger;
@@ -49,8 +45,29 @@ public class BuildCommand {
         this.buildFormatCache = buildFormatCache;
     }
 
+    @Execute
+    public void list(@Context Player player) {
+        @Nullable List<String> builds;
+        try {
+            builds = buildMetaStore.getBuilds();
+        } catch (BuildFormatException e) {
+            player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
+            return;
+        }
+        if (builds.isEmpty()) {
+            player.sendMessage(Component.text("No builds found").color(NamedTextColor.RED));
+            return;
+        }
+
+        player.sendMessage(Component.text("Found " + builds.size() + " builds").color(NamedTextColor.GREEN));
+        for (String build : builds) {
+            player.sendMessage(Component.text(" - " + build).color(NamedTextColor.YELLOW));
+        }
+    }
+
+    @Async
     @Execute(name = "create")
-    public void create(@Context Player player, @Arg String name, @Varargs String... description) {
+    public void create(@Context Player player, @Arg String name, @Join String description) {
 
         @Nullable BuildMeta meta;
         try {
@@ -73,8 +90,9 @@ public class BuildCommand {
         }
     }
 
+    @Async
     @Execute(name = "save")
-    public void save(@Context Player player, @Arg String name, @Flag("-f") boolean force, @Join String formats) {
+    public void save(@Context Player player, @Arg String name, @Flag("-f") boolean force, @Varargs BuildType... buildType) {
         @Nullable BuildMeta meta = null;
         try {
             meta = buildMetaStore.getByName(name);
@@ -87,7 +105,7 @@ public class BuildCommand {
             return;
         }
 
-        List<String> formatNames = Stream.of(formats).map(String::toLowerCase).toList();
+        List<String> formatNames = Stream.of(buildType).map(type -> type.getBuildType().toLowerCase(Locale.ROOT)).toList();
         if (!force) {
             for (BuildFormatChecksum format : meta.formats()) {
                 if (!formatNames.contains(format.name())) {

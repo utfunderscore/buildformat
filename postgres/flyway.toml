@@ -1,0 +1,17 @@
+[flyway]
+locations = ["filesystem:src/main/resources/db/migration"]
+cleanDisabled = false
+
+[environments.development]
+location = ""
+url = "jdbc:postgresql://localhost:5432/example_db"
+user = "postgres"
+password = "password"
+baselineOnMigrate = true
+
+[environments.production]
+location = ""
+url = "jdbc:postgresql://localhost:5432/builds"
+user = "postgres"
+password = "password"
+baselineOnMigrate = true

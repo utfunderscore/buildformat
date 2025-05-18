@@ -5,6 +5,7 @@ plugins {
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.16"
     id("xyz.jpenilla.run-paper") version "2.3.1"
     id("xyz.jpenilla.resource-factory-bukkit-convention") version "1.2.0"
+    id("com.gradleup.shadow") version "9.0.0-beta13"
 }
 
 group = "io.papermc.paperweight"
@@ -22,6 +23,18 @@ repositories {
 dependencies {
     implementation(project(":common"))
     implementation("dev.rollczi:litecommands-bukkit:3.9.7")
+
+    compileOnly(platform("com.intellectualsites.bom:bom-newest:1.52"))
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core")
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit") { isTransitive = false }
+
+    implementation(project(":postgres"))
+    implementation("org.jooq:jooq:3.20.4")
+    implementation("org.postgresql:postgresql:42.7.5")
+    implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
+
+
+
     paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
 }
 

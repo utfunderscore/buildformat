@@ -3,9 +3,13 @@ package org.readutf.buildformat.plugin.formats;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
@@ -21,6 +25,10 @@ public class BuildFormatCache {
 
     public BuildFormatCache(@NotNull File directory) throws BuildFormatException, IOException {
         this.directory = directory;
+    }
+
+    public List<String> getFormats() {
+        return Arrays.stream(Optional.ofNullable(directory.list()).orElse(new String[0])).map(FilenameUtils::removeExtension).toList();
     }
 
     public @NotNull List<RequirementData> getRequirements(String name) throws BuildFormatException {

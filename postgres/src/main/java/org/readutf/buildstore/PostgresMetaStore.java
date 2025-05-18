@@ -1,80 +1,95 @@
 package org.readutf.buildstore;
 
-import com.zaxxer.hikari.HikariDataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
+import org.jooq.Result;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.meta.BuildMeta;
 import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.buildstore.generated.Tables;
+import org.readutf.buildstore.generated.tables.records.BuildmetaFormatRecord;
 import org.readutf.buildstore.generated.tables.records.BuildmetaRecord;
+import org.readutf.buildstore.generated.tables.records.BuildmetaTagsRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PostgresMetaStore implements BuildMetaStore {
 
-    private final @NotNull HikariDataSource dataSource;
+    private static final Logger logger = LoggerFactory.getLogger(PostgresMetaStore.class);
 
-    public PostgresMetaStore(@NotNull HikariDataSource dataSource) {
-        this.dataSource = dataSource;
+    private final @NotNull PostgresDatabaseManager databaseManager;
+
+    public PostgresMetaStore(@NotNull PostgresDatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
     }
 
     @Override
     public @NotNull BuildMeta create(String name, String description) throws BuildFormatException {
+        return databaseManager.runReturning(ctx -> {
+            BuildmetaRecord buildmetaRecord = ctx.newRecord(Tables.BUILDMETA);
+            buildmetaRecord.setName(name);
+            buildmetaRecord.setDescription(description);
 
-        try (Connection connection = getConnection()) {
-            try {
-                DSLContext context = DSL.using(connection, SQLDialect.POSTGRES);
-                BuildmetaRecord buildmetaRecord = context.newRecord(Tables.BUILDMETA);
-                buildmetaRecord.setName(name);
-                buildmetaRecord.setDescription(description);
+            buildmetaRecord.store();
 
-                buildmetaRecord.store();
-
-                return new BuildMeta(name, description, Collections.emptyList(), Collections.emptyList());
-            } catch (Exception e) {
-                throw new BuildFormatException("Failed to create build meta", e);
-            }
-        } catch (SQLException e) {
-            throw new BuildFormatException("Failed to close connection", e);
-        }
+            return new BuildMeta(name, description, Collections.emptyList(), Collections.emptyList());
+        });
     }
 
     @Override
     public @Nullable BuildMeta getByName(String name) throws BuildFormatException {
-        try(Connection connect = getConnection()) {
-            try {
-                DSLContext context = DSL.using(connect, SQLDialect.POSTGRES);
-                BuildmetaRecord record = context.fetchOne(Tables.BUILDMETA, Tables.BUILDMETA.NAME.eq(name));
-
-                if(record == null) return null;
-
-                return new BuildMeta(record.getName(), record.getDescription(), Collections.emptyList(), Collections.emptyList());
-            } catch (Exception e) {
-                throw new BuildFormatException("Failed to get build meta", e);
+        return databaseManager.runReturning(ctx -> {
+            BuildmetaRecord buildmetaRecord = ctx.fetchOne(Tables.BUILDMETA, Tables.BUILDMETA.NAME.eq(name));
+            if (buildmetaRecord == null) {
+                return null;
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+
+            Result<BuildmetaTagsRecord> tagRecords = ctx.fetch(Tables.BUILDMETA_TAGS, Tables.BUILDMETA_TAGS.BUILDMETA_ID.eq(buildmetaRecord.getId()));
+
+            List<String> tags = tagRecords.map(BuildmetaTagsRecord::getTag);
+
+            Result<BuildmetaFormatRecord> formatRecords = ctx.fetch(Tables.BUILDMETA_FORMAT, Tables.BUILDMETA_FORMAT.BUILDMETA_ID.eq(buildmetaRecord.getId()));
+
+            List<BuildFormatChecksum> checksums = formatRecords.map(record ->
+                    new BuildFormatChecksum(record.getName(), record.getChecksum().getBytes(StandardCharsets.UTF_8))
+            );
+
+            return new BuildMeta(buildmetaRecord.getName(), buildmetaRecord.getDescription(), tags, checksums);
+        });
     }
 
     @Override
     public void setFormats(String name, List<BuildFormatChecksum> formats) throws BuildFormatException {
+        databaseManager.run(context -> {
+            BuildmetaRecord buildmetaRecord = context.fetchOne(Tables.BUILDMETA, Tables.BUILDMETA.NAME.eq(name));
+            if (buildmetaRecord == null) throw new BuildFormatException("Could not find build meta with name " + name);
 
+            context.deleteFrom(Tables.BUILDMETA_FORMAT).where(Tables.BUILDMETA_FORMAT.BUILDMETA_ID.eq(buildmetaRecord.getId())).execute();
+
+            List<BuildmetaFormatRecord> checksums = formats.stream()
+                    .map(format -> {
+                        BuildmetaFormatRecord formatRecord = context.newRecord(Tables.BUILDMETA_FORMAT);
+                        formatRecord.setName(format.name());
+                        formatRecord.setChecksum(new String(format.checksum(), StandardCharsets.UTF_8));
+                        formatRecord.setBuildmetaId(buildmetaRecord.getId());
+                        return formatRecord;
+                    }).toList();
+
+            context.batchInsert(checksums).execute();
+        });
     }
 
-    public Connection getConnection() throws BuildFormatException {
-        try {
-            return dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new BuildFormatException("Failed to connect to database", e);
-        }
+    @Override
+    public @NotNull List<String> getBuilds() throws BuildFormatException {
+        return databaseManager.runReturning(context -> {
+            Result<BuildmetaRecord> records = context.selectFrom(Tables.BUILDMETA).fetch();
+            return records.map(BuildmetaRecord::getName);
+        });
     }
+
 
 }

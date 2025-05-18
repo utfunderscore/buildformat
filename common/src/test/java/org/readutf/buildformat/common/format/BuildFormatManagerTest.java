@@ -97,7 +97,7 @@ class BuildFormatManagerTest {
         }
 
         var exception = assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(), InvalidFormat.class);
+            BuildFormatManager.constructBuildFormat(List.of(new Marker("test-a", Position.ZERO, Position.ZERO)), InvalidFormat.class);
         });
         assertEquals("Invalid parameter type: java.lang.String", exception.getMessage());
     }
@@ -115,7 +115,7 @@ class BuildFormatManagerTest {
         var exception = assertThrows(BuildFormatException.class, () -> {
             BuildFormatManager.constructBuildFormat(List.of(new Marker("test-a", new Position(0, 0, 0), new Position(0, 0, 0))), InvalidFormat.class);
         });
-        assertEquals("Failed to create instance of build format: org.readutf.buildstore.common.format.BuildFormatManagerTest$3InvalidFormat", exception.getMessage());
+        assertEquals("Failed to create instance of build format: org.readutf.buildformat.common.format.BuildFormatManagerTest$3InvalidFormat", exception.getMessage());
     }
 
     @Test

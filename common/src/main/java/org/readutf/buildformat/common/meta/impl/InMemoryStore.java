@@ -43,4 +43,9 @@ public class InMemoryStore implements BuildMetaStore {
         );
         buildMetas.put(name, updated);
     }
+
+    @Override
+    public @NotNull List<String> getBuilds() throws BuildFormatException {
+        return List.of();
+    }
 }
