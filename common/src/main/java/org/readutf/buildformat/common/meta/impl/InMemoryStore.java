@@ -48,4 +48,9 @@ public class InMemoryStore implements BuildMetaStore {
     public @NotNull List<String> getBuilds() throws BuildFormatException {
         return List.of();
     }
+
+    @Override
+    public @NotNull List<String> getBuildsByFormat(@NotNull String formatName) throws BuildFormatException {
+        return List.of();
+    }
 }
