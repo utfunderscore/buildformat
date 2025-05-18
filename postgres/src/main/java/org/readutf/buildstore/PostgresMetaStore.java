@@ -91,5 +91,10 @@ public class PostgresMetaStore implements BuildMetaStore {
         });
     }
 
+    @Override
+    public @NotNull List<String> getBuildsByFormat(@NotNull String formatName) throws BuildFormatException {
+        return List.of();
+    }
+
 
 }

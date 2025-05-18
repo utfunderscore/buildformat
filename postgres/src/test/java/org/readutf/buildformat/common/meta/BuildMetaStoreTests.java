@@ -40,7 +40,7 @@ public class BuildMetaStoreTests {
         flyway.migrate();
 
 
-        metaStore = new PostgresMetaStore(new PostgresDatabaseManager(ds, false));
+        metaStore = new PostgresMetaStore(new PostgresDatabaseManager(ds));
     }
 
     @Test
