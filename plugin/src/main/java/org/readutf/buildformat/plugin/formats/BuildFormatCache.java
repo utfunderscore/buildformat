@@ -25,6 +25,7 @@ public class BuildFormatCache {
 
     public BuildFormatCache(@NotNull File directory) throws BuildFormatException, IOException {
         this.directory = directory;
+        directory.mkdirs();
     }
 
     public List<String> getFormats() {
@@ -44,7 +45,7 @@ public class BuildFormatCache {
         File file = new File(directory, name + ".json");
         if (!file.exists()) {
             logger.info("File {} does not exist", file.getAbsolutePath());
-            throw new BuildFormatException("File does not exist: " + file.getAbsolutePath());
+            throw new BuildFormatException("File does not exist: " + file.getName());
         }
         try {
             return BuildFormatManager.load(file);

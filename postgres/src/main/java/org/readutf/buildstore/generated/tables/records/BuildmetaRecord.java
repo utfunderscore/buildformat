@@ -46,17 +46,31 @@ public class BuildmetaRecord extends UpdatableRecordImpl<BuildmetaRecord> {
     }
 
     /**
+     * Setter for <code>public.buildmeta.version</code>.
+     */
+    public void setVersion(Integer value) {
+        set(2, value);
+    }
+
+    /**
+     * Getter for <code>public.buildmeta.version</code>.
+     */
+    public Integer getVersion() {
+        return (Integer) get(2);
+    }
+
+    /**
      * Setter for <code>public.buildmeta.description</code>.
      */
     public void setDescription(String value) {
-        set(2, value);
+        set(3, value);
     }
 
     /**
      * Getter for <code>public.buildmeta.description</code>.
      */
     public String getDescription() {
-        return (String) get(2);
+        return (String) get(3);
     }
 
     // -------------------------------------------------------------------------
@@ -82,11 +96,12 @@ public class BuildmetaRecord extends UpdatableRecordImpl<BuildmetaRecord> {
     /**
      * Create a detached, initialised BuildmetaRecord
      */
-    public BuildmetaRecord(Integer id, String name, String description) {
+    public BuildmetaRecord(Integer id, String name, Integer version, String description) {
         super(Buildmeta.BUILDMETA);
 
         setId(id);
         setName(name);
+        setVersion(version);
         setDescription(description);
         resetTouchedOnNotNull();
     }

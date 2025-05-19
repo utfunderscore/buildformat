@@ -13,12 +13,12 @@ import org.junit.jupiter.api.TestInstance;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildstore.PostgresDatabaseManager;
-import org.readutf.buildstore.PostgresMetaStore;
+import org.readutf.buildstore.PostgresStore;
 
 @TestInstance(org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS)
-public class BuildMetaStoreTests {
+public class BuildStoreTests {
 
-    private PostgresMetaStore metaStore;
+    private PostgresStore metaStore;
 
     @BeforeAll
     void setUp() {
@@ -40,7 +40,7 @@ public class BuildMetaStoreTests {
         flyway.migrate();
 
 
-        metaStore = new PostgresMetaStore(new PostgresDatabaseManager(ds));
+        metaStore = new PostgresStore(new PostgresDatabaseManager(ds));
     }
 
     @Test
@@ -69,15 +69,14 @@ public class BuildMetaStoreTests {
     }
 
     @Test
-    public void setFormats() throws BuildFormatException {
-
+    public void update() throws BuildFormatException {
 
         metaStore.create("setFormats", "Description!");
         List<BuildFormatChecksum> formats = List.of(
                 new BuildFormatChecksum("test", "test".getBytes(StandardCharsets.UTF_8)),
                 new BuildFormatChecksum("test2", "test2".getBytes(StandardCharsets.UTF_8))
         );
-        metaStore.setFormats("setFormats", formats);
+        metaStore.update("setFormats", formats);
 
         BuildMeta meta = metaStore.getByName("setFormats");
         assertNotNull(meta);
@@ -89,7 +88,7 @@ public class BuildMetaStoreTests {
     }
 
     @Test
-    void setFormatsOverride() throws BuildFormatException {
+    void updateOverride() throws BuildFormatException {
         metaStore.create("setFormatsOverride", "Description!");
 
         List<BuildFormatChecksum> original = List.of(
@@ -97,14 +96,14 @@ public class BuildMetaStoreTests {
                 new BuildFormatChecksum("test2", "test2".getBytes(StandardCharsets.UTF_8))
         );
 
-        metaStore.setFormats("setFormatsOverride", original);
+        metaStore.update("setFormatsOverride", original);
 
         List<BuildFormatChecksum> formats = List.of(
                 new BuildFormatChecksum("test", "test".getBytes(StandardCharsets.UTF_8)),
                 new BuildFormatChecksum("test2", "test2".getBytes(StandardCharsets.UTF_8))
         );
 
-        metaStore.setFormats("setFormatsOverride", formats);
+        metaStore.update("setFormatsOverride", formats);
 
         BuildMeta meta = metaStore.getByName("setFormatsOverride");
         assertNotNull(meta);
@@ -123,10 +122,13 @@ public class BuildMetaStoreTests {
         List<BuildFormatChecksum> formats = List.of(new BuildFormatChecksum("get_by_format", "test".getBytes(StandardCharsets.UTF_8)));
         List<BuildFormatChecksum> formats2 = List.of(new BuildFormatChecksum("get_by_format", "test".getBytes(StandardCharsets.UTF_8)));
 
-        metaStore.setFormats("get_by_format1", formats);
-        metaStore.setFormats("get_by_format2", formats2);
+        metaStore.update("get_by_format1", formats);
+        metaStore.update("get_by_format2", formats2);
 
-
+        metaStore.getBuildsByFormat("get_by_format").forEach((name, checksum) -> {
+            assertTrue(name.equals("get_by_format1") || name.equals("get_by_format2"));
+            assertEquals("get_by_format", checksum.name());
+        });
 
     }
 

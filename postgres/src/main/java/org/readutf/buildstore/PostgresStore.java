@@ -3,13 +3,16 @@ package org.readutf.buildstore;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.Record;
 import org.jooq.Result;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.meta.BuildMeta;
-import org.readutf.buildformat.common.meta.BuildMetaStore;
+import org.readutf.buildformat.common.meta.BuildStore;
 import org.readutf.buildstore.generated.Tables;
 import org.readutf.buildstore.generated.tables.records.BuildmetaFormatRecord;
 import org.readutf.buildstore.generated.tables.records.BuildmetaRecord;
@@ -17,13 +20,13 @@ import org.readutf.buildstore.generated.tables.records.BuildmetaTagsRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PostgresMetaStore implements BuildMetaStore {
+public class PostgresStore implements BuildStore {
 
-    private static final Logger logger = LoggerFactory.getLogger(PostgresMetaStore.class);
+    private static final Logger logger = LoggerFactory.getLogger(PostgresStore.class);
 
     private final @NotNull PostgresDatabaseManager databaseManager;
 
-    public PostgresMetaStore(@NotNull PostgresDatabaseManager databaseManager) {
+    public PostgresStore(@NotNull PostgresDatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
     }
 
@@ -33,10 +36,11 @@ public class PostgresMetaStore implements BuildMetaStore {
             BuildmetaRecord buildmetaRecord = ctx.newRecord(Tables.BUILDMETA);
             buildmetaRecord.setName(name);
             buildmetaRecord.setDescription(description);
+            buildmetaRecord.setVersion(0);
 
             buildmetaRecord.store();
 
-            return new BuildMeta(name, description, Collections.emptyList(), Collections.emptyList());
+            return new BuildMeta(name, description, 0, Collections.emptyList(), Collections.emptyList());
         });
     }
 
@@ -58,17 +62,21 @@ public class PostgresMetaStore implements BuildMetaStore {
                     new BuildFormatChecksum(record.getName(), record.getChecksum().getBytes(StandardCharsets.UTF_8))
             );
 
-            return new BuildMeta(buildmetaRecord.getName(), buildmetaRecord.getDescription(), tags, checksums);
+            return new BuildMeta(buildmetaRecord.getName(), buildmetaRecord.getDescription(), buildmetaRecord.getVersion(), tags, checksums);
         });
     }
 
     @Override
-    public void setFormats(String name, List<BuildFormatChecksum> formats) throws BuildFormatException {
+    public @Nullable BuildMeta update(String name, List<BuildFormatChecksum> formats) throws BuildFormatException {
         databaseManager.run(context -> {
             BuildmetaRecord buildmetaRecord = context.fetchOne(Tables.BUILDMETA, Tables.BUILDMETA.NAME.eq(name));
             if (buildmetaRecord == null) throw new BuildFormatException("Could not find build meta with name " + name);
 
             context.deleteFrom(Tables.BUILDMETA_FORMAT).where(Tables.BUILDMETA_FORMAT.BUILDMETA_ID.eq(buildmetaRecord.getId())).execute();
+
+            context.update(Tables.BUILDMETA).set(Tables.BUILDMETA.VERSION, Tables.BUILDMETA.VERSION.add(1))
+                    .where(Tables.BUILDMETA.NAME.eq(name))
+                    .execute();
 
             List<BuildmetaFormatRecord> checksums = formats.stream()
                     .map(format -> {
@@ -81,6 +89,8 @@ public class PostgresMetaStore implements BuildMetaStore {
 
             context.batchInsert(checksums).execute();
         });
+
+        return getByName(name);
     }
 
     @Override
@@ -92,8 +102,23 @@ public class PostgresMetaStore implements BuildMetaStore {
     }
 
     @Override
-    public @NotNull List<String> getBuildsByFormat(@NotNull String formatName) throws BuildFormatException {
-        return List.of();
+    public @NotNull Map<String, BuildFormatChecksum> getBuildsByFormat(@NotNull String formatName) throws BuildFormatException {
+        return databaseManager.runReturning(context -> {
+                    Result<Record> result = context.select()
+                            .from(Tables.BUILDMETA.join(Tables.BUILDMETA_FORMAT).on(
+                                    Tables.BUILDMETA.ID.eq(Tables.BUILDMETA_FORMAT.BUILDMETA_ID)
+                            )).where(Tables.BUILDMETA.NAME.eq(formatName))
+                            .fetch();
+
+                    return result.stream().collect(Collectors.toMap(
+                            record -> record.get(Tables.BUILDMETA.NAME),
+                            record -> new BuildFormatChecksum(
+                                    record.get(Tables.BUILDMETA_FORMAT.NAME),
+                                    record.get(Tables.BUILDMETA_FORMAT.CHECKSUM).getBytes(StandardCharsets.UTF_8)
+                            )
+                    ));
+                }
+        );
     }
 
 

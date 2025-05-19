@@ -1,10 +1,10 @@
 # BuildFormat
 BuildFormat is a build management system for minecraft builds. Allows for streamline integration with your building
-server and team to produce builds faster. All requirements for a build can be defined programmatically and checked
+server and team to produce builds faster. All requirements for a buildMeta can be defined programmatically and checked
 in game prior to being loaded.
 
 ## Markers
-Markers define points in the build that are used for in your gamemode. They are set using a sign with the following format:
+Markers define points in the buildMeta that are used for in your gamemode. They are set using a sign with the following format:
 ```
 #marker
 <name>
@@ -13,10 +13,10 @@ Markers define points in the build that are used for in your gamemode. They are 
 Where:
 - `#marker` is the prefix that tells the system this is a marker
 - `<name>` is the name of the marker, this is used to identify the marker in the code
-- `<offset>` is the offset from the marker to the point in the build. This can be useful to get more precise locations
+- `<offset>` is the offset from the marker to the point in the buildMeta. This can be useful to get more precise locations
 
 
-## Example build definition
+## Example buildMeta definition
 ```java
 public record TestFormat(
         @Requirement(name = "test-a") Marker single,

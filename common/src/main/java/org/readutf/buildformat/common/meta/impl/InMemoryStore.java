@@ -8,9 +8,9 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.meta.BuildMeta;
-import org.readutf.buildformat.common.meta.BuildMetaStore;
+import org.readutf.buildformat.common.meta.BuildStore;
 
-public class InMemoryStore implements BuildMetaStore {
+public class InMemoryStore implements BuildStore {
 
     private final Map<String, BuildMeta> buildMetas = new HashMap<>();
 
@@ -19,7 +19,7 @@ public class InMemoryStore implements BuildMetaStore {
         if(buildMetas.containsKey(name)) {
             throw new BuildFormatException("Build with name " + name + " already exists");
         }
-        BuildMeta buildMeta = new BuildMeta(name, description, List.of(), List.of());
+        BuildMeta buildMeta = new BuildMeta(name, description, 1, List.of(), List.of());
         buildMetas.put(name, buildMeta);
         return buildMeta;
     }
@@ -30,7 +30,7 @@ public class InMemoryStore implements BuildMetaStore {
     }
 
     @Override
-    public void setFormats(String name, List<BuildFormatChecksum> formats) throws BuildFormatException {
+    public BuildMeta update(String name, List<BuildFormatChecksum> formats) throws BuildFormatException {
         BuildMeta buildMeta = buildMetas.get(name);
         if (buildMeta == null) {
             throw new BuildFormatException("Build with name " + name + " does not exist");
@@ -38,10 +38,12 @@ public class InMemoryStore implements BuildMetaStore {
         BuildMeta updated = new BuildMeta(
                 buildMeta.name(),
                 buildMeta.description(),
+                1,
                 buildMeta.tags(),
                 formats
         );
         buildMetas.put(name, updated);
+        return buildMeta;
     }
 
     @Override
@@ -50,7 +52,7 @@ public class InMemoryStore implements BuildMetaStore {
     }
 
     @Override
-    public @NotNull List<String> getBuildsByFormat(@NotNull String formatName) throws BuildFormatException {
-        return List.of();
+    public @NotNull Map<String, BuildFormatChecksum> getBuildsByFormat(@NotNull String formatName) throws BuildFormatException {
+        return new HashMap<>();
     }
 }

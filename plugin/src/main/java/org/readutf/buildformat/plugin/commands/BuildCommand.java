@@ -2,15 +2,22 @@ package org.readutf.buildformat.plugin.commands;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitPlayer;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
+import com.sk89q.worldedit.extent.clipboard.io.sponge.SpongeSchematicV3Writer;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import dev.rollczi.litecommands.annotations.argument.Arg;
 import dev.rollczi.litecommands.annotations.async.Async;
 import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
 import dev.rollczi.litecommands.annotations.execute.Execute;
+import dev.rollczi.litecommands.annotations.execute.ExecuteDefault;
 import dev.rollczi.litecommands.annotations.flag.Flag;
 import dev.rollczi.litecommands.annotations.join.Join;
 import dev.rollczi.litecommands.annotations.varargs.Varargs;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -26,7 +33,9 @@ import org.readutf.buildformat.common.format.BuildFormatManager;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.meta.BuildMeta;
-import org.readutf.buildformat.common.meta.BuildMetaStore;
+import org.readutf.buildformat.common.meta.BuildStore;
+import org.readutf.buildformat.common.schematic.BuildSchematic;
+import org.readutf.buildformat.common.schematic.SchematicStore;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.formats.BuildFormatCache;
 import org.readutf.buildformat.plugin.marker.MarkerScanner;
@@ -36,20 +45,22 @@ import org.slf4j.LoggerFactory;
 @Command(name = "build")
 public class BuildCommand {
 
-    private @NotNull final BuildMetaStore buildMetaStore;
+    private @NotNull final BuildStore buildStore;
+    private @NotNull final SchematicStore schematicStore;
     private @NotNull final BuildFormatCache buildFormatCache;
     private static final Logger logger = LoggerFactory.getLogger(BuildCommand.class);
 
-    public BuildCommand(@NotNull BuildMetaStore buildMetaStore, @NotNull BuildFormatCache buildFormatCache) {
-        this.buildMetaStore = buildMetaStore;
+    public BuildCommand(@NotNull BuildStore buildStore, @NotNull SchematicStore schematicStore, @NotNull BuildFormatCache buildFormatCache) {
+        this.buildStore = buildStore;
+        this.schematicStore = schematicStore;
         this.buildFormatCache = buildFormatCache;
     }
 
-    @Execute
+    @Execute(name = "list")
     public void list(@Context Player player) {
         @Nullable List<String> builds;
         try {
-            builds = buildMetaStore.getBuilds();
+            builds = buildStore.getBuilds();
         } catch (BuildFormatException e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
             return;
@@ -71,7 +82,7 @@ public class BuildCommand {
 
         @Nullable BuildMeta meta;
         try {
-            meta = buildMetaStore.getByName(name);
+            meta = buildStore.getByName(name);
         } catch (Exception e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
             return;
@@ -81,9 +92,11 @@ public class BuildCommand {
             return;
         }
 
+
+
         String descriptionJoined = String.join(" ", description);
         try {
-            buildMetaStore.create(name, descriptionJoined);
+            buildStore.create(name, descriptionJoined);
             player.sendMessage(Component.text("Build " + name + " created").color(NamedTextColor.GREEN));
         } catch (Exception e) {
             player.sendMessage(Component.text("Failed to create build: " + e.getMessage()).color(NamedTextColor.RED));
@@ -95,7 +108,7 @@ public class BuildCommand {
     public void save(@Context Player player, @Arg String name, @Flag("-f") boolean force, @Varargs BuildType... buildType) {
         @Nullable BuildMeta meta = null;
         try {
-            meta = buildMetaStore.getByName(name);
+            meta = buildStore.getByName(name);
         } catch (BuildFormatException e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
             return;
@@ -107,9 +120,15 @@ public class BuildCommand {
 
         List<String> formatNames = Stream.of(buildType).map(type -> type.getBuildType().toLowerCase(Locale.ROOT)).toList();
         if (!force) {
+            List<String> missing = new ArrayList<>();
+
             for (BuildFormatChecksum format : meta.formats()) {
                 if (!formatNames.contains(format.name())) {
-                    player.sendMessage(Component.text("A previously saved format " + format.name() + " is not in the list of formats to save, to override this use -f").color(NamedTextColor.RED));
+                    missing.add(format.name());
+                }
+                if(!missing.isEmpty()) {
+                    player.sendMessage(Component.text("The following formats are missing: (To override this use -f)").color(NamedTextColor.RED));
+                    player.sendMessage(Component.text(String.join(", ", missing)).color(NamedTextColor.RED));
                     return;
                 }
             }
@@ -122,15 +141,27 @@ public class BuildCommand {
             return;
         }
 
-        List<Marker> markers = MarkerScanner.scan(clipboardHolder.getClipboards().getFirst());
+        Clipboard clipboard = clipboardHolder.getClipboards().getFirst();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        SpongeSchematicV3Writer writer = new SpongeSchematicV3Writer(new DataOutputStream(outputStream));
+        try {
+            writer.write(clipboard);
+        } catch (IOException e) {
+            player.sendMessage(Component.text("Failed to save clipboard").color(NamedTextColor.RED));
+            return;
+        }
+        byte[] data = outputStream.toByteArray();
 
-        logger.info("Markers: {}", markers);
+
+        List<Marker> markers = MarkerScanner.scan(clipboard);
 
         List<BuildFormatChecksum> checksums = getBuildFormatChecksums(player, formatNames, markers);
         if (checksums == null) return;
 
         try {
-            buildMetaStore.setFormats(name, checksums);
+            schematicStore.save(new BuildSchematic(name, data));
+            buildStore.update(name, checksums);
+
             player.sendMessage(Component.text("Build " + name + " saved with formats: " + formatNames).color(NamedTextColor.GREEN));
         } catch (BuildFormatException e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));

@@ -1,5 +1,6 @@
 plugins {
-    id("java-library")
+    id("java")
+    `java-library`
 }
 
 group = "org.readutf.buildstore"
@@ -12,16 +13,16 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    api("org.jetbrains:annotations:26.0.2")
-    api("org.slf4j:slf4j-api:2.0.17")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
+    implementation(project(":common"))
+
+    api("software.amazon.awssdk:aws-core:2.31.45")
+    api("software.amazon.awssdk:s3:2.31.45")
 }
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
 tasks.test {

@@ -14,11 +14,9 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    implementation("org.jetbrains:annotations:26.0.2")
-    implementation(project(":common"))
+    compileOnly(project(":common"))
 
     api("com.zaxxer:HikariCP:6.3.0")
-
     api("org.jooq:jooq:3.20.4")
     api("org.postgresql:postgresql:42.7.5")
     api("org.flywaydb:flyway-database-postgresql:11.8.2")

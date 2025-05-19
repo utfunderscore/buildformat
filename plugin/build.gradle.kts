@@ -29,13 +29,14 @@ dependencies {
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit") { isTransitive = false }
 
     implementation(project(":postgres"))
-    implementation("org.jooq:jooq:3.20.4")
-    implementation("org.postgresql:postgresql:42.7.5")
-    implementation("org.flywaydb:flyway-database-postgresql:11.8.2")
-
+    implementation(project(":s3"))
 
 
     paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
+}
+
+tasks.compileJava {
+    options.compilerArgs.add("-parameters")
 }
 
 tasks {

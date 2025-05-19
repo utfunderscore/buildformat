@@ -70,6 +70,11 @@ public class Buildmeta extends TableImpl<BuildmetaRecord> {
     public final TableField<BuildmetaRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(32).nullable(false), this, "");
 
     /**
+     * The column <code>public.buildmeta.version</code>.
+     */
+    public final TableField<BuildmetaRecord, Integer> VERSION = createField(DSL.name("version"), SQLDataType.INTEGER.nullable(false), this, "");
+
+    /**
      * The column <code>public.buildmeta.description</code>.
      */
     public final TableField<BuildmetaRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.VARCHAR(128).nullable(false), this, "");

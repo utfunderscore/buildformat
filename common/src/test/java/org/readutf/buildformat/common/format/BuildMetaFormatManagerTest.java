@@ -12,7 +12,7 @@ import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.markers.Position;
 import org.readutf.buildformat.common.format.requirements.Requirement;
 
-class BuildFormatManagerTest {
+class BuildMetaFormatManagerTest {
 
     public record TestFormat(
             @Requirement(name = "test-a") Marker single,
