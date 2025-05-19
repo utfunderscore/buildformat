@@ -50,7 +50,7 @@ tasks {
 
 bukkitPluginYaml {
     name = "buildformat"
-    main = "org.readutf.buildformat.plugin.BuildFormatPlugin"
+    main = "org.readutf.buildformat.plugin.BuildPlugin"
     load = BukkitPluginYaml.PluginLoadOrder.STARTUP
     authors.add("Author")
     apiVersion = "1.21.4"

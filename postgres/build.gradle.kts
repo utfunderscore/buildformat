@@ -14,7 +14,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    compileOnly(project(":common"))
+    implementation(project(":common"))
 
     api("com.zaxxer:HikariCP:6.3.0")
     api("org.jooq:jooq:3.20.4")

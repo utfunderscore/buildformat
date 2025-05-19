@@ -1,0 +1,11 @@
+database:
+  host: localhost
+  port: "5432"
+  database: buildformat
+  user: your_db_user
+  password: your_db_password
+aws:
+  accessKey: your_aws_access_key
+  secretKey: your_aws_secret_key
+  endpoint: https://s3.your-endpoint.com
+  bucket: buildformat
