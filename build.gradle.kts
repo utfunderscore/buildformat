@@ -1,12 +1,34 @@
 plugins {
     id("java")
+    `maven-publish`
 }
 
-group = "org.readutf.buildstore"
-version = "1.0-SNAPSHOT"
+group = "org.readutf.buildformat"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
+}
+
+subprojects {
+
+    if (project.name == "plugin") {
+        return@subprojects
+    }
+
+    apply(plugin = "maven-publish")
+    apply(plugin = "java-library")
+
+    version = rootProject.version
+    group = rootProject.group
+
+    publishing {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(components["java"])
+            }
+        }
+    }
 }
 
 dependencies {

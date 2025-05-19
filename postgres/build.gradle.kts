@@ -3,9 +3,6 @@ plugins {
     id("org.jooq.jooq-codegen-gradle") version "3.20.4"
 }
 
-group = "org.readutf.buildstore"
-version = "1.0-SNAPSHOT"
-
 repositories {
     mavenCentral()
 }
@@ -49,7 +46,6 @@ jooq {
             }
         }
     }
-
 }
 
 tasks.test {

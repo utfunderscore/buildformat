@@ -3,9 +3,6 @@ plugins {
     `java-library`
 }
 
-group = "org.readutf.buildstore"
-version = "1.0-SNAPSHOT"
-
 repositories {
     mavenCentral()
 }
