@@ -8,9 +8,9 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.meta.BuildMeta;
-import org.readutf.buildformat.common.meta.BuildStore;
+import org.readutf.buildformat.common.meta.BuildMetaStore;
 
-public class InMemoryStore implements BuildStore {
+public class InMemoryMetaStore implements BuildMetaStore {
 
     private final Map<String, BuildMeta> buildMetas = new HashMap<>();
 

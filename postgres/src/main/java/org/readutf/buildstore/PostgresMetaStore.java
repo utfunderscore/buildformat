@@ -12,7 +12,7 @@ import org.jooq.Result;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.meta.BuildMeta;
-import org.readutf.buildformat.common.meta.BuildStore;
+import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.buildstore.generated.Tables;
 import org.readutf.buildstore.generated.tables.records.BuildmetaFormatRecord;
 import org.readutf.buildstore.generated.tables.records.BuildmetaRecord;
@@ -20,13 +20,13 @@ import org.readutf.buildstore.generated.tables.records.BuildmetaTagsRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PostgresStore implements BuildStore {
+public class PostgresMetaStore implements BuildMetaStore {
 
-    private static final Logger logger = LoggerFactory.getLogger(PostgresStore.class);
+    private static final Logger logger = LoggerFactory.getLogger(PostgresMetaStore.class);
 
     private final @NotNull PostgresDatabaseManager databaseManager;
 
-    public PostgresStore(@NotNull PostgresDatabaseManager databaseManager) {
+    public PostgresMetaStore(@NotNull PostgresDatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
     }
 

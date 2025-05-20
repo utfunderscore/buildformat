@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 
-public interface BuildStore {
+public interface BuildMetaStore {
 
     @NotNull BuildMeta create(String name, String description) throws BuildFormatException;
 

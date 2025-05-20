@@ -3,7 +3,7 @@ package org.readutf.buildformat.common.schematic;
 import java.util.List;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 
-public interface SchematicStore {
+public interface BuildSchematicStore {
 
     void save(BuildSchematic buildSchematic) throws BuildFormatException;
 

@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.schematic.BuildSchematic;
-import org.readutf.buildformat.common.schematic.SchematicStore;
+import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -16,14 +16,14 @@ import software.amazon.awssdk.services.s3.model.ListObjectVersionsResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-public class S3SchematicStore implements SchematicStore {
+public class S3BuildSchematicStore implements BuildSchematicStore {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(S3SchematicStore.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(S3BuildSchematicStore.class);
 
     private @NotNull final S3Client s3Client;
     private @NotNull final String bucketName;
 
-    public S3SchematicStore(S3Client s3Client, String bucketName) {
+    public S3BuildSchematicStore(S3Client s3Client, String bucketName) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }

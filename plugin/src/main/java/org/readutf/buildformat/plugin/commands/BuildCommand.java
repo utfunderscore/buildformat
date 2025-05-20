@@ -3,7 +3,6 @@ package org.readutf.buildformat.plugin.commands;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitPlayer;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardWriter;
 import com.sk89q.worldedit.extent.clipboard.io.sponge.SpongeSchematicV3Writer;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import dev.rollczi.litecommands.annotations.argument.Arg;
@@ -11,7 +10,6 @@ import dev.rollczi.litecommands.annotations.async.Async;
 import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
 import dev.rollczi.litecommands.annotations.execute.Execute;
-import dev.rollczi.litecommands.annotations.execute.ExecuteDefault;
 import dev.rollczi.litecommands.annotations.flag.Flag;
 import dev.rollczi.litecommands.annotations.join.Join;
 import dev.rollczi.litecommands.annotations.varargs.Varargs;
@@ -33,9 +31,9 @@ import org.readutf.buildformat.common.format.BuildFormatManager;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.meta.BuildMeta;
-import org.readutf.buildformat.common.meta.BuildStore;
+import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.buildformat.common.schematic.BuildSchematic;
-import org.readutf.buildformat.common.schematic.SchematicStore;
+import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.formats.BuildFormatCache;
 import org.readutf.buildformat.plugin.marker.MarkerScanner;
@@ -45,14 +43,14 @@ import org.slf4j.LoggerFactory;
 @Command(name = "build")
 public class BuildCommand {
 
-    private @NotNull final BuildStore buildStore;
-    private @NotNull final SchematicStore schematicStore;
+    private @NotNull final BuildMetaStore buildMetaStore;
+    private @NotNull final BuildSchematicStore buildSchematicStore;
     private @NotNull final BuildFormatCache buildFormatCache;
     private static final Logger logger = LoggerFactory.getLogger(BuildCommand.class);
 
-    public BuildCommand(@NotNull BuildStore buildStore, @NotNull SchematicStore schematicStore, @NotNull BuildFormatCache buildFormatCache) {
-        this.buildStore = buildStore;
-        this.schematicStore = schematicStore;
+    public BuildCommand(@NotNull BuildMetaStore buildMetaStore, @NotNull BuildSchematicStore buildSchematicStore, @NotNull BuildFormatCache buildFormatCache) {
+        this.buildMetaStore = buildMetaStore;
+        this.buildSchematicStore = buildSchematicStore;
         this.buildFormatCache = buildFormatCache;
     }
 
@@ -60,9 +58,10 @@ public class BuildCommand {
     public void list(@Context Player player) {
         @Nullable List<String> builds;
         try {
-            builds = buildStore.getBuilds();
+            builds = buildMetaStore.getBuilds();
         } catch (BuildFormatException e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
+            logger.info("A database exception occurred", e);
             return;
         }
         if (builds.isEmpty()) {
@@ -82,9 +81,10 @@ public class BuildCommand {
 
         @Nullable BuildMeta meta;
         try {
-            meta = buildStore.getByName(name);
+            meta = buildMetaStore.getByName(name);
         } catch (Exception e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
+            logger.info("A database exception occurred", e);
             return;
         }
         if (meta != null) {
@@ -96,7 +96,7 @@ public class BuildCommand {
 
         String descriptionJoined = String.join(" ", description);
         try {
-            buildStore.create(name, descriptionJoined);
+            buildMetaStore.create(name, descriptionJoined);
             player.sendMessage(Component.text("Build " + name + " created").color(NamedTextColor.GREEN));
         } catch (Exception e) {
             player.sendMessage(Component.text("Failed to create build: " + e.getMessage()).color(NamedTextColor.RED));
@@ -108,9 +108,10 @@ public class BuildCommand {
     public void save(@Context Player player, @Arg String name, @Flag("-f") boolean force, @Varargs BuildType... buildType) {
         @Nullable BuildMeta meta = null;
         try {
-            meta = buildStore.getByName(name);
+            meta = buildMetaStore.getByName(name);
         } catch (BuildFormatException e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
+            logger.info("A database exception occurred", e);
             return;
         }
         if (meta == null) {
@@ -159,12 +160,13 @@ public class BuildCommand {
         if (checksums == null) return;
 
         try {
-            schematicStore.save(new BuildSchematic(name, data));
-            buildStore.update(name, checksums);
+            buildSchematicStore.save(new BuildSchematic(name, data));
+            buildMetaStore.update(name, checksums);
 
             player.sendMessage(Component.text("Build " + name + " saved with formats: " + formatNames).color(NamedTextColor.GREEN));
         } catch (BuildFormatException e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
+            logger.info("A database exception occurred", e);
         }
     }
 

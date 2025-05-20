@@ -13,12 +13,12 @@ import org.junit.jupiter.api.TestInstance;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildstore.PostgresDatabaseManager;
-import org.readutf.buildstore.PostgresStore;
+import org.readutf.buildstore.PostgresMetaStore;
 
 @TestInstance(org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS)
-public class BuildStoreTests {
+public class BuildMetaStoreTests {
 
-    private PostgresStore metaStore;
+    private PostgresMetaStore metaStore;
 
     @BeforeAll
     void setUp() {
@@ -40,7 +40,7 @@ public class BuildStoreTests {
         flyway.migrate();
 
 
-        metaStore = new PostgresStore(new PostgresDatabaseManager(ds));
+        metaStore = new PostgresMetaStore(new PostgresDatabaseManager(ds));
     }
 
     @Test

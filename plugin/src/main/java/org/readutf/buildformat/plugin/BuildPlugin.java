@@ -9,21 +9,20 @@ import java.net.URI;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.meta.BuildStore;
-import org.readutf.buildformat.common.schematic.SchematicStore;
+import org.readutf.buildformat.common.meta.BuildMetaStore;
+import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.buildformat.plugin.commands.BuildCommand;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.commands.types.ExampleInvalidUsageHandler;
 import org.readutf.buildformat.plugin.formats.BuildFormatCache;
-import org.readutf.buildformat.s3.S3SchematicStore;
+import org.readutf.buildformat.s3.S3BuildSchematicStore;
 import org.readutf.buildstore.PostgresDatabaseManager;
-import org.readutf.buildstore.PostgresStore;
+import org.readutf.buildstore.PostgresMetaStore;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 public class BuildPlugin extends JavaPlugin {
 
@@ -54,8 +53,8 @@ public class BuildPlugin extends JavaPlugin {
         String bucket = getConfig().getString("aws.bucket", "buildformat");
 
         PostgresDatabaseManager databaseManager = new PostgresDatabaseManager(dataSource);
-        BuildStore buildStore = new PostgresStore(databaseManager);
-        SchematicStore schematicStore = new S3SchematicStore(awsClient, bucket);
+        BuildMetaStore buildMetaStore = new PostgresMetaStore(databaseManager);
+        BuildSchematicStore buildSchematicStore = new S3BuildSchematicStore(awsClient, bucket);
 
         try {
             BuildFormatCache buildFormatCache = new BuildFormatCache(new File(getDataFolder(), "formats"));
@@ -63,7 +62,7 @@ public class BuildPlugin extends JavaPlugin {
             LiteBukkitFactory.builder(this)
                     .invalidUsage(new ExampleInvalidUsageHandler())
                     .argument(BuildType.class, new BuildType.BuildTypesSuggester(buildFormatCache))
-                    .commands(new BuildCommand(buildStore, schematicStore, buildFormatCache))
+                    .commands(new BuildCommand(buildMetaStore, buildSchematicStore, buildFormatCache))
                     .build();
 
         } catch (BuildFormatException | IOException e) {
