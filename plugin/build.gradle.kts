@@ -2,7 +2,7 @@ import xyz.jpenilla.resourcefactory.bukkit.BukkitPluginYaml
 
 plugins {
     `java-library`
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.16"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
     id("xyz.jpenilla.run-paper") version "2.3.1"
     id("xyz.jpenilla.resource-factory-bukkit-convention") version "1.2.0"
     id("com.gradleup.shadow") version "9.0.0-beta13"
@@ -13,10 +13,11 @@ version = "1.0.0-SNAPSHOT"
 description = "Test plugin for paperweight-userdev"
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(23)
 }
 
 repositories {
+    mavenCentral()
     maven { url = uri("https://repo.panda-lang.org/releases") }
 }
 
@@ -32,7 +33,7 @@ dependencies {
     implementation(project(":s3"))
 
 
-    paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT")
 }
 
 tasks.compileJava {
@@ -41,7 +42,7 @@ tasks.compileJava {
 
 tasks {
     compileJava {
-        options.release = 21
+        options.release = 23
     }
     javadoc {
         options.encoding = Charsets.UTF_8.name()
@@ -53,6 +54,6 @@ bukkitPluginYaml {
     main = "org.readutf.buildformat.plugin.BuildPlugin"
     load = BukkitPluginYaml.PluginLoadOrder.STARTUP
     authors.add("Author")
-    apiVersion = "1.21.4"
+    apiVersion = "1.21.5"
     depend = listOf("FastAsyncWorldEdit")
 }

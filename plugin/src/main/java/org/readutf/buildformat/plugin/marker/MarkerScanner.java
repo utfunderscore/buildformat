@@ -7,6 +7,7 @@ import com.sk89q.worldedit.world.block.BaseBlock;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import org.bukkit.Location;
@@ -50,8 +51,8 @@ public class MarkerScanner {
                 logger.debug("No front messages or back messages found");
                 return;
             }
-            List<Component> front = frontMessagesTag.value().stream().map(LinStringTag::value).map(text -> GsonComponentSerializer.gson().deserialize(text)).toList();
-            List<Component> back = backMessagesTag.value().stream().map(LinStringTag::value).map(text -> GsonComponentSerializer.gson().deserialize(text)).toList();
+            List<Component> front = frontMessagesTag.value().stream().map(LinStringTag::value).map(Component::text).map(comp -> (Component) comp).toList();
+            List<Component> back = backMessagesTag.value().stream().map(LinStringTag::value).map(Component::text).map(comp -> (Component) comp).toList();
 
             BlockVector3 relative = blockVector3.subtract(BlockVector3.at(0, 0, 0));
 
