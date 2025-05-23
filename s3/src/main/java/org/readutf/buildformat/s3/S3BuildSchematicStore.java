@@ -23,7 +23,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
     private @NotNull final S3Client s3Client;
     private @NotNull final String bucketName;
 
-    public S3BuildSchematicStore(S3Client s3Client, String bucketName) {
+    public S3BuildSchematicStore(@NotNull S3Client s3Client, @NotNull String bucketName) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }
