@@ -1,6 +1,7 @@
 package org.readutf.buildstore;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -80,9 +81,10 @@ public class PostgresMetaStore implements BuildMetaStore {
 
             List<BuildmetaFormatRecord> checksums = formats.stream()
                     .map(format -> {
+                        String data = Base64.getEncoder().encodeToString(format.checksum());
                         BuildmetaFormatRecord formatRecord = context.newRecord(Tables.BUILDMETA_FORMAT);
                         formatRecord.setName(format.name());
-                        formatRecord.setChecksum(new String(format.checksum(), StandardCharsets.UTF_8));
+                        formatRecord.setChecksum(data);
                         formatRecord.setBuildmetaId(buildmetaRecord.getId());
                         return formatRecord;
                     }).toList();
@@ -114,7 +116,7 @@ public class PostgresMetaStore implements BuildMetaStore {
                             record -> record.get(Tables.BUILDMETA.NAME),
                             record -> new BuildFormatChecksum(
                                     record.get(Tables.BUILDMETA_FORMAT.NAME),
-                                    record.get(Tables.BUILDMETA_FORMAT.CHECKSUM).getBytes(StandardCharsets.UTF_8)
+                                    Base64.getDecoder().decode(record.get(Tables.BUILDMETA_FORMAT.CHECKSUM))
                             )
                     ));
                 }
