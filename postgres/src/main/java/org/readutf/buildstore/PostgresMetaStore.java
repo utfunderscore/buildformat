@@ -107,7 +107,7 @@ public class PostgresMetaStore implements BuildMetaStore {
                     Result<Record> result = context.select()
                             .from(Tables.BUILDMETA.join(Tables.BUILDMETA_FORMAT).on(
                                     Tables.BUILDMETA.ID.eq(Tables.BUILDMETA_FORMAT.BUILDMETA_ID)
-                            )).where(Tables.BUILDMETA.NAME.eq(formatName))
+                            )).where(Tables.BUILDMETA_FORMAT.NAME.eq(formatName))
                             .fetch();
 
                     return result.stream().collect(Collectors.toMap(
