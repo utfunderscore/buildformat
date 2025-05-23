@@ -6,6 +6,9 @@ import com.sk89q.worldedit.world.block.BaseBlock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -29,27 +32,24 @@ public class MarkerScanner {
 
     public static @NotNull List<Marker> scan(@NotNull Clipboard clipboard) {
 
-        List<Marker> markers = new ArrayList<>();
-
-
-        BlockVector3 minimumPoint = clipboard.getMinimumPoint();
-        clipboard.iterator().forEachRemaining(blockVector3 -> {
+        long start = System.currentTimeMillis();
+        List<Marker> markers = StreamSupport.stream(clipboard.spliterator(), false).map(blockVector3 -> {
             BaseBlock block = clipboard.getFullBlock(blockVector3);
             LinCompoundTag nbt = block.getNbt();
-            if (nbt == null) return;
+            if (nbt == null) return null;
 
             LinCompoundTag frontText = getTag(nbt, "front_text", LinTagType.compoundTag());
             LinCompoundTag backText = getTag(nbt, "back_text", LinTagType.compoundTag());
             if (frontText == null || backText == null) {
                 logger.debug("No front text or back text found");
-                return;
+                return null;
             }
 
             LinListTag<@NotNull LinStringTag> frontMessagesTag = getListTag(frontText, "messages", LinTagType.stringTag());
             LinListTag<@NotNull LinStringTag> backMessagesTag = getListTag(backText, "messages", LinTagType.stringTag());
             if (frontMessagesTag == null || backMessagesTag == null) {
                 logger.debug("No front messages or back messages found");
-                return;
+                return null;
             }
             List<Component> front = frontMessagesTag.value().stream().map(LinStringTag::value).map(Component::text).map(comp -> (Component) comp).toList();
             List<Component> back = backMessagesTag.value().stream().map(LinStringTag::value).map(Component::text).map(comp -> (Component) comp).toList();
@@ -67,11 +67,13 @@ public class MarkerScanner {
             Marker frontMarker = toMarker(position, front);
             Marker backMarker = toMarker(position, back);
             if(frontMarker != null) {
-                markers.add(frontMarker);
-            } else if(backMarker != null) {
-                markers.add(backMarker);
-            }
-        });
+                return frontMarker;
+            } else return backMarker;
+        }).filter(Objects::nonNull).toList();
+
+        long after = System.currentTimeMillis();
+
+        logger.info("Scanning {} markers in {} ms", markers.size(), (after - start));
 
         return markers;
     }
