@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -47,6 +50,7 @@ public class BuildCommand {
     private @NotNull final BuildSchematicStore buildSchematicStore;
     private @NotNull final BuildFormatCache buildFormatCache;
     private static final Logger logger = LoggerFactory.getLogger(BuildCommand.class);
+    private static final Executor uploadExecutor = Executors.newSingleThreadExecutor();
 
     public BuildCommand(@NotNull BuildMetaStore buildMetaStore, @NotNull BuildSchematicStore buildSchematicStore, @NotNull BuildFormatCache buildFormatCache) {
         this.buildMetaStore = buildMetaStore;
@@ -79,6 +83,8 @@ public class BuildCommand {
     @Execute(name = "create")
     public void create(@Context Player player, @Arg String name, @Join String description) {
 
+        name = name.toLowerCase();
+
         @Nullable BuildMeta meta;
         try {
             meta = buildMetaStore.getByName(name);
@@ -92,8 +98,6 @@ public class BuildCommand {
             return;
         }
 
-
-
         String descriptionJoined = String.join(" ", description);
         try {
             buildMetaStore.create(name, descriptionJoined);
@@ -105,8 +109,12 @@ public class BuildCommand {
 
     @Async
     @Execute(name = "save")
-    public void save(@Context Player player, @Arg String name, @Flag("-f") boolean force, @Varargs BuildType... buildType) {
-        @Nullable BuildMeta meta = null;
+    public void save(@Context Player player, @Arg("name") String originalName, @Flag("-f") boolean force, @Varargs BuildType... buildType) {
+        String name = originalName.toLowerCase();
+
+        System.out.println(Thread.currentThread().getName());
+
+        @Nullable BuildMeta meta;
         try {
             meta = buildMetaStore.getByName(name);
         } catch (BuildFormatException e) {
@@ -127,7 +135,7 @@ public class BuildCommand {
                 if (!formatNames.contains(format.name())) {
                     missing.add(format.name());
                 }
-                if(!missing.isEmpty()) {
+                if (!missing.isEmpty()) {
                     player.sendMessage(Component.text("The following formats are missing: (To override this use -f)").color(NamedTextColor.RED));
                     player.sendMessage(Component.text(String.join(", ", missing)).color(NamedTextColor.RED));
                     return;
@@ -153,21 +161,24 @@ public class BuildCommand {
         }
         byte[] data = outputStream.toByteArray();
 
-
+        player.sendMessage(Component.text("Scanning markers..."));
         List<Marker> markers = MarkerScanner.scan(clipboard);
 
         List<BuildFormatChecksum> checksums = getBuildFormatChecksums(player, formatNames, markers);
         if (checksums == null) return;
 
+        player.sendMessage(Component.text("Uploading build file..."));
+
         try {
             buildSchematicStore.save(new BuildSchematic(name, data));
+            player.sendMessage(Component.text("Updating database...").color(NamedTextColor.GREEN));
             buildMetaStore.update(name, checksums);
-
             player.sendMessage(Component.text("Build " + name + " saved with formats: " + formatNames).color(NamedTextColor.GREEN));
         } catch (BuildFormatException e) {
             player.sendMessage(Component.text("A database exception occurred.").color(NamedTextColor.RED));
             logger.info("A database exception occurred", e);
         }
+
     }
 
     private @Nullable List<BuildFormatChecksum> getBuildFormatChecksums(Player player, List<String> formatNames, List<Marker> markers) {
