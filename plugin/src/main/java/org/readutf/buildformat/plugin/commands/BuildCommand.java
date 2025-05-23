@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
@@ -109,7 +110,7 @@ public class BuildCommand {
 
     @Async
     @Execute(name = "save")
-    public void save(@Context Player player, @Arg("name") String originalName, @Flag("-f") boolean force, @Varargs BuildType... buildType) {
+    public void save(@Context Player player, @Arg("name") String originalName, @Flag("-f") boolean force, @Varargs BuildType... buildType) throws IOException {
         String name = originalName.toLowerCase();
 
         System.out.println(Thread.currentThread().getName());
@@ -152,13 +153,15 @@ public class BuildCommand {
 
         Clipboard clipboard = clipboardHolder.getClipboards().getFirst();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        SpongeSchematicV3Writer writer = new SpongeSchematicV3Writer(new DataOutputStream(outputStream));
+        GZIPOutputStream gzipStream = new GZIPOutputStream(outputStream);
+        SpongeSchematicV3Writer writer = new SpongeSchematicV3Writer(new DataOutputStream(gzipStream));
         try {
             writer.write(clipboard);
         } catch (IOException e) {
             player.sendMessage(Component.text("Failed to save clipboard").color(NamedTextColor.RED));
             return;
         }
+        gzipStream.close();
         byte[] data = outputStream.toByteArray();
 
         player.sendMessage(Component.text("Scanning markers..."));
