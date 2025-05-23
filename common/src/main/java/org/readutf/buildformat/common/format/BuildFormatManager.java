@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
@@ -111,11 +113,21 @@ public class BuildFormatManager {
             }
 
             if (parameterType == List.class) {
-                args[i] = matching;
+                ParameterizedType listType = (ParameterizedType) parameter.getParameterizedType();
+                Type actualType = listType.getActualTypeArguments()[0];
+                if(actualType == Marker.class) {
+                    args[i] = new ArrayList<>(matching);
+                } else if (actualType == Position.class) {
+                    args[i] = matching.stream().map(Marker::position).toList();
+                } else {
+                    throw new BuildFormatException("Invalid list parameter type: " + actualType.getTypeName());
+                }
+
+
             } else if (isMarker) {
-                args[i] = matching.get(0);
+                args[i] = matching.getFirst();
             } else if (isPosition) {
-                args[i] = matching.get(0).position();
+                args[i] = matching.getFirst().position();
             } else {
                 throw new BuildFormatException("Invalid parameter type: " + parameterType.getName());
             }
