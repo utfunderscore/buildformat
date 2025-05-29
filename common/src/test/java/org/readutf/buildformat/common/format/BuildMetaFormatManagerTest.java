@@ -3,6 +3,7 @@ package org.readutf.buildformat.common.format;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,8 @@ import org.readutf.buildformat.common.markers.Position;
 import org.readutf.buildformat.common.format.requirements.Requirement;
 
 class BuildMetaFormatManagerTest {
+
+
 
     public record TestFormat(
             @Requirement(name = "test-a") Marker single,
@@ -73,6 +76,20 @@ class BuildMetaFormatManagerTest {
         );
 
         PositionDataFormat format = BuildFormatManager.constructBuildFormat(markers, PositionDataFormat.class);
+    }
+
+    @Test
+    void checksumTest() throws BuildFormatException, IOException {
+
+        File workDir = new File(System.getProperty("user.dir"));
+
+        List<RequirementData> validators = BuildFormatManager.getValidators(TestFormat.class);
+        BuildFormatManager.save(workDir, "checksum-test", validators);
+        List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "checksum-test.json"));
+
+        System.out.println(validators);
+        System.out.println(loadedValidators);
+        assertEquals(validators, loadedValidators);
     }
 
     @Test

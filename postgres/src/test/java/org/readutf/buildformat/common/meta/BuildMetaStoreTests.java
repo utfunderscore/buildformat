@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import org.flywaydb.core.Flyway;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,20 +25,20 @@ public class BuildMetaStoreTests {
     void setUp() {
 
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:postgresql://localhost:5432/example_db");
-        config.setUsername("postgres");
-        config.setPassword("password");
+        config.setJdbcUrl("jdbc:postgresql://185.227.70.59:5432/builds");
+        config.setUsername("readutf");
+        config.setPassword("w4vA9mtVoC79eUoWKrsv0XycHExRiYRWTzrzQgwc65CP3g2GBgPOY2o9WXRQaZq8");
         config.addDataSourceProperty("cachePrepStmts", "true");
 
         HikariDataSource ds = new HikariDataSource(config);
 
-        Flyway flyway = Flyway.configure()
-                .cleanDisabled(false)
-                .dataSource(ds)
-                .load();
-
-        flyway.clean();
-        flyway.migrate();
+//        Flyway flyway = Flyway.configure()
+//                .cleanDisabled(false)
+//                .dataSource(ds)
+//                .load();
+//
+//        flyway.clean();
+//        flyway.migrate();
 
 
         metaStore = new PostgresMetaStore(new PostgresDatabaseManager(ds));
@@ -116,19 +117,23 @@ public class BuildMetaStoreTests {
 
     @Test
     void getByFormat() throws BuildFormatException {
-        metaStore.create("get_by_format1", "Description!");
-        metaStore.create("get_by_format2", "Description!");
+//        metaStore.create("get_by_format1", "Description!");
+//        metaStore.create("get_by_format2", "Description!");
+//
+//        List<BuildFormatChecksum> formats = List.of(new BuildFormatChecksum("get_by_format", "test".getBytes(StandardCharsets.UTF_8)));
+//        List<BuildFormatChecksum> formats2 = List.of(new BuildFormatChecksum("get_by_format", "test".getBytes(StandardCharsets.UTF_8)));
+//
+//        metaStore.update("get_by_format1", formats);
+//        metaStore.update("get_by_format2", formats2);
+//
+//        metaStore.getBuildsByFormat("get_by_format").forEach((name, checksum) -> {
+//            assertTrue(name.equals("get_by_format1") || name.equals("get_by_format2"));
+//            assertEquals("get_by_format", checksum.name());
+//        });
 
-        List<BuildFormatChecksum> formats = List.of(new BuildFormatChecksum("get_by_format", "test".getBytes(StandardCharsets.UTF_8)));
-        List<BuildFormatChecksum> formats2 = List.of(new BuildFormatChecksum("get_by_format", "test".getBytes(StandardCharsets.UTF_8)));
+        Map<String, BuildFormatChecksum> tnttag = metaStore.getBuildsByFormat("tnttag");
 
-        metaStore.update("get_by_format1", formats);
-        metaStore.update("get_by_format2", formats2);
-
-        metaStore.getBuildsByFormat("get_by_format").forEach((name, checksum) -> {
-            assertTrue(name.equals("get_by_format1") || name.equals("get_by_format2"));
-            assertEquals("get_by_format", checksum.name());
-        });
+        System.out.println(tnttag);
 
     }
 

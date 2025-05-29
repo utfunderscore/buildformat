@@ -29,6 +29,8 @@ public class PostgresMetaStore implements BuildMetaStore {
 
     public PostgresMetaStore(@NotNull PostgresDatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
+        System.setProperty("org.jooq.no-logo", "true");
+        System.setProperty("org.jooq.no-tips", "true");
     }
 
     @Override

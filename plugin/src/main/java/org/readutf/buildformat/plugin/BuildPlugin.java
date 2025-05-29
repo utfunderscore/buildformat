@@ -33,9 +33,6 @@ public class BuildPlugin extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
-        System.setProperty("org.jooq.no-logo", "true");
-        System.setProperty("org.jooq.no-tips", "true");
-
         HikariDataSource dataSource = getDatabase(
                 getConfig().getString("database.host", "localhost"),
                 getConfig().getString("database.port", "5432"),
