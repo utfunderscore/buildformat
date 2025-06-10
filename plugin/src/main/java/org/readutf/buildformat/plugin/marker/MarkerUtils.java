@@ -4,16 +4,11 @@ import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BaseBlock;
 
-import java.util.ArrayList;
+import com.sk89q.worldedit.world.block.BlockTypes;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
-import org.bukkit.Location;
 import org.enginehub.linbus.tree.LinCompoundTag;
 import org.enginehub.linbus.tree.LinListTag;
 import org.enginehub.linbus.tree.LinStringTag;
@@ -26,9 +21,9 @@ import org.readutf.buildformat.common.markers.Position;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MarkerScanner {
+public class MarkerUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(MarkerScanner.class);
+    private static final Logger logger = LoggerFactory.getLogger(MarkerUtils.class);
 
     public static @NotNull List<Marker> scan(@NotNull Clipboard clipboard) {
 
@@ -76,6 +71,15 @@ public class MarkerScanner {
         logger.info("Scanning {} markers in {} ms", markers.size(), (after - start));
 
         return markers;
+    }
+
+    public static void removeMarkerBlocks(@NotNull Clipboard clipboard, @NotNull List<Marker> markers) {
+
+        for (Marker marker : markers) {
+            Position position = marker.origin();
+            clipboard.setBlock(position.getBlockX(), position.getBlockY(), position.getBlockZ(), BlockTypes.AIR.getDefaultState());
+        }
+
     }
 
     private @Nullable
