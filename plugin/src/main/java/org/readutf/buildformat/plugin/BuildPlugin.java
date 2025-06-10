@@ -3,9 +3,11 @@ package org.readutf.buildformat.plugin;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import dev.rollczi.litecommands.bukkit.LiteBukkitFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.exception.BuildFormatException;
@@ -33,18 +35,12 @@ public class BuildPlugin extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
-        HikariDataSource dataSource = getDatabase(
-                getConfig().getString("database.host", "localhost"),
-                getConfig().getString("database.port", "5432"),
-                getConfig().getString("database.database", "buildformat"),
-                getConfig().getString("database.user", ""),
-                getConfig().getString("database.password", "")
-        );
+        HikariDataSource dataSource = getDatabase();
 
         S3Client awsClient = getAwsClient(
-                getConfig().getString("aws.accessKey", ""),
-                getConfig().getString("aws.secretKey", ""),
-                getConfig().getString("aws.endpoint", "")
+                getConfigString("AWS_ACCESS_KEY", "aws.accessKey"),
+                getConfigString("AWS_SECRET_KEY", "aws.secretKey"),
+                getConfigString("AWS_ENDPOINT", "aws.endpoint")
         );
 
         String bucket = getConfig().getString("aws.bucket", "buildformat");
@@ -67,13 +63,13 @@ public class BuildPlugin extends JavaPlugin {
         }
     }
 
-    private @NotNull HikariDataSource getDatabase(
-            @NotNull String host,
-            @NotNull String port,
-            @NotNull String database,
-            @NotNull String user,
-            @NotNull String password
-    ) {
+    private @NotNull HikariDataSource getDatabase() {
+        String host = getConfigString("DATABASE_URL", "database.host");
+        String port = getConfigString("DATABASE_PORT", "database.port");
+        String database = getConfigString("DATABASE_NAME", "database.database");
+        String user = getConfigString("DATABASE_USER", "database.user");
+        String password = getConfigString("DATABASE_PASSWORD", "database.password");
+
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl("jdbc:postgresql://%s:%s/%s".formatted(host, port, database));
         if (!password.isEmpty() && !user.isEmpty()) {
@@ -101,6 +97,14 @@ public class BuildPlugin extends JavaPlugin {
                 .region(Region.of("auto"))
                 .serviceConfiguration(serviceConfiguration)
                 .build();
+    }
+
+    public String getConfigString(String envVar, String configPath) {
+        String value = System.getenv(envVar);
+        if (value == null || value.isEmpty()) {
+            value = getConfig().getString(configPath, "");
+        }
+        return value;
     }
 
 }
