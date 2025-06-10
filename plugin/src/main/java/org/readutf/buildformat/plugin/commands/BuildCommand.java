@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -40,7 +39,7 @@ import org.readutf.buildformat.common.schematic.BuildSchematic;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.formats.BuildFormatCache;
-import org.readutf.buildformat.plugin.marker.MarkerScanner;
+import org.readutf.buildformat.plugin.marker.MarkerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,7 +164,8 @@ public class BuildCommand {
         byte[] data = outputStream.toByteArray();
 
         player.sendMessage(Component.text("Scanning markers..."));
-        List<Marker> markers = MarkerScanner.scan(clipboard);
+        List<Marker> markers = MarkerUtils.scan(clipboard);
+        MarkerUtils.removeMarkerBlocks(clipboard, markers);
 
         List<BuildFormatChecksum> checksums = getBuildFormatChecksums(player, formatNames, markers);
         if (checksums == null) return;
