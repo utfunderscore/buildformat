@@ -118,7 +118,7 @@ public class BuildFormatManager {
                 if(actualType == Marker.class) {
                     args[i] = new ArrayList<>(matching);
                 } else if (actualType == Position.class) {
-                    args[i] = matching.stream().map(Marker::position).toList();
+                    args[i] = matching.stream().map(Marker::origin).toList();
                 } else {
                     throw new BuildFormatException("Invalid list parameter type: " + actualType.getTypeName());
                 }
@@ -127,7 +127,7 @@ public class BuildFormatManager {
             } else if (isMarker) {
                 args[i] = matching.getFirst();
             } else if (isPosition) {
-                args[i] = matching.getFirst().position();
+                args[i] = matching.getFirst().origin();
             } else {
                 throw new BuildFormatException("Invalid parameter type: " + parameterType.getName());
             }
