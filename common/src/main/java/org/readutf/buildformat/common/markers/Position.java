@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Represents a 3D position with x, y, z coordinates.
+ * Represents a 3D origin with x, y, z coordinates.
  */
 public record Position(
         double x,
@@ -12,15 +12,27 @@ public record Position(
         double z
 ) {
     /**
-     * The zero position constant (0, 0, 0).
+     * The zero origin constant (0, 0, 0).
      */
     public static final Position ZERO = new Position(0, 0, 0);
 
+    public int getBlockX() {
+        return (int) Math.floor(x);
+    }
+
+    public int getBlockY() {
+        return (int) Math.floor(y);
+    }
+
+    public int getBlockZ() {
+        return (int) Math.floor(z);
+    }
+
     /**
-     * Adds the given position to this position.
+     * Adds the given origin to this origin.
      *
-     * @param position the position to add (must not be null)
-     * @return the sum of this position and the given position
+     * @param position the origin to add (must not be null)
+     * @return the sum of this origin and the given origin
      */
     @Contract(pure = true)
     public @NotNull Position add(@NotNull Position position) {
@@ -32,10 +44,10 @@ public record Position(
     }
 
     /**
-     * Subtracts the given position from this position.
+     * Subtracts the given origin from this origin.
      *
-     * @param position the position to subtract (must not be null)
-     * @return the difference of this position and the given position
+     * @param position the origin to subtract (must not be null)
+     * @return the difference of this origin and the given origin
      */
     @Contract(pure = true)
     public @NotNull Position subtract(@NotNull Position position) {
@@ -47,10 +59,10 @@ public record Position(
     }
 
     /**
-     * Multiplies this position by a scalar value.
+     * Multiplies this origin by a scalar value.
      *
      * @param scalar the scalar to multiply by
-     * @return a new position scaled by the given scalar
+     * @return a new origin scaled by the given scalar
      */
     @Contract(pure = true)
     public @NotNull Position multiply(double scalar) {
@@ -62,10 +74,10 @@ public record Position(
     }
 
     /**
-     * Divides this position by a scalar value.
+     * Divides this origin by a scalar value.
      *
      * @param scalar the scalar to divide by
-     * @return a new position scaled by the reciprocal of the scalar
+     * @return a new origin scaled by the reciprocal of the scalar
      */
     @Contract(pure = true)
     public @NotNull Position divide(double scalar) {
@@ -77,10 +89,10 @@ public record Position(
     }
 
     /**
-     * Multiplies this position by another position, element-wise.
+     * Multiplies this origin by another origin, element-wise.
      *
-     * @param position the position to multiply by (must not be null)
-     * @return a new position with each component multiplied
+     * @param position the origin to multiply by (must not be null)
+     * @return a new origin with each component multiplied
      */
     @Contract(pure = true)
     public @NotNull Position multiply(@NotNull Position position) {
@@ -92,10 +104,10 @@ public record Position(
     }
 
     /**
-     * Divides this position by another position, element-wise.
+     * Divides this origin by another origin, element-wise.
      *
-     * @param position the position to divide by (must not be null)
-     * @return a new position with each component divided
+     * @param position the origin to divide by (must not be null)
+     * @return a new origin with each component divided
      */
     @Contract(pure = true)
     public @NotNull Position divide(@NotNull Position position) {
