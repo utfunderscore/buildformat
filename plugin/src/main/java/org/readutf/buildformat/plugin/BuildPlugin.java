@@ -20,6 +20,8 @@ import org.readutf.buildformat.plugin.formats.BuildFormatCache;
 import org.readutf.buildformat.s3.S3BuildSchematicStore;
 import org.readutf.buildstore.PostgresDatabaseManager;
 import org.readutf.buildstore.PostgresMetaStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -28,6 +30,8 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 
 public class BuildPlugin extends JavaPlugin {
 
+
+    private static final Logger log = LoggerFactory.getLogger(BuildPlugin.class);
 
     @Override
     public void onEnable() {
@@ -71,7 +75,9 @@ public class BuildPlugin extends JavaPlugin {
         String password = getConfigString("DATABASE_PASSWORD", "database.password");
 
         HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setJdbcUrl("jdbc:postgresql://%s:%s/%s".formatted(host, port, database));
+        String url = "jdbc:postgresql://%s:%s/%s".formatted(host, port, database);
+        log.info("Connecting to database at: {}", url);
+        hikariConfig.setJdbcUrl(url);
         if (!password.isEmpty() && !user.isEmpty()) {
             hikariConfig.setPassword(password);
             hikariConfig.setUsername(user);
