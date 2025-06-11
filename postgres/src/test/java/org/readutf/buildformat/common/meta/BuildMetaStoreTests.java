@@ -15,31 +15,42 @@ import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildstore.PostgresDatabaseManager;
 import org.readutf.buildstore.PostgresMetaStore;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @TestInstance(org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS)
+@Testcontainers
 public class BuildMetaStoreTests {
+
+    @Container
+    private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14")
+            .withDatabaseName("builds")
+            .withUsername("test")
+            .withPassword("test");
 
     private PostgresMetaStore metaStore;
 
     @BeforeAll
     void setUp() {
+        // Make sure the container is started
+        postgres.start();
 
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:postgresql://185.227.70.59:5432/builds");
-        config.setUsername("readutf");
-        config.setPassword("w4vA9mtVoC79eUoWKrsv0XycHExRiYRWTzrzQgwc65CP3g2GBgPOY2o9WXRQaZq8");
+        config.setJdbcUrl(postgres.getJdbcUrl());
+        config.setUsername(postgres.getUsername());
+        config.setPassword(postgres.getPassword());
         config.addDataSourceProperty("cachePrepStmts", "true");
 
         HikariDataSource ds = new HikariDataSource(config);
 
-//        Flyway flyway = Flyway.configure()
-//                .cleanDisabled(false)
-//                .dataSource(ds)
-//                .load();
-//
-//        flyway.clean();
-//        flyway.migrate();
+        Flyway flyway = Flyway.configure()
+                .cleanDisabled(false)
+                .dataSource(ds)
+                .load();
 
+        flyway.clean();
+        flyway.migrate();
 
         metaStore = new PostgresMetaStore(new PostgresDatabaseManager(ds));
     }
