@@ -39,7 +39,7 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Build with Gradle
-      run: ./gradlew build --no-daemon --stacktrace
+      run: ./gradlew shadowJar --no-daemon --stacktrace
 
     - name: List all JAR files
       run: find . -name "*.jar" -type f -not -path "*/build/tmp/*" -not -path "*/run/*"
