@@ -49,10 +49,7 @@ jobs:
       with:
         name: build-artifacts
         path: |
-          common/build/libs/*.jar
           plugin/build/libs/*.jar
-          postgres/build/libs/*.jar
-          s3/build/libs/*.jar
 
     - name: Set Release Name
       id: set_release_name
