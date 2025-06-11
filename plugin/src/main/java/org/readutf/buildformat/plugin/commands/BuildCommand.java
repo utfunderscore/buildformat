@@ -111,9 +111,6 @@ public class BuildCommand {
     @Execute(name = "save")
     public void save(@Context Player player, @Arg("name") String originalName, @Flag("-f") boolean force, @Varargs BuildType... buildType) throws IOException {
         String name = originalName.toLowerCase();
-
-        System.out.println(Thread.currentThread().getName());
-
         @Nullable BuildMeta meta;
         try {
             meta = buildMetaStore.getByName(name);
