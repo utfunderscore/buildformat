@@ -62,7 +62,7 @@ public class PostgresMetaStore implements BuildMetaStore {
             Result<BuildmetaFormatRecord> formatRecords = ctx.fetch(Tables.BUILDMETA_FORMAT, Tables.BUILDMETA_FORMAT.BUILDMETA_ID.eq(buildmetaRecord.getId()));
 
             List<BuildFormatChecksum> checksums = formatRecords.map(record ->
-                    new BuildFormatChecksum(record.getName(), record.getChecksum().getBytes(StandardCharsets.UTF_8))
+                    new BuildFormatChecksum(record.getName(), Base64.getDecoder().decode(record.getChecksum().getBytes(StandardCharsets.UTF_8)))
             );
 
             return new BuildMeta(buildmetaRecord.getName(), buildmetaRecord.getDescription(), buildmetaRecord.getVersion(), tags, checksums);
