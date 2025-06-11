@@ -76,6 +76,7 @@ public class BuildPlugin extends JavaPlugin {
 
         HikariConfig hikariConfig = new HikariConfig();
         String url = "jdbc:postgresql://%s:%s/%s".formatted(host, port, database);
+
         log.info("Connecting to database at: {}", url);
         hikariConfig.setJdbcUrl(url);
         if (!password.isEmpty() && !user.isEmpty()) {
