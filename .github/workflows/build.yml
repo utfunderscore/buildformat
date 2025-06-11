@@ -14,6 +14,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
@@ -37,7 +39,7 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Build with Gradle
-      run: ./gradlew build -x test
+      run: ./gradlew build
 
     - name: List all JAR files
       run: find . -name "*.jar" -type f -not -path "*/build/tmp/*" -not -path "*/run/*"
