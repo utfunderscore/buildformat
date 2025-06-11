@@ -13,7 +13,7 @@ version = "1.0.0-SNAPSHOT"
 description = "Test plugin for paperweight-userdev"
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(23)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
 repositories {
@@ -44,7 +44,7 @@ tasks.compileJava {
 
 tasks {
     compileJava {
-        options.release = 23
+        options.release = 21
     }
     javadoc {
         options.encoding = Charsets.UTF_8.name()
