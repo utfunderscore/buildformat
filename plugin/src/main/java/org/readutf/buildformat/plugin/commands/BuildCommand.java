@@ -164,7 +164,7 @@ public class BuildCommand {
         List<Marker> markers = MarkerUtils.scan(clipboard);
         MarkerUtils.removeMarkerBlocks(clipboard, markers);
 
-        List<BuildFormatChecksum> checksums = getBuildFormatChecksums(player, formatNames, markers);
+        List<BuildFormatChecksum> checksums = testBuildRequirements(player, formatNames, markers);
         if (checksums == null) return;
 
         player.sendMessage(Component.text("Uploading build file..."));
@@ -181,7 +181,7 @@ public class BuildCommand {
 
     }
 
-    private @Nullable List<BuildFormatChecksum> getBuildFormatChecksums(Player player, List<String> formatNames, List<Marker> markers) {
+    private @Nullable List<BuildFormatChecksum> testBuildRequirements(Player player, List<String> formatNames, List<Marker> markers) {
         List<BuildFormatChecksum> checksums = new ArrayList<>();
 
         for (String formatName : formatNames) {

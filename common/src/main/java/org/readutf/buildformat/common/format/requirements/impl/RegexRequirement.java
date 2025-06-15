@@ -11,4 +11,9 @@ public record RegexRequirement(
     public String getRegex() {
         return regex;
     }
+
+    @Override
+    public String getExplanation() {
+        return "At least one marker matching the regex '" + regex + "' is required.";
+    }
 }
