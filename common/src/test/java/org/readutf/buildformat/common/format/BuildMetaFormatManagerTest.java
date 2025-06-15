@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
@@ -161,6 +164,19 @@ class BuildMetaFormatManagerTest {
 
         List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "simple-format.json"));
         assertEquals(validators, loadedValidators);
+    }
+
+    @Test
+    void testSerialization() throws BuildFormatException, JsonProcessingException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String json = objectMapper.writeValueAsString(BuildFormatManager.getValidators(TestFormat.class));
+
+        System.out.println(json);
+
+        objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, RequirementData.class));
+
     }
 
 }
