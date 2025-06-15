@@ -9,4 +9,6 @@ public interface RequirementType {
     @JsonIgnore
     String getRegex();
 
+    String getExplanation();
+
 }
