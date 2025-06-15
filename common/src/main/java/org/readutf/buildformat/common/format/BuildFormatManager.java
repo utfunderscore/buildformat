@@ -2,6 +2,7 @@ package org.readutf.buildformat.common.format;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,10 +17,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
+import org.readutf.buildformat.common.format.requirements.RequirementData;
+import org.readutf.buildformat.common.format.requirements.impl.ExactRequirement;
+import org.readutf.buildformat.common.format.requirements.impl.RegexRequirement;
+import org.readutf.buildformat.common.format.requirements.impl.StartsWithRequirement;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.markers.Position;
 import org.readutf.buildformat.common.format.requirements.Requirement;
@@ -29,9 +35,12 @@ import org.slf4j.LoggerFactory;
 
 public class BuildFormatManager {
 
-    private @NotNull static final Logger logger = LoggerFactory.getLogger(BuildFormatManager.class);
-    private @NotNull static final Map<Class<? extends BuildFormat>, List<RequirementData>> generatedRequirements = new HashMap<>();
-    private @NotNull static final ObjectMapper objectMapper = new ObjectMapper();
+    private @NotNull
+    static final Logger logger = LoggerFactory.getLogger(BuildFormatManager.class);
+    private @NotNull
+    static final Map<Class<? extends BuildFormat>, List<RequirementData>> generatedRequirements = new HashMap<>();
+    private @NotNull
+    static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Generates the requirements for a given build type and build class.
@@ -61,13 +70,20 @@ public class BuildFormatManager {
                 throw new BuildFormatException("Requirement annotation not found on parameter: " + parameter.getName());
             }
 
-            String regex = getRegex(requirement);
             int minimum = requirement.minimum();
             if (minimum < 1) {
                 throw new BuildFormatException("Minimum value must be greater than or equal to 1");
             }
 
-            requirements.add(new RequirementData(regex, minimum));
+            if (!requirement.regex().isEmpty()) {
+                requirements.add(new RequirementData(new RegexRequirement(requirement.regex()), minimum));
+            } else if (!requirement.startsWith().isEmpty()) {
+                requirements.add(new RequirementData(new StartsWithRequirement(requirement.startsWith()), minimum));
+            } else if (!requirement.name().isEmpty()) {
+                requirements.add(new RequirementData(new ExactRequirement(requirement.name()), minimum));
+            } else {
+                throw new BuildFormatException("Requirement annotation must have at least one of startsWith, endsWith or regex");
+            }
         }
 
         generatedRequirements.put(buildClass, requirements);
@@ -103,9 +119,9 @@ public class BuildFormatManager {
             boolean isMarker = parameterType == Marker.class;
             boolean isPosition = parameterType == Position.class;
 
-            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.regex())).toList();
+            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.type().getRegex())).toList();
 
-            int minumum = requirement.minimum();
+            int minumum = requirement.minimumAmount();
             if (isMarker || isPosition) minumum = Math.max(1, minumum);
 
             if (matching.size() < minumum) {
@@ -115,7 +131,7 @@ public class BuildFormatManager {
             if (parameterType == List.class) {
                 ParameterizedType listType = (ParameterizedType) parameter.getParameterizedType();
                 Type actualType = listType.getActualTypeArguments()[0];
-                if(actualType == Marker.class) {
+                if (actualType == Marker.class) {
                     args[i] = new ArrayList<>(matching);
                 } else if (actualType == Position.class) {
                     args[i] = matching.stream().map(Marker::origin).toList();
@@ -162,12 +178,12 @@ public class BuildFormatManager {
         for (RequirementData requirement : requirementData) {
             logger.info("Markers: {}", markers);
 
-            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.regex())).toList();
+            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.type().getRegex())).toList();
 
-            int minumum = requirement.minimum();
+            int minimum = requirement.minimumAmount();
 
-            if (matching.size() < minumum) {
-                throw new BuildFormatException("Not enough markers found for requirement: " + requirement.regex());
+            if (matching.size() < minimum) {
+                throw new BuildFormatException("Not enough markers found for requirement: " + requirement.type().getRegex());
             }
         }
     }
