@@ -23,13 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
-import org.readutf.buildformat.common.format.requirements.impl.ExactRequirement;
-import org.readutf.buildformat.common.format.requirements.impl.RegexRequirement;
-import org.readutf.buildformat.common.format.requirements.impl.StartsWithRequirement;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.markers.Position;
 import org.readutf.buildformat.common.format.requirements.Requirement;
-import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,15 +71,12 @@ public class BuildFormatManager {
                 throw new BuildFormatException("Minimum value must be greater than or equal to 1");
             }
 
-            if (!requirement.regex().isEmpty()) {
-                requirements.add(new RequirementData(new RegexRequirement(requirement.regex()), minimum));
-            } else if (!requirement.startsWith().isEmpty()) {
-                requirements.add(new RequirementData(new StartsWithRequirement(requirement.startsWith()), minimum));
-            } else if (!requirement.name().isEmpty()) {
-                requirements.add(new RequirementData(new ExactRequirement(requirement.name()), minimum));
-            } else {
-                throw new BuildFormatException("Requirement annotation must have at least one of startsWith, endsWith or regex");
-            }
+            requirements.add(new RequirementData(
+                    requirement.name().isEmpty() ? null : requirement.name(),
+                    requirement.startsWith().isEmpty() ? null : requirement.startsWith(),
+                    requirement.endsWith().isEmpty() ? null : requirement.endsWith(),
+                    minimum
+            ));
         }
 
         generatedRequirements.put(buildClass, requirements);
@@ -119,7 +112,7 @@ public class BuildFormatManager {
             boolean isMarker = parameterType == Marker.class;
             boolean isPosition = parameterType == Position.class;
 
-            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.type().getRegex())).toList();
+            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.getRegex())).toList();
 
             int minumum = requirement.minimumAmount();
             if (isMarker || isPosition) minumum = Math.max(1, minumum);
@@ -138,7 +131,6 @@ public class BuildFormatManager {
                 } else {
                     throw new BuildFormatException("Invalid list parameter type: " + actualType.getTypeName());
                 }
-
 
             } else if (isMarker) {
                 args[i] = matching.getFirst();
@@ -178,41 +170,18 @@ public class BuildFormatManager {
         for (RequirementData requirement : requirementData) {
             logger.info("Markers: {}", markers);
 
-            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.type().getRegex())).toList();
+            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.getRegex())).toList();
 
             int minimum = requirement.minimumAmount();
 
             if (matching.size() < minimum) {
-                throw new BuildFormatException("Not enough markers found for requirement: " + requirement.type().getRegex());
+                throw new BuildFormatException("Build did not meet requirement: " + requirement.getExplanation());
             }
         }
     }
 
     public static byte[] generateChecksum(List<@NotNull RequirementData> requirementData) {
         return ByteBuffer.allocate(4).putInt(requirementData.hashCode()).array();
-    }
-
-    /**
-     * Converts a requirement annotation to a regex string.
-     *
-     * @param requirement The requirement annotation.
-     * @return The regex string.
-     */
-    private static @NotNull String getRegex(@NotNull Requirement requirement) throws BuildFormatException {
-        @NotNull String regex;
-        if (!requirement.name().isEmpty()) {
-            return "\\b" + requirement.name() + "\\b";
-        }
-        if (!requirement.endsWith().isEmpty()) {
-            regex = "^" + requirement.startsWith() + ".*" + requirement.endsWith() + "$";
-        } else if (!requirement.startsWith().isEmpty()) {
-            regex = "^" + requirement.startsWith() + ".*$";
-        } else if (!requirement.regex().isEmpty()) {
-            regex = requirement.regex();
-        } else {
-            throw new BuildFormatException("Requirement annotation must have at least one of startsWith, endsWith or regex");
-        }
-        return regex;
     }
 
     /**
