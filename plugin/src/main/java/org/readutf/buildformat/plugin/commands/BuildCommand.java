@@ -162,7 +162,7 @@ public class BuildCommand {
 
         player.sendMessage(Component.text("Scanning markers..."));
         List<Marker> markers = MarkerUtils.scan(clipboard);
-        MarkerUtils.removeMarkerBlocks(clipboard, markers);
+//        MarkerUtils.removeMarkerBlocks(clipboard, markers);
 
         List<BuildFormatChecksum> checksums = testBuildRequirements(player, formatNames, markers);
         if (checksums == null) return;
