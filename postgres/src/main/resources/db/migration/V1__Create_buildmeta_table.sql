@@ -1,5 +1,3 @@
-create database builds;
-
 create table buildmeta
 (
     id serial primary key,
