@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.readutf.buildformat"
-version = "1.0.16"
+version = "1.0.17"
 
 repositories {
     mavenCentral()
@@ -27,6 +27,18 @@ subprojects {
             create<MavenPublication>("mavenJava") {
                 from(components["java"])
             }
+        }
+
+        repositories {
+            maven {
+                name = "utfMvn"
+                url = uri("https://mvn.utf.lol/releases")
+                credentials {
+                    username = System.getenv("UTF_MVN_USER")
+                    password = System.getenv("UTF_MVN_PASS")
+                }
+            }
+
         }
     }
 }
