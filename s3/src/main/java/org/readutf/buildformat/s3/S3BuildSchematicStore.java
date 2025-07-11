@@ -1,6 +1,8 @@
 package org.readutf.buildformat.s3;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
@@ -8,23 +10,28 @@ import org.readutf.buildformat.common.schematic.BuildSchematic;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectVersionsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectVersionsResponse;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
+import software.amazon.awssdk.core.async.AsyncResponseTransformer;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.transfer.s3.S3TransferManager;
+import software.amazon.awssdk.transfer.s3.model.*;
+import software.amazon.awssdk.transfer.s3.progress.LoggingTransferListener;
 
 public class S3BuildSchematicStore implements BuildSchematicStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BuildSchematicStore.class);
 
-    private @NotNull final S3Client s3Client;
+    private @NotNull final S3TransferManager transferManager;
     private @NotNull final String bucketName;
 
-    public S3BuildSchematicStore(@NotNull S3Client s3Client, @NotNull String bucketName) {
-        this.s3Client = s3Client;
+    public S3BuildSchematicStore(@NotNull S3AsyncClient s3Client, @NotNull String bucketName) {
+        this.transferManager = S3TransferManager.builder()
+                .s3Client(s3Client)
+                .build();
         this.bucketName = bucketName;
     }
 
@@ -39,18 +46,21 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
         // Create body
         byte[] buildData = buildSchematic.buildData();
 
-        PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(bucketName)
-                .key("%s.schem".formatted(buildSchematic.buildName()))
+        UploadRequest uploadRequest = UploadRequest.builder()
+                .putObjectRequest(builder -> builder
+                        .bucket(bucketName)
+                        .key("%s.schem".formatted(buildSchematic.buildName()))
+                )
+                .addTransferListener(LoggingTransferListener.create())
+                .requestBody(AsyncRequestBody.fromBytes(buildData))
                 .build();
 
-        RequestBody requestBody = RequestBody.fromBytes(buildData);
-
         try {
-            s3Client.putObject(request, requestBody);
-        } catch (software.amazon.awssdk.awscore.exception.AwsServiceException e) {
+            CompletableFuture<CompletedUpload> future = transferManager.upload(uploadRequest).completionFuture();
+            future.join();
+        } catch (AwsServiceException e) {
             throw new BuildFormatException("Failed to save build schematic to S3", e);
-        } catch (software.amazon.awssdk.core.exception.SdkClientException e) {
+        } catch (SdkClientException e) {
             throw new RuntimeException(e);
         }
 
@@ -64,32 +74,21 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
             throw new BuildFormatException("Build name must be alphanumeric + dashes and underscores");
         }
 
-        try {
-            var getObjectRequest = GetObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key("%s.schem".formatted(name))
-                    .build();
+        DownloadRequest<ResponseBytes<GetObjectResponse>> downloadRequest =
+                DownloadRequest.builder()
+                        .getObjectRequest(req -> req.bucket(bucketName).key("%s.schem".formatted(name)))
+                        .responseTransformer(AsyncResponseTransformer.toBytes())
+                        .build();
 
-            var response = s3Client.getObject(getObjectRequest);
-            byte[] data = response.readAllBytes();
+        CompletedDownload<ResponseBytes<GetObjectResponse>> downloaded = transferManager.download(downloadRequest).completionFuture().join();
 
-            return new BuildSchematic(name, data);
-        } catch (NoSuchKeyException e) {
-            return null; // Schematic not found
-        } catch (Exception e) {
-            throw new BuildFormatException("Failed to load build schematic from S3", e);
-        }
+        byte[] byteArray = downloaded.result().asByteArray();
+
+        return new BuildSchematic(name, byteArray);
     }
 
     @Override
     public List<String> history(String name) throws BuildFormatException {
-
-        ListObjectVersionsRequest listObjectVersionsRequest = ListObjectVersionsRequest.builder()
-                .bucket(bucketName)
-                .prefix("%s.schem".formatted(name)) // Optional: filter versions by object key prefix
-                .build();
-
-        ListObjectVersionsResponse versionsResponse = s3Client.listObjectVersions(listObjectVersionsRequest);
 
         return List.of();
     }
