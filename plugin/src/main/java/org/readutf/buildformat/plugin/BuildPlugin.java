@@ -10,6 +10,7 @@ import java.net.URI;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
@@ -25,11 +26,9 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.*;
 
 public class BuildPlugin extends JavaPlugin {
-
 
     private static final Logger log = LoggerFactory.getLogger(BuildPlugin.class);
 
@@ -39,15 +38,10 @@ public class BuildPlugin extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         saveConfig();
 
+        String bucket = getConfigValue("AWS_BUCKET", "aws.bucket");
+
         HikariDataSource dataSource = getDatabase();
-
-        S3Client awsClient = getAwsClient(
-                getConfigString("AWS_ACCESS_KEY", "aws.accessKey"),
-                getConfigString("AWS_SECRET_KEY", "aws.secretKey"),
-                getConfigString("AWS_ENDPOINT", "aws.endpoint")
-        );
-
-        String bucket = getConfig().getString("aws.bucket", "buildformat");
+        S3AsyncClient awsClient = getAwsClient();
 
         PostgresDatabaseManager databaseManager = new PostgresDatabaseManager(dataSource);
         BuildMetaStore buildMetaStore = new PostgresMetaStore(databaseManager);
@@ -68,18 +62,18 @@ public class BuildPlugin extends JavaPlugin {
     }
 
     private @NotNull HikariDataSource getDatabase() {
-        String host = getConfigString("DATABASE_URL", "database.host");
-        String port = getConfigString("DATABASE_PORT", "database.port");
-        String database = getConfigString("DATABASE_NAME", "database.database");
-        String user = getConfigString("DATABASE_USER", "database.user");
-        String password = getConfigString("DATABASE_PASSWORD", "database.password");
+        String host = getConfigValue("DATABASE_URL", "database.host");
+        String port = getConfigValue("DATABASE_PORT", "database.port");
+        String database = getConfigValue("DATABASE_NAME", "database.database");
+        String user = getConfigValue("DATABASE_USER", "database.user");
+        String password = getConfigValue("DATABASE_PASSWORD", "database.password");
 
         HikariConfig hikariConfig = new HikariConfig();
         String url = "jdbc:postgresql://%s:%s/%s".formatted(host, port, database);
 
         log.info("Connecting to database at: {}", url);
         hikariConfig.setJdbcUrl(url);
-        if (!password.isEmpty() && !user.isEmpty()) {
+        if (password != null && user != null) {
             hikariConfig.setPassword(password);
             hikariConfig.setUsername(user);
         }
@@ -88,30 +82,40 @@ public class BuildPlugin extends JavaPlugin {
         return new HikariDataSource(hikariConfig);
     }
 
-    public S3Client getAwsClient(@NotNull String accessKey, @NotNull String secretKey, @NotNull String endpoint) {
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(
-                accessKey,
-                secretKey
-        );
+    public S3AsyncClient getAwsClient() {
 
-        S3Configuration serviceConfiguration = S3Configuration.builder()
-                .pathStyleAccessEnabled(true)
-                .build();
+        String accessKey = getConfigValue("AWS_ACCESS_KEY", "aws.accessKey");
+        String secretKey = getConfigValue("AWS_SECRET_KEY", "aws.secretKey");
+        String endpoint = getConfigValue("AWS_ENDPOINT", "aws.endpoint");
+        String region = getConfigValue("AWS_REGION", "aws.region");
 
-        return S3Client.builder()
-                .endpointOverride(URI.create(endpoint))
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .region(Region.of("auto"))
-                .serviceConfiguration(serviceConfiguration)
-                .build();
-    }
+        System.out.println("Using AWS credentials: " + accessKey + ", endpoint: " + endpoint + ", region: " + region);
 
-    public String getConfigString(String envVar, String configPath) {
-        String value = System.getenv(envVar);
-        if (value == null || value.isEmpty()) {
-            value = getConfig().getString(configPath, "");
+        boolean pathStyleAccessEnabled = getConfig().getBoolean("aws.pathStyleAccessEnabled", true);
+        if (accessKey == null || secretKey == null) {
+            throw new RuntimeException("AWS credentials are not set in the configuration.");
         }
-        return value;
+
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
+
+        S3Configuration serviceConfiguration =
+                S3Configuration.builder().pathStyleAccessEnabled(pathStyleAccessEnabled).build();
+
+        S3AsyncClientBuilder builder = S3AsyncClient.builder()
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(serviceConfiguration)
+                .region(Region.US_EAST_1);
+
+
+        if(endpoint != null) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+        return builder.build();
     }
 
+    public @Nullable String getConfigValue(String envKey, String confKey) {
+        String env = System.getenv(envKey);
+        if (env != null && !env.isEmpty()) return env;
+        return getConfig().getString(confKey, null);
+    }
 }
