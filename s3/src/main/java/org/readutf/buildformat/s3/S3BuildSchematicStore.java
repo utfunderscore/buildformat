@@ -10,11 +10,9 @@ import org.readutf.buildformat.common.schematic.BuildSchematic;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
-import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
@@ -29,9 +27,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
     private @NotNull final String bucketName;
 
     public S3BuildSchematicStore(@NotNull S3AsyncClient s3Client, @NotNull String bucketName) {
-        this.transferManager = S3TransferManager.builder()
-                .s3Client(s3Client)
-                .build();
+        this.transferManager = S3TransferManager.builder().s3Client(s3Client).build();
         this.bucketName = bucketName;
     }
 
@@ -47,21 +43,18 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
         byte[] buildData = buildSchematic.buildData();
 
         UploadRequest uploadRequest = UploadRequest.builder()
-                .putObjectRequest(builder -> builder
-                        .bucket(bucketName)
-                        .key("%s.schem".formatted(buildSchematic.buildName()))
-                )
+                .putObjectRequest(
+                        builder -> builder.bucket(bucketName).key("%s.schem".formatted(buildSchematic.buildName())))
                 .addTransferListener(LoggingTransferListener.create())
                 .requestBody(AsyncRequestBody.fromBytes(buildData))
                 .build();
 
         try {
-            CompletableFuture<CompletedUpload> future = transferManager.upload(uploadRequest).completionFuture();
+            CompletableFuture<CompletedUpload> future =
+                    transferManager.upload(uploadRequest).completionFuture();
             future.join();
-        } catch (AwsServiceException e) {
+        } catch (Exception e) {
             throw new BuildFormatException("Failed to save build schematic to S3", e);
-        } catch (SdkClientException e) {
-            throw new RuntimeException(e);
         }
 
         LOGGER.info("Saved build schematic {} to S3 bucket {}", buildSchematic.buildName(), bucketName);
@@ -74,13 +67,13 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
             throw new BuildFormatException("Build name must be alphanumeric + dashes and underscores");
         }
 
-        DownloadRequest<ResponseBytes<GetObjectResponse>> downloadRequest =
-                DownloadRequest.builder()
-                        .getObjectRequest(req -> req.bucket(bucketName).key("%s.schem".formatted(name)))
-                        .responseTransformer(AsyncResponseTransformer.toBytes())
-                        .build();
+        DownloadRequest<ResponseBytes<GetObjectResponse>> downloadRequest = DownloadRequest.builder()
+                .getObjectRequest(req -> req.bucket(bucketName).key("%s.schem".formatted(name)))
+                .responseTransformer(AsyncResponseTransformer.toBytes())
+                .build();
 
-        CompletedDownload<ResponseBytes<GetObjectResponse>> downloaded = transferManager.download(downloadRequest).completionFuture().join();
+        CompletedDownload<ResponseBytes<GetObjectResponse>> downloaded =
+                transferManager.download(downloadRequest).completionFuture().join();
 
         byte[] byteArray = downloaded.result().asByteArray();
 
@@ -92,5 +85,4 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
 
         return List.of();
     }
-
 }
