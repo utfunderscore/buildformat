@@ -31,7 +31,7 @@ dependencies {
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core")
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit") { isTransitive = false }
 
-    implementation(project(":postgres"))
+    implementation(project(":sql"))
     implementation(project(":s3"))
 
 
