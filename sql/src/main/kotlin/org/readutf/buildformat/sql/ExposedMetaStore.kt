@@ -1,8 +1,10 @@
 package org.readutf.buildformat.sql
 
+import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -16,7 +18,13 @@ import org.readutf.buildformat.common.meta.BuildMeta
 import org.readutf.buildformat.common.meta.BuildMetaStore
 import java.util.Base64
 
-class ExposedMetaStore(val database: Database) : BuildMetaStore {
+open class ExposedMetaStore private constructor(
+    val database: Database
+) : BuildMetaStore {
+
+    constructor(datasource: HikariDataSource) : this(
+        Database.connect(datasource = datasource)
+    )
 
     init {
         transaction(database) {
