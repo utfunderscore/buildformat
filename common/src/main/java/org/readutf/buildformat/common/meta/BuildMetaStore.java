@@ -9,11 +9,11 @@ import org.readutf.buildformat.common.format.BuildFormatChecksum;
 
 public interface BuildMetaStore {
 
-    @NotNull BuildMeta create(String name, String description) throws BuildFormatException;
+    @NotNull BuildMeta create(@NotNull String name, @NotNull String description) throws BuildFormatException;
 
-    @Nullable BuildMeta getByName(String name) throws BuildFormatException;
+    @Nullable BuildMeta getByName(@NotNull String name) throws BuildFormatException;
 
-    BuildMeta update(String name, List<BuildFormatChecksum> formats) throws BuildFormatException;
+    BuildMeta update(@NotNull String name, @NotNull List<BuildFormatChecksum> formats) throws BuildFormatException;
 
     @NotNull List<String> getBuilds() throws BuildFormatException;
 

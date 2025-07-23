@@ -15,7 +15,7 @@ public class InMemoryMetaStore implements BuildMetaStore {
     private final Map<String, BuildMeta> buildMetas = new HashMap<>();
 
     @Override
-    public @NotNull BuildMeta create(String name, String description) throws BuildFormatException {
+    public @NotNull BuildMeta create(@NotNull String name, @NotNull String description) throws BuildFormatException {
         if(buildMetas.containsKey(name)) {
             throw new BuildFormatException("Build with name " + name + " already exists");
         }
@@ -25,12 +25,12 @@ public class InMemoryMetaStore implements BuildMetaStore {
     }
 
     @Override
-    public @Nullable BuildMeta getByName(String name) {
+    public @Nullable BuildMeta getByName(@NotNull String name) {
         return buildMetas.get(name);
     }
 
     @Override
-    public BuildMeta update(String name, List<BuildFormatChecksum> formats) throws BuildFormatException {
+    public BuildMeta update(@NotNull String name, @NotNull List<BuildFormatChecksum> formats) throws BuildFormatException {
         BuildMeta buildMeta = buildMetas.get(name);
         if (buildMeta == null) {
             throw new BuildFormatException("Build with name " + name + " does not exist");
