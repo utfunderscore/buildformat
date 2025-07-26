@@ -19,8 +19,7 @@ import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.commands.types.ExampleInvalidUsageHandler;
 import org.readutf.buildformat.plugin.formats.BuildFormatCache;
 import org.readutf.buildformat.s3.S3BuildSchematicStore;
-import org.readutf.buildstore.PostgresDatabaseManager;
-import org.readutf.buildstore.PostgresMetaStore;
+import org.readutf.buildformat.sql.SQLMetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -43,8 +42,7 @@ public class BuildPlugin extends JavaPlugin {
         HikariDataSource dataSource = getDatabase();
         S3AsyncClient awsClient = getAwsClient();
 
-        PostgresDatabaseManager databaseManager = new PostgresDatabaseManager(dataSource);
-        BuildMetaStore buildMetaStore = new PostgresMetaStore(databaseManager);
+        BuildMetaStore buildMetaStore = SQLMetaStore.createMetaStore(dataSource);
         BuildSchematicStore buildSchematicStore = new S3BuildSchematicStore(awsClient, bucket);
 
         try {
@@ -62,7 +60,7 @@ public class BuildPlugin extends JavaPlugin {
     }
 
     private @NotNull HikariDataSource getDatabase() {
-        String host = getConfigValue("DATABASE_URL", "database.host");
+        String host = getConfigValue("DATABASE_HOST", "database.host");
         String port = getConfigValue("DATABASE_PORT", "database.port");
         String database = getConfigValue("DATABASE_NAME", "database.database");
         String user = getConfigValue("DATABASE_USER", "database.user");

@@ -30,16 +30,24 @@ dependencies {
     compileOnly(platform("com.intellectualsites.bom:bom-newest:1.52"))
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core")
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit") { isTransitive = false }
+    implementation("org.postgresql:postgresql:42.7.5")
 
     implementation(project(":sql"))
     implementation(project(":s3"))
 
 
-    paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.7-R0.1-SNAPSHOT")
 }
 
 tasks.compileJava {
     options.compilerArgs.add("-parameters")
+}
+
+tasks.runServer {
+    minecraftVersion("1.21.7")
+    jvmArgs(
+        "-Xmx2G",
+    )
 }
 
 tasks {
@@ -56,6 +64,6 @@ bukkitPluginYaml {
     main = "org.readutf.buildformat.plugin.BuildPlugin"
     load = BukkitPluginYaml.PluginLoadOrder.STARTUP
     authors.add("Author")
-    apiVersion = "1.21.5"
+    apiVersion = "1.21"
     depend = listOf("FastAsyncWorldEdit")
 }
