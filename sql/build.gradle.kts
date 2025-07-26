@@ -3,8 +3,6 @@ plugins {
     kotlin("jvm") version "2.1.21"
 }
 
-group = "org.readutf.buildformat"
-version = "1.0.17"
 
 repositories {
     mavenCentral()
@@ -15,7 +13,8 @@ dependencies {
     api(project(":common"))
     api("org.jetbrains.exposed:exposed-core:0.61.0")
     api("org.jetbrains.exposed:exposed-jdbc:0.61.0")
-    api("com.zaxxer:HikariCP:4.0.3")
+    api("com.zaxxer:HikariCP:6.3.0")
+
 
     // Testcontainers
     testImplementation("org.testcontainers:testcontainers:1.19.7")
@@ -29,5 +28,5 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(23)
+    jvmToolchain(21)
 }
