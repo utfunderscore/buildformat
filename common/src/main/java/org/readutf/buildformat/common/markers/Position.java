@@ -9,12 +9,19 @@ import org.jetbrains.annotations.NotNull;
 public record Position(
         double x,
         double y,
-        double z
+        double z,
+        float yaw,
+        float pitch
 ) {
+
+    public Position(double x, double y, double z) {
+        this(x, y, z, 0, 0);
+    }
+
     /**
      * The zero origin constant (0, 0, 0).
      */
-    public static final Position ZERO = new Position(0, 0, 0);
+    public static final Position ZERO = new Position(0, 0, 0, 0, 0);
 
     public int getBlockX() {
         return (int) Math.floor(x);
@@ -39,7 +46,9 @@ public record Position(
         return new Position(
                 this.x + position.x,
                 this.y + position.y,
-                this.z + position.z
+                this.z + position.z,
+                this.yaw,
+                this.pitch
         );
     }
 

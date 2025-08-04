@@ -31,12 +31,10 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Get Project Version
+    - name: Get Project Version from Git Tag
       id: get_version
       run: |
-        VERSION=$(./gradlew properties | grep "version:" | awk '{print $2}')
-        echo "Project version: $VERSION"
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        VERSION="${GITHUB_REF_NAME}"
 
     - name: Build with Gradle
       run: ./gradlew shadowJar --no-daemon --stacktrace

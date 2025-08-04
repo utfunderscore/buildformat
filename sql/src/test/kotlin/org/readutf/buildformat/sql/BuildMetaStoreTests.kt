@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.readutf.buildformat.common.exception.BuildFormatException
 import org.readutf.buildformat.common.format.BuildFormatChecksum
+import org.readutf.buildformat.common.meta.BuildMetaStore
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -21,7 +22,7 @@ class BuildMetaStoreTests {
     private val postgres = PostgreSQLContainer("postgres:16")
         .withDatabaseName("builds")
 
-    private lateinit var metaStore: ExposedMetaStore
+    private lateinit var metaStore: BuildMetaStore
 
     @BeforeAll
     fun setUp() {
@@ -37,7 +38,7 @@ class BuildMetaStoreTests {
         }
 
         val ds = HikariDataSource(config)
-        metaStore = ExposedMetaStore(Database.connect(ds))
+        metaStore = SQLMetaStore.createMetaStore(ds)
     }
 
     @Test
