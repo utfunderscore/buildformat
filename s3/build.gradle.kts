@@ -10,9 +10,9 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.testcontainers:testcontainers:1.21.3")
     testImplementation("org.testcontainers:localstack:1.21.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     implementation(project(":common"))
 

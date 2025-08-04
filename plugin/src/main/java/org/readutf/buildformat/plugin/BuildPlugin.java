@@ -39,6 +39,8 @@ public class BuildPlugin extends JavaPlugin {
 
         String bucket = getConfigValue("AWS_BUCKET", "aws.bucket");
 
+        System.out.println("using bucket: " + bucket);
+
         HikariDataSource dataSource = getDatabase();
         S3AsyncClient awsClient = getAwsClient();
 
@@ -105,7 +107,7 @@ public class BuildPlugin extends JavaPlugin {
                 .region(Region.US_EAST_1);
 
 
-        if(endpoint != null) {
+        if (endpoint != null) {
             builder.endpointOverride(URI.create(endpoint));
         }
         return builder.build();
