@@ -44,6 +44,10 @@ public class BuildFormatManager {
         adapters.put(String.class, Marker::toString);
     }
 
+    public static <T> void registerAdapter(Class<? extends T> type, MarkerAdapter<? extends T> adapter) {
+        adapters.put(type, adapter);
+    }
+
     /**
      * Generates the requirements for a given build type and build class.
      *
