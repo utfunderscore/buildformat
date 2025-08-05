@@ -13,10 +13,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.file.NotDirectoryException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -30,13 +29,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BuildFormatManager {
+    @NotNull
+    private static final Logger logger = LoggerFactory.getLogger(BuildFormatManager.class);
+    @NotNull
+    private static final Map<Class<? extends BuildFormat>, List<RequirementData>> generatedRequirements = new HashMap<>();
+    @NotNull
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private @NotNull
-    static final Logger logger = LoggerFactory.getLogger(BuildFormatManager.class);
-    private @NotNull
-    static final Map<Class<? extends BuildFormat>, List<RequirementData>> generatedRequirements = new HashMap<>();
-    private @NotNull
-    static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ConcurrentHashMap<Class<?>, MarkerAdapter<?>> adapters = new ConcurrentHashMap<>();
+
+    static {
+        adapters.put(Marker.class, marker -> marker);
+        adapters.put(Position.class, Marker::getTargetPosition);
+        adapters.put(String.class, Marker::toString);
+    }
 
     /**
      * Generates the requirements for a given build type and build class.
@@ -109,33 +115,29 @@ public class BuildFormatManager {
 
             Class<?> parameterType = parameter.getType();
 
-            boolean isMarker = parameterType == Marker.class;
-            boolean isPosition = parameterType == Position.class;
+
 
             List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.getRegex())).toList();
 
-            int minumum = requirement.minimumAmount();
-            if (isMarker || isPosition) minumum = Math.max(1, minumum);
-
-            if (matching.size() < minumum) {
+            if (matching.size() < Math.max(1, requirement.minimumAmount())) {
                 throw new BuildFormatException("Not enough markers found for parameter: " + parameter.getName());
             }
 
-            if (parameterType == List.class) {
+            if (parameterType == List.class || parameterType == Collection.class) {
                 ParameterizedType listType = (ParameterizedType) parameter.getParameterizedType();
                 Type actualType = listType.getActualTypeArguments()[0];
-                if (actualType == Marker.class) {
-                    args[i] = new ArrayList<>(matching);
-                } else if (actualType == Position.class) {
-                    args[i] = matching.stream().map(Marker::origin).toList();
+                MarkerAdapter<?> markerAdapter = adapters.get(((Class<?>) actualType));
+
+                if(markerAdapter != null) {
+                    args[i] = matching.stream().map(markerAdapter::adapt).toList();
                 } else {
                     throw new BuildFormatException("Invalid list parameter type: " + actualType.getTypeName());
                 }
 
-            } else if (isMarker) {
-                args[i] = matching.getFirst();
-            } else if (isPosition) {
-                args[i] = matching.getFirst().origin();
+
+            } else if(adapters.containsKey(parameterType)){
+                MarkerAdapter<?> markerAdapter = adapters.get(parameterType);
+                args[i] = markerAdapter.adapt(matching.getFirst());
             } else {
                 throw new BuildFormatException("Invalid parameter type: " + parameterType.getName());
             }

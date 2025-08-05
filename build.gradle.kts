@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.readutf.buildformat"
-version = "1.0.20"
+version = "1.0.21"
 
 repositories {
     mavenCentral()
@@ -34,8 +34,8 @@ subprojects {
                 name = "utfMvn"
                 url = uri("https://mvn.utf.lol/releases")
                 credentials {
-                    username = System.getenv("UTF_MVN_USER") ?: findProperty("UTF_MVN_USER") as String? ?: "readutf"
-                    password = System.getenv("UTF_MVN_PASS") ?: findProperty("UTF_MVN_PASS") as String? ?: "readutf"
+                    username = System.getenv("UTF_MVN_USER") ?: findProperty("utfMvnUser") as String? ?: "readutf"
+                    password = System.getenv("UTF_MVN_PASS") ?: findProperty("utfMvnPass") as String? ?: "readutf"
                 }
             }
 

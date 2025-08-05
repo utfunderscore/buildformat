@@ -17,10 +17,8 @@ import org.readutf.buildformat.common.format.requirements.Requirement;
 
 class BuildMetaFormatManagerTest {
 
-
-
     public record TestFormat(
-            @Requirement(name = "test-a") Marker single,
+            @Requirement(name = "test-a") String single,
             @Requirement(startsWith = "test-b") List<Marker> startsWith,
             @Requirement(startsWith = "test-c", minimum = 2) List<Marker> minimum,
             @Requirement InnerTest inner
@@ -59,10 +57,10 @@ class BuildMetaFormatManagerTest {
 
         TestFormat format = BuildFormatManager.constructBuildFormat(markers, TestFormat.class);
 
-        assertEquals(single.get(0), format.single());
+        assertEquals(single.getFirst().toString(), format.single());
         assertEquals(startsWith, format.startsWith());
         assertEquals(minimum, format.minimum());
-        assertEquals(innerSingle.get(0), format.inner().single());
+        assertEquals(innerSingle.getFirst(), format.inner().single());
     }
 
     @Test
@@ -111,14 +109,13 @@ class BuildMetaFormatManagerTest {
     void testInvalidParameterType() {
 
         record InvalidFormat(
-                @Requirement(name = "test-a") String invalid
+                @Requirement(name = "test-a") int invalid
         ) implements BuildFormat {
         }
 
-        var exception = assertThrows(BuildFormatException.class, () -> {
+        assertThrows(BuildFormatException.class, () -> {
             BuildFormatManager.constructBuildFormat(List.of(new Marker("test-a", Position.ZERO, Position.ZERO)), InvalidFormat.class);
         });
-        assertEquals("Invalid parameter type: java.lang.String", exception.getMessage());
     }
 
     @Test
