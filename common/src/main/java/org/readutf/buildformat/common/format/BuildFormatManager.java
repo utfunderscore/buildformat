@@ -67,8 +67,14 @@ public class BuildFormatManager {
 
         for (Parameter parameter : constructor.getParameters()) {
             Requirement requirement = getRequirement(parameter);
-            if (BuildFormat.class.isAssignableFrom(parameter.getType())) {
-                requirements.add(null);
+            Class<?> type = parameter.getType();
+
+            if (!adapters.containsKey(type) && !Collection.class.isAssignableFrom(type)) {
+                if (!BuildFormat.class.isAssignableFrom(type) ) {
+                    throw new BuildFormatException("Invalid build requirement type: " + type);
+                }
+                Class<? extends BuildFormat> subclass = type.asSubclass(BuildFormat.class);
+                requirements.addAll(getValidators(subclass));
                 continue;
             }
 
@@ -120,7 +126,6 @@ public class BuildFormatManager {
             Class<?> parameterType = parameter.getType();
 
 
-
             List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.getRegex())).toList();
 
             if (matching.size() < Math.max(1, requirement.minimumAmount())) {
@@ -132,14 +137,14 @@ public class BuildFormatManager {
                 Type actualType = listType.getActualTypeArguments()[0];
                 MarkerAdapter<?> markerAdapter = adapters.get(((Class<?>) actualType));
 
-                if(markerAdapter != null) {
+                if (markerAdapter != null) {
                     args[i] = matching.stream().map(markerAdapter::adapt).toList();
                 } else {
                     throw new BuildFormatException("Invalid list parameter type: " + actualType.getTypeName());
                 }
 
 
-            } else if(adapters.containsKey(parameterType)){
+            } else if (adapters.containsKey(parameterType)) {
                 MarkerAdapter<?> markerAdapter = adapters.get(parameterType);
                 args[i] = markerAdapter.adapt(matching.getFirst());
             } else {
