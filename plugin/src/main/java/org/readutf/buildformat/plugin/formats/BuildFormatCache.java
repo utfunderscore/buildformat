@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.format.BuildFormatManager;
+import org.readutf.buildformat.common.format.BuildFormatManagerLegacy;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class BuildFormatCache {
             throw new BuildFormatException("File does not exist: " + file.getName());
         }
         try {
-            return BuildFormatManager.load(file);
+            return BuildFormatManagerLegacy.load(file);
         } catch (IOException e) {
             logger.error("Failed to read file {}", file.getAbsolutePath(), e);
             throw new BuildFormatException("Failed to read file: " + file.getAbsolutePath(), e);

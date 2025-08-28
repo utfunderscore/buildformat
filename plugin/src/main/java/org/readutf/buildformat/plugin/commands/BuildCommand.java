@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
-import org.readutf.buildformat.common.format.BuildFormatManager;
+import org.readutf.buildformat.common.format.BuildFormatManagerLegacy;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.meta.BuildMeta;
@@ -187,8 +187,8 @@ public class BuildCommand {
         for (String formatName : formatNames) {
             try {
                 List<RequirementData> requirements = buildFormatCache.getRequirements(formatName);
-                BuildFormatManager.testRequirements(markers, requirements);
-                BuildFormatChecksum checksum = new BuildFormatChecksum(formatName, BuildFormatManager.generateChecksum(requirements));
+                BuildFormatManagerLegacy.testRequirements(markers, requirements);
+                BuildFormatChecksum checksum = new BuildFormatChecksum(formatName, BuildFormatManagerLegacy.generateChecksum(requirements));
                 checksums.add(checksum);
             } catch (BuildFormatException e) {
                 player.sendMessage(Component.text(e.getMessage()).color(NamedTextColor.RED));

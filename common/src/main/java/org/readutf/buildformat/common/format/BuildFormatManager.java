@@ -1,7 +1,16 @@
 package org.readutf.buildformat.common.format;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.readutf.buildformat.common.exception.BuildFormatException;
+import org.readutf.buildformat.common.format.requirements.Requirement;
+import org.readutf.buildformat.common.format.requirements.RequirementData;
+import org.readutf.buildformat.common.markers.Marker;
+import org.readutf.buildformat.common.markers.Position;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,103 +20,44 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.nio.file.NotDirectoryException;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.format.requirements.RequirementData;
-import org.readutf.buildformat.common.markers.Marker;
-import org.readutf.buildformat.common.markers.Position;
-import org.readutf.buildformat.common.format.requirements.Requirement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BuildFormatManager {
+
     @NotNull
     private static final Logger logger = LoggerFactory.getLogger(BuildFormatManager.class);
+
     @NotNull
-    private static final Map<Class<? extends BuildFormat>, List<RequirementData>> generatedRequirements = new HashMap<>();
+    private final ObjectMapper objectMapper;
+
     @NotNull
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final Map<Class<? extends BuildFormat>, List<RequirementData>> cachedRequirements;
 
-    private static final ConcurrentHashMap<Class<?>, MarkerAdapter<?>> adapters = new ConcurrentHashMap<>();
+    @NotNull
+    private final Map<Class<?>, MarkerAdapter<?>> adapters;
 
-    static {
-        adapters.put(Marker.class, marker -> marker);
-        adapters.put(Position.class, Marker::getTargetPosition);
-        adapters.put(String.class, Marker::toString);
-    }
+    private BuildFormatManager(@NotNull ObjectMapper objectMapper, @NotNull Map<Class<?>, MarkerAdapter<?>> adapters) {
+        this.objectMapper = objectMapper;
+        this.adapters = adapters;
+        this.cachedRequirements = new HashMap<>();
 
-    public static <T> void registerAdapter(Class<? extends T> type, MarkerAdapter<? extends T> adapter) {
-        adapters.put(type, adapter);
-    }
-
-    /**
-     * Generates the requirements for a given build type and build class.
-     *
-     * @param buildClass The build class.
-     * @param <T>        The type of the build class.
-     * @return A list of requirement data.
-     * @throws BuildFormatException If the build class is not a record or if the requirements are invalid.
-     */
-    public static <T extends BuildFormat> @NotNull List<RequirementData> getValidators(
-            @NotNull Class<T> buildClass
-    ) throws BuildFormatException {
-        if (!buildClass.isRecord()) throw new BuildFormatException("Build class must be a record");
-
-        Constructor<?> constructor = buildClass.getDeclaredConstructors()[0];
-
-        List<RequirementData> requirements = new ArrayList<>();
-
-        for (Parameter parameter : constructor.getParameters()) {
-            Requirement requirement = getRequirement(parameter);
-            Class<?> type = parameter.getType();
-
-            if (!adapters.containsKey(type) && !Collection.class.isAssignableFrom(type)) {
-                if (!BuildFormat.class.isAssignableFrom(type) ) {
-                    throw new BuildFormatException("Invalid build requirement type: " + type);
-                }
-                Class<? extends BuildFormat> subclass = type.asSubclass(BuildFormat.class);
-                requirements.addAll(getValidators(subclass));
-                continue;
-            }
-
-            if (requirement == null) {
-                throw new BuildFormatException("Requirement annotation not found on parameter: " + parameter.getName());
-            }
-
-            int minimum = requirement.minimum();
-            if (minimum < 1) {
-                throw new BuildFormatException("Minimum value must be greater than or equal to 1");
-            }
-
-            requirements.add(new RequirementData(
-                    requirement.name().isEmpty() ? null : requirement.name(),
-                    requirement.startsWith().isEmpty() ? null : requirement.startsWith(),
-                    requirement.endsWith().isEmpty() ? null : requirement.endsWith(),
-                    minimum
-            ));
-        }
-
-        generatedRequirements.put(buildClass, requirements);
-
-        return requirements;
+        //Register default adapters
+        this.adapters.put(Marker.class, marker -> marker);
+        this.adapters.put(Position.class, Marker::getTargetPosition);
+        this.adapters.put(String.class, Marker::toString);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends BuildFormat> @NotNull T constructBuildFormat(
+    public <T extends BuildFormat> @NotNull T read(
             @NotNull List<Marker> markers,
             @NotNull Class<T> buildFormat
     ) throws BuildFormatException {
-        List<RequirementData> requirementData = generatedRequirements.get(buildFormat);
+        List<RequirementData> requirementData = cachedRequirements.get(buildFormat);
         if (requirementData == null) {
             requirementData = getValidators(buildFormat);
+            cachedRequirements.put(BuildFormat.class, requirementData);
         }
 
         Constructor<?> constructor = buildFormat.getDeclaredConstructors()[0];
@@ -119,7 +69,7 @@ public class BuildFormatManager {
             RequirementData requirement = requirementData.get(i);
 
             if (BuildFormat.class.isAssignableFrom(parameter.getType())) {
-                args[i] = constructBuildFormat(markers, (Class<? extends BuildFormat>) parameter.getType());
+                args[i] = read(markers, (Class<? extends BuildFormat>) parameter.getType());
                 continue;
             }
 
@@ -159,41 +109,88 @@ public class BuildFormatManager {
             logger.error("Failed to create instance of build format: {}", buildFormat.getName(), e);
             throw new BuildFormatException("Failed to create instance of build format: " + buildFormat.getName());
         }
-
     }
 
-    public static List<RequirementData> load(File file) throws IOException {
-        return objectMapper.readValue(file, new TypeReference<>() {
-        });
+    public <T extends BuildFormat> void save(@NotNull Path path, @NotNull Class<T> buildFormat) throws BuildFormatException, IOException {
+        save(path, getValidators(buildFormat));
     }
 
-    public static void save(File directory, String name, List<RequirementData> requirementData) throws IOException {
+    public <T extends BuildFormat> int getChecksum(@NotNull Class<T> buildFormatClass) throws BuildFormatException {
+        List<RequirementData> validators = getValidators(buildFormatClass);
+        return validators.hashCode();
+    }
+
+    /**
+     * Generates the requirements for a given build type and build class.
+     *
+     * @param buildClass The build class.
+     * @param <T>        The type of the build class.
+     * @return A list of requirement data.
+     * @throws BuildFormatException If the build class is not a record or if the requirements are invalid.
+     */
+    private <T extends BuildFormat> @NotNull List<RequirementData> getValidators(
+            @NotNull Class<T> buildClass
+    ) throws BuildFormatException {
+        if (!buildClass.isRecord()) throw new BuildFormatException("Build class must be a record");
+        List<RequirementData> requirementData = cachedRequirements.get(buildClass);
+        if (requirementData != null) {
+            return requirementData;
+        }
+
+        Constructor<?> constructor = buildClass.getDeclaredConstructors()[0];
+
+        List<RequirementData> requirements = new ArrayList<>();
+
+        for (Parameter parameter : constructor.getParameters()) {
+            Requirement requirement = getRequirement(parameter);
+            Class<?> type = parameter.getType();
+
+            if (!adapters.containsKey(type) && !Collection.class.isAssignableFrom(type)) {
+                if (!BuildFormat.class.isAssignableFrom(type)) {
+                    throw new BuildFormatException("Invalid build requirement type: " + type);
+                }
+                Class<? extends BuildFormat> subclass = type.asSubclass(BuildFormat.class);
+                requirements.addAll(getValidators(subclass));
+                continue;
+            }
+
+            if (requirement == null) {
+                throw new BuildFormatException("Requirement annotation not found on parameter: " + parameter.getName());
+            }
+
+            int minimum = requirement.minimum();
+            if (minimum < 1) {
+                throw new BuildFormatException("Minimum value must be greater than or equal to 1");
+            }
+
+            requirements.add(new RequirementData(
+                    requirement.name().isEmpty() ? null : requirement.name(),
+                    requirement.startsWith().isEmpty() ? null : requirement.startsWith(),
+                    requirement.endsWith().isEmpty() ? null : requirement.endsWith(),
+                    minimum
+            ));
+        }
+
+        cachedRequirements.put(buildClass, requirements);
+
+        return requirements;
+    }
+
+    private void save(@NotNull Path path, @NotNull List<RequirementData> requirementData) throws IOException {
+        File directory = path.toFile().getParentFile();
+        if (!directory.exists() && directory.mkdirs()) {
+            logger.info("Generated build format directory {}", directory.getAbsolutePath());
+        }
+
         if (!directory.isDirectory()) {
             throw new NotDirectoryException(directory.getAbsolutePath());
         }
 
-        try (FileOutputStream fos = new FileOutputStream(new File(directory, name + ".json"))) {
+        try (FileOutputStream fos = new FileOutputStream(path.toFile())) {
             objectMapper.writeValue(fos, requirementData);
         }
     }
 
-    public static void testRequirements(List<Marker> markers, List<@NotNull RequirementData> requirementData) throws BuildFormatException {
-        for (RequirementData requirement : requirementData) {
-            logger.info("Markers: {}", markers);
-
-            List<Marker> matching = markers.stream().filter(marker -> marker.name().matches(requirement.getRegex())).toList();
-
-            int minimum = requirement.minimumAmount();
-
-            if (matching.size() < minimum) {
-                throw new BuildFormatException("Build did not meet requirement: " + requirement.getExplanation());
-            }
-        }
-    }
-
-    public static byte[] generateChecksum(List<@NotNull RequirementData> requirementData) {
-        return ByteBuffer.allocate(4).putInt(requirementData.hashCode()).array();
-    }
 
     /**
      * Retrieves the requirement annotation from a parameter.
@@ -211,6 +208,37 @@ public class BuildFormatManager {
             }
         }
         return null;
+    }
+
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private final Map<Class<?>, MarkerAdapter<?>> adapters;
+        private @NotNull ObjectMapper objectMapper;
+
+        private Builder() {
+            this.adapters = new HashMap<>();
+            this.objectMapper = new ObjectMapper();
+        }
+
+        public <T> Builder registerAdapter(Class<? extends T> type, MarkerAdapter<? extends T> adapter) {
+            adapters.put(type, adapter);
+            return this;
+        }
+
+        public Builder setObjectMapper() {
+            this.objectMapper = new ObjectMapper();
+            return this;
+        }
+
+        public BuildFormatManager build() {
+            return new BuildFormatManager(objectMapper, adapters);
+        }
+
     }
 
 }

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
@@ -30,10 +31,8 @@ class BuildMetaFormatManagerTest {
     ) implements BuildFormat {
     }
 
-    @Test
-    void getValidators() throws BuildFormatException {
-        System.out.println(BuildFormatManager.getValidators(TestFormat.class));
-    }
+    private final @NotNull BuildFormatManager buildFormatManager = BuildFormatManager.builder()
+            .build();
 
     @Test
     void successfullyConstructBuildFormat() throws BuildFormatException {
@@ -55,7 +54,7 @@ class BuildMetaFormatManagerTest {
         markers.addAll(minimum);
         markers.addAll(innerSingle);
 
-        TestFormat format = BuildFormatManager.constructBuildFormat(markers, TestFormat.class);
+        TestFormat format = buildFormatManager.read(markers, TestFormat.class);
 
         assertEquals(single.getFirst().toString(), format.single());
         assertEquals(startsWith, format.startsWith());
@@ -75,21 +74,25 @@ class BuildMetaFormatManagerTest {
                 new Marker("test-a", new Position(1, 0, 0), new Position(0, 0, 0))
         );
 
-        PositionDataFormat format = BuildFormatManager.constructBuildFormat(markers, PositionDataFormat.class);
+        PositionDataFormat format = buildFormatManager.read(markers, PositionDataFormat.class);
     }
 
     @Test
     void checksumTest() throws BuildFormatException, IOException {
 
-        File workDir = new File(System.getProperty("user.dir"));
+        File workDir = File.createTempFile("buildformat", "test");
 
-        List<RequirementData> validators = BuildFormatManager.getValidators(TestFormat.class);
-        BuildFormatManager.save(workDir, "checksum-test", validators);
-        List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "checksum-test.json"));
+//        List<RequirementData> validators = BuildFormatManager.getValidators(TestFormat.class);
+//        BuildFormatManager.save(workDir, "checksum-test", validators);
+//        List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "checksum-test.json"));
+//
+//        System.out.println(validators);
+//        System.out.println(loadedValidators);
+//        assertEquals(validators, loadedValidators);
 
-        System.out.println(validators);
-        System.out.println(loadedValidators);
-        assertEquals(validators, loadedValidators);
+
+
+        throw new UnsupportedOperationException("TODO");
     }
 
     @Test
@@ -100,7 +103,7 @@ class BuildMetaFormatManagerTest {
         }
 
         Exception exception = assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(), InvalidFormat.class);
+            buildFormatManager.read(List.of(), InvalidFormat.class);
         });
 
     }
@@ -114,7 +117,7 @@ class BuildMetaFormatManagerTest {
         }
 
         assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(new Marker("test-a", Position.ZERO, Position.ZERO)), InvalidFormat.class);
+            buildFormatManager.read(List.of(new Marker("test-a", Position.ZERO, Position.ZERO)), InvalidFormat.class);
         });
     }
 
@@ -129,7 +132,7 @@ class BuildMetaFormatManagerTest {
         }
 
        assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(new Marker("test-a", new Position(0, 0, 0), new Position(0, 0, 0))), InvalidFormat.class);
+           buildFormatManager.read(List.of(new Marker("test-a", new Position(0, 0, 0), new Position(0, 0, 0))), InvalidFormat.class);
         });
     }
 
@@ -142,7 +145,7 @@ class BuildMetaFormatManagerTest {
         }
 
         var exception = assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(), InvalidFormat.class);
+            buildFormatManager.read(List.of(), InvalidFormat.class);
         });
         assertEquals("Not enough markers found for parameter: list", exception.getMessage());
     }
@@ -154,13 +157,16 @@ class BuildMetaFormatManagerTest {
                 @Requirement(name = "test-b", minimum = 2) List<Marker> list
         ) implements BuildFormat {
         }
+//
+//        List<RequirementData> validators = BuildFormatManagerLegacy.getValidators(SimpleTestFormat.class);
+//        File workDir = new File(System.getProperty("user.dir"));
+//        BuildFormatManagerLegacy.save(workDir, "simple-format", validators);
+//
+//        List<RequirementData> loadedValidators = BuildFormatManagerLegacy.load(new File(workDir, "simple-format.json"));
+//        assertEquals(validators, loadedValidators);
 
-        List<RequirementData> validators = BuildFormatManager.getValidators(SimpleTestFormat.class);
-        File workDir = new File(System.getProperty("user.dir"));
-        BuildFormatManager.save(workDir, "simple-format", validators);
+        throw new UnsupportedOperationException();
 
-        List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "simple-format.json"));
-        assertEquals(validators, loadedValidators);
     }
 
     @Test
@@ -168,12 +174,13 @@ class BuildMetaFormatManagerTest {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
-        String json = objectMapper.writeValueAsString(BuildFormatManager.getValidators(TestFormat.class));
+//        String json = objectMapper.writeValueAsString(BuildFormatManagerLegacy.getValidators(TestFormat.class));
 
-        System.out.println(json);
+//        System.out.println(json);
 
-        objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, RequirementData.class));
+//        objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, RequirementData.class));
 
+        throw new UnsupportedOperationException();
     }
 
 }
