@@ -8,7 +8,7 @@ import dev.rollczi.litecommands.suggestion.SuggestionContext;
 import dev.rollczi.litecommands.suggestion.SuggestionResult;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.plugin.formats.BuildFormatCache;
+import org.readutf.buildformat.plugin.formats.BuildFormatStore;
 
 public class BuildType {
 
@@ -24,10 +24,10 @@ public class BuildType {
 
     public static class BuildTypesSuggester extends ArgumentResolver<CommandSender, BuildType> {
 
-        private final BuildFormatCache buildFormatCache;
+        private final BuildFormatStore buildFormatStore;
 
-        public BuildTypesSuggester(BuildFormatCache buildFormatCache) {
-            this.buildFormatCache = buildFormatCache;
+        public BuildTypesSuggester(BuildFormatStore buildFormatStore) {
+            this.buildFormatStore = buildFormatStore;
         }
 
         @Override
@@ -37,7 +37,7 @@ public class BuildType {
 
         @Override
         public SuggestionResult suggest(Invocation<CommandSender> invocation, Argument<BuildType> argument, SuggestionContext context) {
-            return SuggestionResult.of(buildFormatCache.getFormats());
+            return SuggestionResult.of(buildFormatStore.getFormats());
         }
     }
 

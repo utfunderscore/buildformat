@@ -2,12 +2,16 @@ package org.readutf.buildformat.common.format;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
@@ -30,9 +34,11 @@ class BuildMetaFormatManagerTest {
     ) implements BuildFormat {
     }
 
+    private final @NotNull BuildFormatManager buildFormatManager = new BuildFormatManager();
+
     @Test
-    void getValidators() throws BuildFormatException {
-        System.out.println(BuildFormatManager.getValidators(TestFormat.class));
+    void testCompile() throws BuildFormatException {
+        buildFormatManager.compile("test", TestFormat.class);
     }
 
     @Test
@@ -55,7 +61,7 @@ class BuildMetaFormatManagerTest {
         markers.addAll(minimum);
         markers.addAll(innerSingle);
 
-        TestFormat format = BuildFormatManager.constructBuildFormat(markers, TestFormat.class);
+        TestFormat format = buildFormatManager.build(markers, TestFormat.class);
 
         assertEquals(single.getFirst().toString(), format.single());
         assertEquals(startsWith, format.startsWith());
@@ -75,32 +81,31 @@ class BuildMetaFormatManagerTest {
                 new Marker("test-a", new Position(1, 0, 0), new Position(0, 0, 0))
         );
 
-        PositionDataFormat format = BuildFormatManager.constructBuildFormat(markers, PositionDataFormat.class);
+        PositionDataFormat format = buildFormatManager.build(markers, PositionDataFormat.class);
     }
 
     @Test
     void checksumTest() throws BuildFormatException, IOException {
 
-        File workDir = new File(System.getProperty("user.dir"));
+        Path tempFile = Files.createTempFile("buildmeta", "checksumTest");
 
-        List<RequirementData> validators = BuildFormatManager.getValidators(TestFormat.class);
-        BuildFormatManager.save(workDir, "checksum-test", validators);
-        List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "checksum-test.json"));
+        byte[] direct = buildFormatManager.checksum("test", TestFormat.class);
+        buildFormatManager.save(tempFile, "test", TestFormat.class);
+        byte[] fromFile = buildFormatManager.checksum(tempFile);
 
-        System.out.println(validators);
-        System.out.println(loadedValidators);
-        assertEquals(validators, loadedValidators);
+        assertEquals(direct, fromFile);
     }
 
     @Test
     void testNotARecord() {
 
         class InvalidFormat implements BuildFormat {
-            @Requirement(name = "test-a") Marker single;
+            @Requirement(name = "test-a")
+            Marker single;
         }
 
         Exception exception = assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(), InvalidFormat.class);
+            buildFormatManager.build(List.of(), InvalidFormat.class);
         });
 
     }
@@ -114,7 +119,7 @@ class BuildMetaFormatManagerTest {
         }
 
         assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(new Marker("test-a", Position.ZERO, Position.ZERO)), InvalidFormat.class);
+            buildFormatManager.build(List.of(new Marker("test-a", Position.ZERO, Position.ZERO)), InvalidFormat.class);
         });
     }
 
@@ -128,8 +133,8 @@ class BuildMetaFormatManagerTest {
             }
         }
 
-       assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(new Marker("test-a", new Position(0, 0, 0), new Position(0, 0, 0))), InvalidFormat.class);
+        assertThrows(BuildFormatException.class, () -> {
+            buildFormatManager.build(List.of(new Marker("test-a", new Position(0, 0, 0), new Position(0, 0, 0))), InvalidFormat.class);
         });
     }
 
@@ -142,38 +147,9 @@ class BuildMetaFormatManagerTest {
         }
 
         var exception = assertThrows(BuildFormatException.class, () -> {
-            BuildFormatManager.constructBuildFormat(List.of(), InvalidFormat.class);
+            buildFormatManager.build(List.of(), InvalidFormat.class);
         });
         assertEquals("Not enough markers found for parameter: list", exception.getMessage());
-    }
-
-    @Test
-    void testExportSuccess() throws BuildFormatException, IOException {
-
-        record SimpleTestFormat(
-                @Requirement(name = "test-b", minimum = 2) List<Marker> list
-        ) implements BuildFormat {
-        }
-
-        List<RequirementData> validators = BuildFormatManager.getValidators(SimpleTestFormat.class);
-        File workDir = new File(System.getProperty("user.dir"));
-        BuildFormatManager.save(workDir, "simple-format", validators);
-
-        List<RequirementData> loadedValidators = BuildFormatManager.load(new File(workDir, "simple-format.json"));
-        assertEquals(validators, loadedValidators);
-    }
-
-    @Test
-    void testSerialization() throws BuildFormatException, JsonProcessingException {
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        String json = objectMapper.writeValueAsString(BuildFormatManager.getValidators(TestFormat.class));
-
-        System.out.println(json);
-
-        objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, RequirementData.class));
-
     }
 
 }

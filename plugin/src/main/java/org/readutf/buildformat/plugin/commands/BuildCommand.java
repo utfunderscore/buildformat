@@ -13,16 +13,19 @@ import dev.rollczi.litecommands.annotations.execute.Execute;
 import dev.rollczi.litecommands.annotations.flag.Flag;
 import dev.rollczi.litecommands.annotations.join.Join;
 import dev.rollczi.litecommands.annotations.varargs.Varargs;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
@@ -31,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.format.BuildFormatManager;
+import org.readutf.buildformat.common.format.CompiledBuildFormat;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.meta.BuildMeta;
@@ -38,7 +42,7 @@ import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.buildformat.common.schematic.BuildSchematic;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
-import org.readutf.buildformat.plugin.formats.BuildFormatCache;
+import org.readutf.buildformat.plugin.formats.BuildFormatStore;
 import org.readutf.buildformat.plugin.marker.MarkerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,16 +50,19 @@ import org.slf4j.LoggerFactory;
 @Command(name = "build")
 public class BuildCommand {
 
-    private @NotNull final BuildMetaStore buildMetaStore;
-    private @NotNull final BuildSchematicStore buildSchematicStore;
-    private @NotNull final BuildFormatCache buildFormatCache;
+    private @NotNull
+    final BuildMetaStore buildMetaStore;
+    private @NotNull
+    final BuildSchematicStore buildSchematicStore;
+    private @NotNull
+    final BuildFormatStore buildFormatStore;
     private static final Logger logger = LoggerFactory.getLogger(BuildCommand.class);
     private static final Executor uploadExecutor = Executors.newSingleThreadExecutor();
 
-    public BuildCommand(@NotNull BuildMetaStore buildMetaStore, @NotNull BuildSchematicStore buildSchematicStore, @NotNull BuildFormatCache buildFormatCache) {
+    public BuildCommand(@NotNull BuildMetaStore buildMetaStore, @NotNull BuildSchematicStore buildSchematicStore, @NotNull BuildFormatStore buildFormatStore) {
         this.buildMetaStore = buildMetaStore;
         this.buildSchematicStore = buildSchematicStore;
-        this.buildFormatCache = buildFormatCache;
+        this.buildFormatStore = buildFormatStore;
     }
 
     @Execute(name = "list")
@@ -164,8 +171,13 @@ public class BuildCommand {
         List<Marker> markers = MarkerUtils.scan(clipboard);
 //        MarkerUtils.removeMarkerBlocks(clipboard, markers);
 
-        List<BuildFormatChecksum> checksums = testBuildRequirements(player, formatNames, markers);
-        if (checksums == null) return;
+        @NotNull List<BuildFormatChecksum> checksums;
+        try {
+            checksums = testBuildRequirements(formatNames, markers);
+        } catch (BuildFormatException e) {
+            player.sendMessage(Component.text(e.getMessage()));
+            return;
+        }
 
         player.sendMessage(Component.text("Uploading build file..."));
 
@@ -181,19 +193,26 @@ public class BuildCommand {
 
     }
 
-    private @Nullable List<BuildFormatChecksum> testBuildRequirements(Player player, List<String> formatNames, List<Marker> markers) {
-        List<BuildFormatChecksum> checksums = new ArrayList<>();
+    private List<BuildFormatChecksum> testBuildRequirements(@NotNull List<String> formatNames, List<Marker> markers) throws BuildFormatException {
+        List<CompiledBuildFormat> formatChecksums = buildFormatStore.getFormatChecksums();
 
+        List<CompiledBuildFormat> selectedFormats = new ArrayList<>();
         for (String formatName : formatNames) {
-            try {
-                List<RequirementData> requirements = buildFormatCache.getRequirements(formatName);
-                BuildFormatManager.testRequirements(markers, requirements);
-                BuildFormatChecksum checksum = new BuildFormatChecksum(formatName, BuildFormatManager.generateChecksum(requirements));
-                checksums.add(checksum);
-            } catch (BuildFormatException e) {
-                player.sendMessage(Component.text(e.getMessage()).color(NamedTextColor.RED));
-                return null;
+            CompiledBuildFormat found = formatChecksums.stream()
+                .filter(f -> f.name().equalsIgnoreCase(formatName))
+                .findFirst()
+                .orElse(null);
+            if (found == null) {
+                throw new BuildFormatException("Format not found: " + formatName);
             }
+            selectedFormats.add(found);
+        }
+
+        List<BuildFormatChecksum> checksums = new ArrayList<>();
+        for (CompiledBuildFormat compiledFormat : selectedFormats) {
+            BuildFormatManager.test(markers, compiledFormat);
+            byte[] checksum = BuildFormatManager.checksum(compiledFormat);
+            checksums.add(new BuildFormatChecksum(compiledFormat.name(), checksum));
         }
         return checksums;
     }

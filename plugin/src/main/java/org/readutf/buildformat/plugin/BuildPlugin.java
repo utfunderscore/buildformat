@@ -17,7 +17,7 @@ import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.buildformat.plugin.commands.BuildCommand;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.commands.types.ExampleInvalidUsageHandler;
-import org.readutf.buildformat.plugin.formats.BuildFormatCache;
+import org.readutf.buildformat.plugin.formats.BuildFormatStore;
 import org.readutf.buildformat.s3.S3BuildSchematicStore;
 import org.readutf.buildformat.sql.SQLMetaStore;
 import org.slf4j.Logger;
@@ -48,12 +48,12 @@ public class BuildPlugin extends JavaPlugin {
         BuildSchematicStore buildSchematicStore = new S3BuildSchematicStore(awsClient, bucket);
 
         try {
-            BuildFormatCache buildFormatCache = new BuildFormatCache(new File(getDataFolder(), "formats"));
+            BuildFormatStore buildFormatStore = new BuildFormatStore(new File(getDataFolder(), "formats"));
 
             LiteBukkitFactory.builder(this)
                     .invalidUsage(new ExampleInvalidUsageHandler())
-                    .argument(BuildType.class, new BuildType.BuildTypesSuggester(buildFormatCache))
-                    .commands(new BuildCommand(buildMetaStore, buildSchematicStore, buildFormatCache))
+                    .argument(BuildType.class, new BuildType.BuildTypesSuggester(buildFormatStore))
+                    .commands(new BuildCommand(buildMetaStore, buildSchematicStore, buildFormatStore))
                     .build();
 
         } catch (BuildFormatException | IOException e) {
