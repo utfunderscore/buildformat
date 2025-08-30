@@ -39,6 +39,12 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew shadowJar --no-daemon --stacktrace
 
+    - name: Publish to UTF Maven Repository
+      run: ./gradlew publishAllPublicationsToUtfMvnRepository --no-daemon --stacktrace
+      env:
+        UTF_MVN_USER: ${{ secrets.UTF_MVN_USER }}
+        UTF_MVN_PASS: ${{ secrets.UTF_MVN_PASS }}
+
     - name: List all JAR files
       run: find . -name "*.jar" -type f -not -path "*/build/tmp/*" -not -path "*/run/*"
 
