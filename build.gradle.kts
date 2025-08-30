@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.readutf.buildformat"
-version = "1.0.23"
+version = "1.0.26"
 
 repositories {
     mavenCentral()
