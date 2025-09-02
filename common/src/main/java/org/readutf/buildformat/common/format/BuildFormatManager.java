@@ -40,6 +40,10 @@ public class BuildFormatManager {
         adapters.put(String.class, Marker::toString);
     }
 
+    public static <T> void registerAdapter(Class<? extends T> type, MarkerAdapter<? extends T> adapter) {
+        adapters.put(type, adapter);
+    }
+
     @Contract("_, _ -> new")
     public static <T extends BuildFormat> @NotNull CompiledBuildFormat compile(@NotNull String name, @NotNull Class<T> format) throws BuildFormatException {
         return new CompiledBuildFormat(name, getValidators(format));
