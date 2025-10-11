@@ -1,5 +1,6 @@
 package org.readutf.buildformat.common.markers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,14 +24,18 @@ public record Position(
      */
     public static final Position ZERO = new Position(0, 0, 0, 0, 0);
 
+    @JsonIgnore
     public int getBlockX() {
         return (int) Math.floor(x);
     }
 
+
+    @JsonIgnore
     public int getBlockY() {
         return (int) Math.floor(y);
     }
 
+    @JsonIgnore
     public int getBlockZ() {
         return (int) Math.floor(z);
     }
