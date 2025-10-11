@@ -180,7 +180,7 @@ public class BuildCommand {
         player.sendMessage(Component.text("Uploading build file..."));
 
         try {
-            buildSchematicStore.save(new BuildData(name, List.of(), data));
+            buildSchematicStore.save(new BuildData(name, markers, data));
             player.sendMessage(Component.text("Updating database...").color(NamedTextColor.GREEN));
             buildMetaStore.update(name, checksums);
             player.sendMessage(Component.text("Build " + name + " saved with formats: " + formatNames).color(NamedTextColor.GREEN));
