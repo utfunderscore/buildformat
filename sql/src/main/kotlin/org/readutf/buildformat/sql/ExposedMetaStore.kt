@@ -44,7 +44,6 @@ open class ExposedMetaStore private constructor(
             transaction(database) {
                 Tables.BuildMeta.insert {
                     it[this.name] = name
-                    it[this.version] = 1
                     it[this.description] = description
                 }
             }
@@ -58,7 +57,6 @@ open class ExposedMetaStore private constructor(
         return BuildMeta(
             name,
             description,
-            1,
             emptyList(),
             emptyList()
         )
@@ -95,7 +93,6 @@ open class ExposedMetaStore private constructor(
                 BuildMeta(
                     buildMetaRow[Tables.BuildMeta.name],
                     buildMetaRow[Tables.BuildMeta.description],
-                    buildMetaRow[Tables.BuildMeta.version],
                     tags,
                     checksums
                 )
@@ -114,14 +111,7 @@ open class ExposedMetaStore private constructor(
                 .singleOrNull() ?: throw BuildFormatException("Could not find build meta with name $name")
 
             val id = buildMetaRow[Tables.BuildMeta.id]
-
             Tables.BuildMetaFormat.deleteWhere { Tables.BuildMetaFormat.buildMeta eq id }
-
-            Tables.BuildMeta.update({ Tables.BuildMeta.name eq name }) {
-                it[version] = buildMetaRow[Tables.BuildMeta.version] + 1
-            }
-
-            val newVersion = buildMetaRow[Tables.BuildMeta.version] + 1
 
             formats.filterNotNull().forEach { format ->
                 Tables.BuildMetaFormat.insert {
