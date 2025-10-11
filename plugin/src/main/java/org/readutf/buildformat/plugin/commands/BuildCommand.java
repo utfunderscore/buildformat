@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -35,11 +34,10 @@ import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.format.BuildFormatManager;
 import org.readutf.buildformat.common.format.CompiledBuildFormat;
-import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.meta.BuildMeta;
 import org.readutf.buildformat.common.meta.BuildMetaStore;
-import org.readutf.buildformat.common.schematic.BuildSchematic;
+import org.readutf.buildformat.common.schematic.BuildData;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.formats.BuildFormatStore;
@@ -182,7 +180,7 @@ public class BuildCommand {
         player.sendMessage(Component.text("Uploading build file..."));
 
         try {
-            buildSchematicStore.save(new BuildSchematic(name, data));
+            buildSchematicStore.save(new BuildData(name, data));
             player.sendMessage(Component.text("Updating database...").color(NamedTextColor.GREEN));
             buildMetaStore.update(name, checksums);
             player.sendMessage(Component.text("Build " + name + " saved with formats: " + formatNames).color(NamedTextColor.GREEN));

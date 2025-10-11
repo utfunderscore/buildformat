@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.schematic.BuildSchematic;
+import org.readutf.buildformat.common.schematic.BuildData;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
     }
 
     @Override
-    public void save(BuildSchematic buildSchematic) throws BuildFormatException {
+    public void save(BuildData buildSchematic) throws BuildFormatException {
 
         // Ensure its alphanumeric with underscores and dashes
         if (!buildSchematic.buildName().matches("^[a-zA-Z0-9_-]+$")) {
@@ -61,7 +61,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
     }
 
     @Override
-    public @Nullable BuildSchematic load(String name) throws BuildFormatException {
+    public @Nullable BuildData load(String name) throws BuildFormatException {
         // Ensure its alphanumeric with underscores and dashes
         if (!name.matches("^[a-zA-Z0-9_-]+$")) {
             throw new BuildFormatException("Build name must be alphanumeric + dashes and underscores");
@@ -77,7 +77,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
 
         byte[] byteArray = downloaded.result().asByteArray();
 
-        return new BuildSchematic(name, byteArray);
+        return new BuildData(name, byteArray);
     }
 
     @Override
