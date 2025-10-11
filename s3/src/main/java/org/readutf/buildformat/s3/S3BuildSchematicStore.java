@@ -77,7 +77,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
 
         byte[] byteArray = downloaded.result().asByteArray();
 
-        return new BuildData(name, byteArray);
+        return new BuildData(name, List.of(), byteArray);
     }
 
     @Override

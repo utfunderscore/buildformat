@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 class S3BuildDataStoreTest {
 
@@ -50,7 +51,7 @@ class S3BuildDataStoreTest {
 
         // Load Atlantis.schem from resources
         BuildData schematic = new BuildData(
-                "Atlantis", Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
+                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
 
         store.save(schematic);
 
@@ -81,7 +82,7 @@ class S3BuildDataStoreTest {
 
         // Load Atlantis.schem from resources
         BuildData schematic = new BuildData(
-                "Atlantis", Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
+                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
 
         store.save(schematic);
 

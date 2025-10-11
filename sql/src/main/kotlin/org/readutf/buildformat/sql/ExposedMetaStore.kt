@@ -103,7 +103,7 @@ open class ExposedMetaStore private constructor(
     override fun update(
         name: String,
         formats: List<BuildFormatChecksum?>
-    ): BuildMeta? {
+    ) {
         return transaction(database) {
             val buildMetaRow = Tables.BuildMeta
                 .selectAll()
@@ -121,7 +121,6 @@ open class ExposedMetaStore private constructor(
                 }
             }
 
-            getByName(name)
         }
     }
 
