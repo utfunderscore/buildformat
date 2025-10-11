@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DatabindException;
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.markers.Marker;
+import org.readutf.buildformat.common.markers.Position;
 import org.readutf.buildformat.common.schematic.BuildData;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.slf4j.Logger;
@@ -52,7 +54,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
 
             // Create body
             byte[] buildData = buildSchematic.buildData();
-            byte[] markersJsonData = MAPPER.writeValueAsBytes(buildSchematic.markers());
+            String markersJsonData = MAPPER.writeValueAsString(buildSchematic.markers());
 
             UploadRequest schematicUploadRequest = UploadRequest.builder()
                     .putObjectRequest(
@@ -65,7 +67,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
                     .putObjectRequest(
                             builder -> builder.bucket(bucketName).key("%s/markers.json".formatted(buildSchematic.buildName()))
                     ).addTransferListener(LoggingTransferListener.create())
-                    .requestBody(AsyncRequestBody.fromBytes(markersJsonData))
+                    .requestBody(AsyncRequestBody.fromString(markersJsonData))
                     .build();
 
             CompletableFuture<CompletedUpload> schematicUploadFuture =
@@ -105,7 +107,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
                 transferManager.download(markersDownloadRequest).completionFuture().join();
 
         byte[] schematicData = schematicDownload.result().asByteArray();
-        byte[] markersData = markersDownload.result().asByteArray();
+        String markersData = new String(markersDownload.result().asByteArray());
 
         try {
             List<Marker> markers = MAPPER.readValue(markersData, new TypeReference<>() {
@@ -122,4 +124,25 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
 
         return List.of();
     }
+
+    public static void main(String[] args) throws JsonProcessingException {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        List<Marker> markers = List.of(
+                new Marker("test", new Position(0.0, 0.0, 0.0), new Position(0.0, 0.0, 0.0))
+        );
+
+        String s = new ObjectMapper().writeValueAsString(markers);
+        byte[] bytes = s.getBytes();
+
+        String read = new String(bytes);
+        List<Marker> readMarkers = mapper.readValue(read, new TypeReference<>() {
+        });
+
+        System.out.println(readMarkers);
+
+
+    }
+
 }
