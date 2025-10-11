@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
+    env:
+      ARENA_VERSION: ${{ github.ref_name }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
