@@ -1,5 +1,9 @@
 package org.readutf.buildformat.common.markers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Represents a origin inside a build
  * @param name The name of the marker
@@ -8,7 +12,8 @@ package org.readutf.buildformat.common.markers;
  */
 public record Marker(String name, Position origin, Position offset) {
 
-    public Position getTargetPosition() {
+    @Contract(pure = true) @JsonIgnore
+    public @NotNull Position getTargetPosition() {
         return origin.add(offset);
     }
 }
