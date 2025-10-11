@@ -19,7 +19,7 @@ public class InMemoryMetaStore implements BuildMetaStore {
         if(buildMetas.containsKey(name)) {
             throw new BuildFormatException("Build with name " + name + " already exists");
         }
-        BuildMeta buildMeta = new BuildMeta(name, description, 1, List.of(), List.of());
+        BuildMeta buildMeta = new BuildMeta(name, description, List.of(), List.of());
         buildMetas.put(name, buildMeta);
         return buildMeta;
     }
@@ -30,7 +30,7 @@ public class InMemoryMetaStore implements BuildMetaStore {
     }
 
     @Override
-    public BuildMeta update(@NotNull String name, @NotNull List<BuildFormatChecksum> formats) throws BuildFormatException {
+    public void update(@NotNull String name, @NotNull List<BuildFormatChecksum> formats) throws BuildFormatException {
         BuildMeta buildMeta = buildMetas.get(name);
         if (buildMeta == null) {
             throw new BuildFormatException("Build with name " + name + " does not exist");
@@ -38,12 +38,10 @@ public class InMemoryMetaStore implements BuildMetaStore {
         BuildMeta updated = new BuildMeta(
                 buildMeta.name(),
                 buildMeta.description(),
-                1,
                 buildMeta.tags(),
                 formats
         );
         buildMetas.put(name, updated);
-        return buildMeta;
     }
 
     @Override

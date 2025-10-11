@@ -3,7 +3,7 @@ package org.readutf.buildformat.s3;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.schematic.BuildSchematic;
+import org.readutf.buildformat.common.schematic.BuildData;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -17,8 +17,9 @@ import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
-class S3BuildSchematicStoreTest {
+class S3BuildDataStoreTest {
 
     @BeforeAll
     public static void beforeAll() {}
@@ -49,12 +50,12 @@ class S3BuildSchematicStoreTest {
         S3BuildSchematicStore store = new S3BuildSchematicStore(s3, "test");
 
         // Load Atlantis.schem from resources
-        BuildSchematic schematic = new BuildSchematic(
-                "Atlantis", Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
+        BuildData schematic = new BuildData(
+                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
 
         store.save(schematic);
 
-        BuildSchematic downloaded = store.load("Atlantis");
+        BuildData downloaded = store.load("Atlantis");
 
         System.out.println(downloaded);
     }
@@ -80,12 +81,12 @@ class S3BuildSchematicStoreTest {
         S3BuildSchematicStore store = new S3BuildSchematicStore(client, bucket);
 
         // Load Atlantis.schem from resources
-        BuildSchematic schematic = new BuildSchematic(
-                "Atlantis", Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
+        BuildData schematic = new BuildData(
+                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
 
         store.save(schematic);
 
-        BuildSchematic downloaded = store.load("Atlantis");
+        BuildData downloaded = store.load("Atlantis");
 
         System.out.println(downloaded);
     }

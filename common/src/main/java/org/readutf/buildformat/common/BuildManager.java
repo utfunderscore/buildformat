@@ -8,7 +8,7 @@ import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.meta.BuildMeta;
 import org.readutf.buildformat.common.meta.BuildMetaStore;
-import org.readutf.buildformat.common.schematic.BuildSchematic;
+import org.readutf.buildformat.common.schematic.BuildData;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 
 public class BuildManager {
@@ -27,7 +27,7 @@ public class BuildManager {
         BuildMeta meta = buildMetaStore.getByName(name);
         if (meta == null) return null;
 
-        BuildSchematic buildData = schematicStore.load(name);
+        BuildData buildData = schematicStore.load(name);
         if (buildData == null) return null;
         return new Build(meta, buildData);
     }

@@ -1,12 +1,18 @@
 package org.readutf.buildformat.s3;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.schematic.BuildSchematic;
+import org.readutf.buildformat.common.markers.Marker;
+import org.readutf.buildformat.common.schematic.BuildData;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +28,12 @@ import software.amazon.awssdk.transfer.s3.progress.LoggingTransferListener;
 public class S3BuildSchematicStore implements BuildSchematicStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BuildSchematicStore.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private @NotNull final S3TransferManager transferManager;
-    private @NotNull final String bucketName;
+    private @NotNull
+    final S3TransferManager transferManager;
+    private @NotNull
+    final String bucketName;
 
     public S3BuildSchematicStore(@NotNull S3AsyncClient s3Client, @NotNull String bucketName) {
         this.transferManager = S3TransferManager.builder().s3Client(s3Client).build();
@@ -32,27 +41,39 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
     }
 
     @Override
-    public void save(BuildSchematic buildSchematic) throws BuildFormatException {
+    public void save(@NotNull BuildData buildSchematic) throws BuildFormatException {
 
         // Ensure its alphanumeric with underscores and dashes
         if (!buildSchematic.buildName().matches("^[a-zA-Z0-9_-]+$")) {
             throw new BuildFormatException("Build name must be alphanumeric + dashes and underscores");
         }
 
-        // Create body
-        byte[] buildData = buildSchematic.buildData();
-
-        UploadRequest uploadRequest = UploadRequest.builder()
-                .putObjectRequest(
-                        builder -> builder.bucket(bucketName).key("%s.schem".formatted(buildSchematic.buildName())))
-                .addTransferListener(LoggingTransferListener.create())
-                .requestBody(AsyncRequestBody.fromBytes(buildData))
-                .build();
-
         try {
-            CompletableFuture<CompletedUpload> future =
-                    transferManager.upload(uploadRequest).completionFuture();
-            future.join();
+
+            // Create body
+            byte[] buildData = buildSchematic.buildData();
+            byte[] markersJsonData = MAPPER.writeValueAsBytes(buildSchematic.markers());
+
+            UploadRequest schematicUploadRequest = UploadRequest.builder()
+                    .putObjectRequest(
+                            builder -> builder.bucket(bucketName).key("%s/build.schem".formatted(buildSchematic.buildName())))
+                    .addTransferListener(LoggingTransferListener.create())
+                    .requestBody(AsyncRequestBody.fromBytes(buildData))
+                    .build();
+
+            UploadRequest markersUploadRequest = UploadRequest.builder()
+                    .putObjectRequest(
+                            builder -> builder.bucket(bucketName).key("%s/markers.json".formatted(buildSchematic.buildName()))
+                    ).addTransferListener(LoggingTransferListener.create())
+                    .requestBody(AsyncRequestBody.fromBytes(markersJsonData))
+                    .build();
+
+            CompletableFuture<CompletedUpload> schematicUploadFuture =
+                    transferManager.upload(schematicUploadRequest).completionFuture();
+            CompletableFuture<CompletedUpload> markersUploadFuture =
+                    transferManager.upload(markersUploadRequest).completionFuture();
+
+            CompletableFuture.allOf(schematicUploadFuture, markersUploadFuture).join();
         } catch (Exception e) {
             throw new BuildFormatException("Failed to save build schematic to S3", e);
         }
@@ -61,27 +82,43 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
     }
 
     @Override
-    public @Nullable BuildSchematic load(String name) throws BuildFormatException {
+    public @Nullable BuildData load(@NotNull String name) throws BuildFormatException {
         // Ensure its alphanumeric with underscores and dashes
         if (!name.matches("^[a-zA-Z0-9_-]+$")) {
             throw new BuildFormatException("Build name must be alphanumeric + dashes and underscores");
         }
 
-        DownloadRequest<ResponseBytes<GetObjectResponse>> downloadRequest = DownloadRequest.builder()
-                .getObjectRequest(req -> req.bucket(bucketName).key("%s.schem".formatted(name)))
+        DownloadRequest<ResponseBytes<GetObjectResponse>> schematicDownloadRequest = DownloadRequest.builder()
+                .getObjectRequest(req -> req.bucket(bucketName).key("%s/build.schem".formatted(name)))
                 .responseTransformer(AsyncResponseTransformer.toBytes())
                 .build();
 
-        CompletedDownload<ResponseBytes<GetObjectResponse>> downloaded =
-                transferManager.download(downloadRequest).completionFuture().join();
+        CompletedDownload<ResponseBytes<GetObjectResponse>> schematicDownload =
+                transferManager.download(schematicDownloadRequest).completionFuture().join();
 
-        byte[] byteArray = downloaded.result().asByteArray();
+        DownloadRequest<ResponseBytes<GetObjectResponse>> markersDownloadRequest = DownloadRequest.builder()
+                .getObjectRequest(req -> req.bucket(bucketName).key("%s/markers.json".formatted(name)))
+                .responseTransformer(AsyncResponseTransformer.toBytes())
+                .build();
 
-        return new BuildSchematic(name, byteArray);
+        CompletedDownload<ResponseBytes<GetObjectResponse>> markersDownload =
+                transferManager.download(markersDownloadRequest).completionFuture().join();
+
+        byte[] schematicData = schematicDownload.result().asByteArray();
+        byte[] markersData = markersDownload.result().asByteArray();
+
+        try {
+            List<Marker> markers = MAPPER.readValue(markersData, new TypeReference<>() {
+            });
+
+            return new BuildData(name, markers, schematicData);
+        } catch (IOException e) {
+            throw new BuildFormatException("Failed to load build schematic from S3", e);
+        }
     }
 
     @Override
-    public List<String> history(String name) throws BuildFormatException {
+    public List<String> history(String name) {
 
         return List.of();
     }
