@@ -15,6 +15,7 @@ dependencies {
     testImplementation("org.testcontainers:localstack:1.21.3")
 
     implementation(project(":common"))
+    implementation("tools.jackson.core:jackson-databind:3.0.0")
 
     api("software.amazon.awssdk:aws-core:2.31.77")
     api("software.amazon.awssdk:s3:2.31.77")
