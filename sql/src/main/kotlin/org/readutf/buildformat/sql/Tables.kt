@@ -6,7 +6,6 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 object Tables {
     object BuildMeta : IntIdTable("buildmeta") {
         val name = varchar("name", 32).uniqueIndex("UK_build_meta_name")
-        val version = integer("version")
         val description = varchar("description", 128)
     }
 

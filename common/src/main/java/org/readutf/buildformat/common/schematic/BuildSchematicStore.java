@@ -5,7 +5,7 @@ import org.readutf.buildformat.common.exception.BuildFormatException;
 
 public interface BuildSchematicStore {
 
-    void save(BuildSchematic buildSchematic) throws BuildFormatException;
+    void save(BuildData buildData) throws BuildFormatException;
 
     /**
      * Load the latest version of the build schematic
@@ -13,7 +13,7 @@ public interface BuildSchematicStore {
      * @return the schematic data
      * @throws BuildFormatException - if the schematic is not found or cannot be loaded
      */
-    BuildSchematic load(String name) throws BuildFormatException;
+    BuildData load(String name) throws BuildFormatException;
 
     List<String> history(String name) throws BuildFormatException;
 
