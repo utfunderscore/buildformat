@@ -30,7 +30,7 @@ public class InMemoryMetaStore implements BuildMetaStore {
     }
 
     @Override
-    public void update(@NotNull String name, @NotNull List<BuildFormatChecksum> formats) throws BuildFormatException {
+    public void update(@NotNull String name, @NotNull List<BuildFormatChecksum> checksums) throws BuildFormatException {
         BuildMeta buildMeta = buildMetas.get(name);
         if (buildMeta == null) {
             throw new BuildFormatException("Build with name " + name + " does not exist");
@@ -39,7 +39,7 @@ public class InMemoryMetaStore implements BuildMetaStore {
                 buildMeta.name(),
                 buildMeta.description(),
                 buildMeta.tags(),
-                formats
+                checksums
         );
         buildMetas.put(name, updated);
     }

@@ -18,6 +18,7 @@ import org.readutf.buildformat.plugin.commands.BuildCommand;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.commands.types.ExampleInvalidUsageHandler;
 import org.readutf.buildformat.plugin.formats.BuildFormatStore;
+import org.readutf.buildformat.plugin.formats.SchematicFormats;
 import org.readutf.buildformat.s3.S3BuildSchematicStore;
 import org.readutf.buildformat.sql.SQLMetaStore;
 import org.slf4j.Logger;

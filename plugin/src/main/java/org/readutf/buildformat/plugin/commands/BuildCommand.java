@@ -3,7 +3,6 @@ package org.readutf.buildformat.plugin.commands;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.BukkitPlayer;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.sponge.SpongeSchematicV3Writer;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import dev.rollczi.litecommands.annotations.argument.Arg;
 import dev.rollczi.litecommands.annotations.async.Async;
@@ -14,8 +13,6 @@ import dev.rollczi.litecommands.annotations.flag.Flag;
 import dev.rollczi.litecommands.annotations.join.Join;
 import dev.rollczi.litecommands.annotations.varargs.Varargs;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +20,6 @@ import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPOutputStream;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -41,6 +37,8 @@ import org.readutf.buildformat.common.schematic.BuildData;
 import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.buildformat.plugin.commands.types.BuildType;
 import org.readutf.buildformat.plugin.formats.BuildFormatStore;
+import org.readutf.buildformat.plugin.formats.SchematicFormat;
+import org.readutf.buildformat.plugin.formats.SchematicFormats;
 import org.readutf.buildformat.plugin.marker.MarkerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +46,19 @@ import org.slf4j.LoggerFactory;
 @Command(name = "build")
 public class BuildCommand {
 
-    private @NotNull
-    final BuildMetaStore buildMetaStore;
-    private @NotNull
-    final BuildSchematicStore buildSchematicStore;
-    private @NotNull
-    final BuildFormatStore buildFormatStore;
+
+
     private static final Logger logger = LoggerFactory.getLogger(BuildCommand.class);
     private static final Executor uploadExecutor = Executors.newSingleThreadExecutor();
+
+    @NotNull
+    private final BuildMetaStore buildMetaStore;
+
+    @NotNull
+    private final BuildSchematicStore buildSchematicStore;
+
+    @NotNull
+    private final BuildFormatStore buildFormatStore;
 
     public BuildCommand(@NotNull BuildMetaStore buildMetaStore, @NotNull BuildSchematicStore buildSchematicStore, @NotNull BuildFormatStore buildFormatStore) {
         this.buildMetaStore = buildMetaStore;
@@ -114,7 +117,7 @@ public class BuildCommand {
 
     @Async
     @Execute(name = "save")
-    public void save(@Context Player player, @Arg("name") String originalName, @Flag("-f") boolean force, @Varargs BuildType... buildType) throws IOException {
+    public void save(@Context Player player, @Arg("name") String originalName, @Arg("format") String format, @Flag("-f") boolean force, @Varargs BuildType... buildType) throws IOException {
         String name = originalName.toLowerCase();
         @Nullable BuildMeta meta;
         try {
@@ -133,9 +136,9 @@ public class BuildCommand {
         if (!force) {
             List<String> missing = new ArrayList<>();
 
-            for (BuildFormatChecksum format : meta.formats()) {
-                if (!formatNames.contains(format.name())) {
-                    missing.add(format.name());
+            for (BuildFormatChecksum buildFormat : meta.formats()) {
+                if (!formatNames.contains(buildFormat.name())) {
+                    missing.add(buildFormat.name());
                 }
                 if (!missing.isEmpty()) {
                     player.sendMessage(Component.text("The following formats are missing: (To override this use -f)").color(NamedTextColor.RED));
@@ -153,21 +156,23 @@ public class BuildCommand {
         }
 
         Clipboard clipboard = clipboardHolder.getClipboards().getFirst();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        GZIPOutputStream gzipStream = new GZIPOutputStream(outputStream);
-        SpongeSchematicV3Writer writer = new SpongeSchematicV3Writer(new DataOutputStream(gzipStream));
+
+        SchematicFormat spongeFormat = SchematicFormats.SPONGE_V3.getFormat();
+        SchematicFormat polarFormat = SchematicFormats.POLAR.getFormat();
+
+        byte[] schematicData;
+        byte[] polarData;
         try {
-            writer.write(clipboard);
-        } catch (IOException e) {
-            player.sendMessage(Component.text("Failed to save clipboard").color(NamedTextColor.RED));
+            schematicData = spongeFormat.convert(clipboard);
+            polarData = polarFormat.convert(clipboard);
+        } catch (Exception e) {
+            player.sendMessage(Component.text("Failed to convert schematic: " + e.getMessage()).color(NamedTextColor.RED));
+            logger.info("Failed to convert schematic", e);
             return;
         }
-        gzipStream.close();
-        byte[] data = outputStream.toByteArray();
 
         player.sendMessage(Component.text("Scanning markers..."));
         List<Marker> markers = MarkerUtils.scan(clipboard);
-//        MarkerUtils.removeMarkerBlocks(clipboard, markers);
 
         @NotNull List<BuildFormatChecksum> checksums;
         try {
@@ -180,7 +185,7 @@ public class BuildCommand {
         player.sendMessage(Component.text("Uploading build file..."));
 
         try {
-            buildSchematicStore.save(new BuildData(name, markers, data));
+            buildSchematicStore.save(new BuildData(name, markers, schematicData, polarData));
             player.sendMessage(Component.text("Updating database...").color(NamedTextColor.GREEN));
             buildMetaStore.update(name, checksums);
             player.sendMessage(Component.text("Build " + name + " saved with formats: " + formatNames).color(NamedTextColor.GREEN));
@@ -191,7 +196,7 @@ public class BuildCommand {
 
     }
 
-    private List<BuildFormatChecksum> testBuildRequirements(@NotNull List<String> formatNames, List<Marker> markers) throws BuildFormatException {
+    private @NotNull List<BuildFormatChecksum> testBuildRequirements(@NotNull List<String> formatNames, List<Marker> markers) throws BuildFormatException {
         List<CompiledBuildFormat> formatChecksums = buildFormatStore.getFormatChecksums();
 
         List<CompiledBuildFormat> selectedFormats = new ArrayList<>();

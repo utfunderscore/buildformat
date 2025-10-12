@@ -13,7 +13,7 @@ public interface BuildMetaStore {
 
     @Nullable BuildMeta getByName(@NotNull String name) throws BuildFormatException;
 
-    void update(@NotNull String name, @NotNull List<BuildFormatChecksum> formats) throws BuildFormatException;
+    void update(@NotNull String name, @NotNull List<BuildFormatChecksum> checksums) throws BuildFormatException;
 
     @NotNull List<String> getBuilds() throws BuildFormatException;
 

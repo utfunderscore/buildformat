@@ -13,7 +13,7 @@ version = "1.0.0-SNAPSHOT"
 description = "Test plugin for paperweight-userdev"
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(23)
 }
 
 repositories {
@@ -21,6 +21,7 @@ repositories {
     maven { url = uri("https://repo.panda-lang.org/releases") }
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://maven.enginehub.org/repo/")
+    maven("https://mvn.utf.lol/releases/")
 }
 
 dependencies {
@@ -31,6 +32,14 @@ dependencies {
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core")
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit") { isTransitive = false }
     implementation("org.postgresql:postgresql:42.7.5")
+
+    implementation("net.minestom:minestom:2025.10.05-1.21.8")
+    implementation("dev.hollowcube:polar:1.14.7") {
+        exclude("net.minestom", "minestom")
+    }
+    implementation("dev.hollowcube:schem:1d3ecd1a62") {
+        exclude("net.minestom", "minestom")
+    }
 
     implementation(project(":sql"))
     implementation(project(":s3"))

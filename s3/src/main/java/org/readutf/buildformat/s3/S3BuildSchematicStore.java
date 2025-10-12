@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,14 +51,22 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
         try {
 
             // Create body
-            byte[] buildData = buildSchematic.buildData();
+            byte[] schematicData = buildSchematic.schematicData();
+            byte[] polarData = buildSchematic.polarData();
             String markersJsonData = MAPPER.writeValueAsString(buildSchematic.markers());
 
             UploadRequest schematicUploadRequest = UploadRequest.builder()
                     .putObjectRequest(
                             builder -> builder.bucket(bucketName).key("%s/build.schem".formatted(buildSchematic.buildName())))
                     .addTransferListener(LoggingTransferListener.create())
-                    .requestBody(AsyncRequestBody.fromBytes(buildData))
+                    .requestBody(AsyncRequestBody.fromBytes(schematicData))
+                    .build();
+
+            UploadRequest polarUploadRequest = UploadRequest.builder()
+                    .putObjectRequest(
+                            builder -> builder.bucket(bucketName).key("%s/build.polar".formatted(buildSchematic.buildName())))
+                    .addTransferListener(LoggingTransferListener.create())
+                    .requestBody(AsyncRequestBody.fromBytes(polarData))
                     .build();
 
             UploadRequest markersUploadRequest = UploadRequest.builder()
@@ -72,10 +78,14 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
 
             CompletableFuture<CompletedUpload> schematicUploadFuture =
                     transferManager.upload(schematicUploadRequest).completionFuture();
+
+            CompletableFuture<CompletedUpload> polarUploadFuture =
+                    transferManager.upload(polarUploadRequest).completionFuture();
+
             CompletableFuture<CompletedUpload> markersUploadFuture =
                     transferManager.upload(markersUploadRequest).completionFuture();
 
-            CompletableFuture.allOf(schematicUploadFuture, markersUploadFuture).join();
+            CompletableFuture.allOf(schematicUploadFuture, markersUploadFuture, polarUploadFuture).join();
         } catch (Exception e) {
             throw new BuildFormatException("Failed to save build schematic to S3", e);
         }
@@ -95,25 +105,34 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
                 .responseTransformer(AsyncResponseTransformer.toBytes())
                 .build();
 
-        CompletedDownload<ResponseBytes<GetObjectResponse>> schematicDownload =
-                transferManager.download(schematicDownloadRequest).completionFuture().join();
+        DownloadRequest<ResponseBytes<GetObjectResponse>> polarDownloadRequest = DownloadRequest.builder()
+                .getObjectRequest(req -> req.bucket(bucketName).key("%s/build.polar".formatted(name)))
+                .responseTransformer(AsyncResponseTransformer.toBytes())
+                .build();
 
         DownloadRequest<ResponseBytes<GetObjectResponse>> markersDownloadRequest = DownloadRequest.builder()
                 .getObjectRequest(req -> req.bucket(bucketName).key("%s/markers.json".formatted(name)))
                 .responseTransformer(AsyncResponseTransformer.toBytes())
                 .build();
 
+        CompletedDownload<ResponseBytes<GetObjectResponse>> schematicDownload =
+                transferManager.download(schematicDownloadRequest).completionFuture().join();
+
+        CompletedDownload<ResponseBytes<GetObjectResponse>> polarDownload =
+                transferManager.download(polarDownloadRequest).completionFuture().join();
+
         CompletedDownload<ResponseBytes<GetObjectResponse>> markersDownload =
                 transferManager.download(markersDownloadRequest).completionFuture().join();
 
         byte[] schematicData = schematicDownload.result().asByteArray();
+        byte[] polarData = polarDownload.result().asByteArray();
         String markersData = new String(markersDownload.result().asByteArray());
 
         try {
             List<Marker> markers = MAPPER.readValue(markersData, new TypeReference<>() {
             });
 
-            return new BuildData(name, markers, schematicData);
+            return new BuildData(name, markers, schematicData, polarData);
         } catch (IOException e) {
             throw new BuildFormatException("Failed to load build schematic from S3", e);
         }
@@ -121,28 +140,7 @@ public class S3BuildSchematicStore implements BuildSchematicStore {
 
     @Override
     public List<String> history(String name) {
-
         return List.of();
-    }
-
-    public static void main(String[] args) throws JsonProcessingException {
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        List<Marker> markers = List.of(
-                new Marker("test", new Position(0.0, 0.0, 0.0), new Position(0.0, 0.0, 0.0))
-        );
-
-        String s = new ObjectMapper().writeValueAsString(markers);
-        byte[] bytes = s.getBytes();
-
-        String read = new String(bytes);
-        List<Marker> readMarkers = mapper.readValue(read, new TypeReference<>() {
-        });
-
-        System.out.println(readMarkers);
-
-
     }
 
 }

@@ -102,7 +102,7 @@ open class ExposedMetaStore private constructor(
 
     override fun update(
         name: String,
-        formats: List<BuildFormatChecksum?>
+        checksums: List<BuildFormatChecksum?>
     ) {
         return transaction(database) {
             val buildMetaRow = Tables.BuildMeta
@@ -113,7 +113,7 @@ open class ExposedMetaStore private constructor(
             val id = buildMetaRow[Tables.BuildMeta.id]
             Tables.BuildMetaFormat.deleteWhere { Tables.BuildMetaFormat.buildMeta eq id }
 
-            formats.filterNotNull().forEach { format ->
+            checksums.filterNotNull().forEach { format ->
                 Tables.BuildMetaFormat.insert {
                     it[this.name] = format.name
                     it[this.checksum] = Base64.getEncoder().encodeToString(format.checksum)

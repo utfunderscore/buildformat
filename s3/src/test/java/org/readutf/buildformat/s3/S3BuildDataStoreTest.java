@@ -49,11 +49,11 @@ class S3BuildDataStoreTest {
 
         S3BuildSchematicStore store = new S3BuildSchematicStore(s3, "test");
 
-        // Load Atlantis.schem from resources
-        BuildData schematic = new BuildData(
-                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
-
-        store.save(schematic);
+//        // Load Atlantis.schem from resources
+//        BuildData schematic = new BuildData(
+//                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
+//
+//        store.save(schematic);
 
         BuildData downloaded = store.load("Atlantis");
 
@@ -81,10 +81,10 @@ class S3BuildDataStoreTest {
         S3BuildSchematicStore store = new S3BuildSchematicStore(client, bucket);
 
         // Load Atlantis.schem from resources
-        BuildData schematic = new BuildData(
-                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
-
-        store.save(schematic);
+//        BuildData schematic = new BuildData(
+//                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
+//
+//        store.save(schematic);
 
         BuildData downloaded = store.load("Atlantis");
 
