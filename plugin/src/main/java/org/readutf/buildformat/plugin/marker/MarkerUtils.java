@@ -101,14 +101,7 @@ public class MarkerUtils {
         }
     }
 
-
-    private static boolean isMarker(List<Component> lines) {
-        if (lines.isEmpty() || !(lines.getFirst() instanceof net.kyori.adventure.text.TextComponent text)) return false;
-        String content = text.content();
-        return content.toLowerCase().contains("marker");
-    }
-
-    private static @Nullable Marker toMarker(Position position, List<Component> lines) {
+    private static @Nullable Marker toMarker(Position position, @NotNull List<Component> lines) {
         if (lines.size() < 2 || !(lines.get(1) instanceof net.kyori.adventure.text.TextComponent nameText)) return null;
         String name = nameText.content();
 
@@ -127,7 +120,7 @@ public class MarkerUtils {
         );
     }
 
-    private static @Nullable Position getOffset(String offsetLine) {
+    private static @Nullable Position getOffset(@NotNull String offsetLine) {
         String[] parts = offsetLine.split(" ");
         if (parts.length != 3) return null;
         try {
