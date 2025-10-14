@@ -117,7 +117,7 @@ public class BuildCommand {
 
     @Async
     @Execute(name = "save")
-    public void save(@Context Player player, @Arg("name") String originalName, @Arg("format") String format, @Flag("-f") boolean force, @Varargs BuildType... buildType) throws IOException {
+    public void save(@Context Player player, @Arg("name") String originalName, @Flag("-f") boolean force, @Varargs BuildType... buildType) {
         String name = originalName.toLowerCase();
         @Nullable BuildMeta meta;
         try {
@@ -181,6 +181,8 @@ public class BuildCommand {
             player.sendMessage(Component.text(e.getMessage()));
             return;
         }
+
+        System.out.println(markers);
 
         player.sendMessage(Component.text("Uploading build file..."));
 

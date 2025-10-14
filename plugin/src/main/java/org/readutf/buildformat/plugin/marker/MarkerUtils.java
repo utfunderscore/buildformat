@@ -1,5 +1,6 @@
 package org.readutf.buildformat.plugin.marker;
 
+import com.fastasyncworldedit.core.registry.state.PropertyKey;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BaseBlock;
@@ -51,16 +52,20 @@ public class MarkerUtils {
 
             BlockVector3 relative = blockVector3.subtract(BlockVector3.at(0, 0, 0));
 
+            float rotation = block.<Integer>getState(PropertyKey.ROTATION) * 22.5f;
+
             Position position = new Position(
                     relative.x(),
                     relative.y(),
-                    relative.z()
+                    relative.z(),
+                    rotation,
+                    0
             );
-
-            logger.info("Position: {}", position);
 
             Marker frontMarker = toMarker(position, front);
             Marker backMarker = toMarker(position, back);
+
+
             if(frontMarker != null) {
                 return frontMarker;
             } else return backMarker;
@@ -71,15 +76,6 @@ public class MarkerUtils {
         logger.info("Scanning {} markers in {} ms", markers.size(), (after - start));
 
         return markers;
-    }
-
-    public static void removeMarkerBlocks(@NotNull Clipboard clipboard, @NotNull List<Marker> markers) {
-
-        for (Marker marker : markers) {
-            Position position = marker.origin();
-            clipboard.setBlock(position.getBlockX(), position.getBlockY(), position.getBlockZ(), BlockTypes.AIR.getDefaultState());
-        }
-
     }
 
     private @Nullable
