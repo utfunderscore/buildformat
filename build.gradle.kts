@@ -1,46 +1,12 @@
 plugins {
-    `java-library`
-    `maven-publish`
+    id("java")
 }
 
 group = "org.readutf.buildformat"
-version = System.getenv("ARENA_VERSION") ?: "dev"
+version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-}
-
-subprojects {
-
-    if (project.name == "plugin") {
-        return@subprojects
-    }
-
-    apply(plugin = "maven-publish")
-    apply(plugin = "java-library")
-
-    version = rootProject.version
-    group = rootProject.group
-
-    publishing {
-        publications {
-            create<MavenPublication>("mavenJava") {
-                from(components["java"])
-            }
-        }
-
-        repositories {
-            maven {
-                name = "utfMvn"
-                url = uri("https://mvn.utf.lol/releases")
-                credentials {
-                    username = System.getenv("UTF_MVN_USER") ?: findProperty("utfMvnUser") as String? ?: "readutf"
-                    password = System.getenv("UTF_MVN_PASS") ?: findProperty("utfMvnPass") as String? ?: "readutf"
-                }
-            }
-
-        }
-    }
 }
 
 dependencies {
