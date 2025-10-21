@@ -25,7 +25,7 @@ public class BuildConstructor {
         this.genericTypeAdapters.put(String.class, String::valueOf);
     }
 
-    public <T> T construct(@NonNull Class<T> clazz, Map<String, List<Position>> positions, Map<String, String> genericSettings) throws Exception {
+    public <T> T construct(@NonNull Class<T> clazz, BuildMarkerData buildData) throws Exception {
         if (!clazz.isRecord()) {
             throw new Exception("Class must be a record");
         }
@@ -43,7 +43,7 @@ public class BuildConstructor {
                 Class<?> paramType = parameter.getType();
 
                 if (Position.class.equals(paramType)) {
-                    List<Position> posList = positions.get(paramName);
+                    List<Position> posList = buildData.positions().get(paramName);
                     if (posList == null || posList.isEmpty()) {
                         throw new Exception("No positions provided for parameter: " + paramName);
                     }
@@ -59,7 +59,7 @@ public class BuildConstructor {
                     }
 
                     if (isListOfPosition) {
-                        List<Position> posList = positions.get(paramName);
+                        List<Position> posList = buildData.positions().get(paramName);
                         if (posList == null) {
                             throw new Exception("No positions provided for parameter: " + paramName);
                         }
@@ -69,7 +69,7 @@ public class BuildConstructor {
                     }
                 } else if (genericTypeAdapters.containsKey(paramType)) {
                     GenericTypeAdapter<?> adapter = genericTypeAdapters.get(paramType);
-                    String value = genericSettings.get(paramName);
+                    String value = buildData.genericSettings() .get(paramName);
                     if (value == null) {
                         throw new Exception("No generic setting provided for parameter: " + paramName);
                     }
