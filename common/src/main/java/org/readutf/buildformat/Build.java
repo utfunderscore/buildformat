@@ -1,11 +1,12 @@
 package org.readutf.buildformat;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record Build(
         String name,
         String description,
-        long creationTimestamp,
+        LocalDateTime creationTimestamp,
         int version,
         List<String> formats
 ) {

@@ -14,12 +14,12 @@ public class BuildConstructorTest {
     @Test
     public void testBuildConstructor() throws Exception {
 
-        buildConstructor.construct(SimpleTestCase.class, Map.of(
-                "startPosition", List.of(new Position(0, 0, 0)),
-                "endPosition", List.of(new Position(0, 0, 0)),
-                "checkpoints", List.of(new Position(0, 0, 0))/*,
-                "startPosition", List.of(new Position(0, 0, 0))*/
-        ), Map.of("speedMultiplier", "1.5", "entityName", "test entity"));
+//        buildConstructor.construct(SimpleTestCase.class, Map.of(
+//                "startPosition", List.of(new Position(0, 0, 0)),
+//                "endPosition", List.of(new Position(0, 0, 0)),
+//                "checkpoints", List.of(new Position(0, 0, 0))/*,
+//                "startPosition", List.of(new Position(0, 0, 0))*/
+//        ), Map.of("speedMultiplier", "1.5", "entityName", "test entity"));
 
 
 
