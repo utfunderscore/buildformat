@@ -17,6 +17,16 @@ dependencies {
     implementation("org.jspecify:jspecify:1.0.0")
 }
 
+tasks {
+    compileJava {
+        options.release = 23
+    }
+    javadoc {
+        options.encoding = Charsets.UTF_8.name()
+    }
+}
+
+
 tasks.test {
     useJUnitPlatform()
 }
