@@ -17,7 +17,9 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.postgresql:postgresql:42.7.8")
+    testImplementation("org.xerial:sqlite-jdbc:3.50.3.0")
+    testImplementation("org.flywaydb:flyway-core:11.14.1")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     implementation(project(":common"))
@@ -25,8 +27,10 @@ dependencies {
     implementation("org.tinylog:tinylog-impl:2.7.0")
     implementation("org.tinylog:slf4j-tinylog:2.7.0")
 
-    compileOnly("org.postgresql:postgresql:42.7.8")
-    jooqCodegen("org.postgresql:postgresql:42.7.8")
+    compileOnly("org.xerial:sqlite-jdbc:3.50.3.0")
+    jooqCodegen("org.xerial:sqlite-jdbc:3.50.3.0")
+
+
     implementation("org.jooq:jooq:3.20.8")
     implementation("org.jspecify:jspecify:1.0.0")
     implementation("com.zaxxer:HikariCP:7.0.2")
@@ -34,31 +38,27 @@ dependencies {
 
 buildscript {
     dependencies {
-        classpath("org.postgresql:postgresql:42.7.8")
+        classpath("org.xerial:sqlite-jdbc:3.50.3.0")
         classpath("org.flywaydb:flyway-database-postgresql:11.3.4")
     }
 }
 
 flyway {
-    url = "jdbc:postgresql://localhost:5433/testdb"
-    user = "postgres"
-    password = "mysecretpassword"
+    url = "jdbc:sqlite:${project.projectDir}/testdb.sqlite"
+    driver = "org.sqlite.JDBC"
     cleanDisabled = false
+    locations = arrayOf("filesystem:src/main/resources/db/migration")
 }
-
 jooq {
     // Example configuration - adjust as needed
     configuration {
         jdbc {
-            driver = "org.postgresql.Driver"
-            url = "jdbc:postgresql://localhost:5433/testdb"
-            user = "postgres"
-            password = "mysecretpassword"
+            driver = "org.sqlite.JDBC"
+            url = "jdbc:sqlite:${project.projectDir}/testdb.sqlite"
         }
         generator {
             database {
-                name = "org.jooq.meta.postgres.PostgresDatabase"
-                inputSchema = "public"
+                name = "org.jooq.meta.sqlite.SQLiteDatabase"
             }
             generate {
                 isDeprecated = false

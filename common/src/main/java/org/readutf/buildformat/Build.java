@@ -7,6 +7,7 @@ public record Build(
         String name,
         String description,
         LocalDateTime creationTimestamp,
+        String checksum,
         int version,
         List<String> formats
 ) {
