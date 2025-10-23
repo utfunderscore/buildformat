@@ -1,6 +1,6 @@
 package org.readutf.buildformat.requirement;
 
-public record AttributeRequirement(
-        String dataType,
+public record Requirement(
+        Class<?> dataType,
         String attributeName
 ) {}
