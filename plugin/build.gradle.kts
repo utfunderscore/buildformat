@@ -22,10 +22,13 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://maven.enginehub.org/repo/")
     maven("https://mvn.utf.lol/releases/")
+    maven("https://repo.papermc.io/repository/maven-public/")
 }
 
 dependencies {
     implementation(project(":common"))
+
+    implementation("dev.rollczi:litecommands-bukkit:3.9.7")
 
     paperweight.paperDevBundle("1.21.10-R0.1-SNAPSHOT")
 }

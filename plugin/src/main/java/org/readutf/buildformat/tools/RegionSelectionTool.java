@@ -12,9 +12,12 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import org.readutf.buildformat.fakes.FakeItemDisplay;
+import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.types.Position;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,15 +25,18 @@ import java.util.UUID;
 
 public class RegionSelectionTool implements Listener {
 
-    private final Map<UUID, Location> leftSelection;
-    private final Map<UUID, Location> rightSelection;
+    public static final ItemStack tool = ItemStack.of(Material.BLAZE_ROD);
+
+    static {
+    }
+
+    private static final Map<UUID, Location> leftSelection = new HashMap<>();
+    private static final Map<UUID, Location> rightSelection = new HashMap<>();
 
     private final Map<UUID, FakeItemDisplay> regionDisplays;
     private final Map<UUID, FakeItemDisplay> regionDisplaysInverted;
 
     public RegionSelectionTool() {
-        this.leftSelection = new HashMap<>();
-        this.rightSelection = new HashMap<>();
         this.regionDisplays = new HashMap<>();
         this.regionDisplaysInverted = new HashMap<>();
     }
@@ -39,7 +45,7 @@ public class RegionSelectionTool implements Listener {
     public void onClick(@NotNull PlayerInteractEvent e) {
 
         ItemStack item = e.getItem();
-        if(item == null || item.getType() != Material.BLAZE_ROD) return;
+        if (item == null || item.getType() != Material.BLAZE_ROD) return;
 
         Block clickedBlock = e.getClickedBlock();
         if (clickedBlock == null) return;
@@ -70,8 +76,8 @@ public class RegionSelectionTool implements Listener {
         }
 
         if (fakeItemDisplay == null) {
-            fakeItemDisplay = spawnOutline(location, playerId, player, false);
-            fakeItemDisplayInv = spawnOutline(location, playerId, player, true);
+            fakeItemDisplay = spawnOutline(location, player, false);
+            fakeItemDisplayInv = spawnOutline(location, player, true);
 
             regionDisplays.put(playerId, fakeItemDisplay);
             regionDisplaysInverted.put(playerId, fakeItemDisplayInv);
@@ -91,13 +97,13 @@ public class RegionSelectionTool implements Listener {
                 (max.getBlockY() - min.getBlockY() + 1),
                 (max.getBlockZ() - min.getBlockZ()) + 1);
 
-        fakeItemDisplay.setTransformation(
-                new Transformation(new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.mul(1.00002f), new AxisAngle4f()));
+        fakeItemDisplay.setTransformation(new Transformation(
+                new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.mul(1.00002f), new AxisAngle4f()));
 
         fakeItemDisplay.teleport(min);
 
-        fakeItemDisplayInv.setTransformation(
-                new Transformation(new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.mul(-1.00001f), new AxisAngle4f()));
+        fakeItemDisplayInv.setTransformation(new Transformation(
+                new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.mul(-1.00001f), new AxisAngle4f()));
 
         fakeItemDisplayInv.teleport(min);
 
@@ -106,14 +112,14 @@ public class RegionSelectionTool implements Listener {
         //        test.setItem(new ItemStack(Material.DIAMOND_BLOCK));
     }
 
-    private @NotNull FakeItemDisplay spawnOutline(Location location, UUID playerId, Player player, boolean flipped) {
+    private @NotNull FakeItemDisplay spawnOutline(Location location, Player player, boolean flipped) {
         FakeItemDisplay fakeItemDisplay;
         fakeItemDisplay = new FakeItemDisplay(location);
         fakeItemDisplay.setItem(ItemStack.of(Material.GRAY_STAINED_GLASS));
 
         fakeItemDisplay.setBrightness(new Display.Brightness(15, 15));
 
-        if(!flipped) {
+        if (!flipped) {
             fakeItemDisplay.setGlowing(true);
             fakeItemDisplay.setGlowColor(Color.WHITE);
         }
@@ -125,13 +131,26 @@ public class RegionSelectionTool implements Listener {
     @EventHandler
     public void disconnect(@NotNull PlayerQuitEvent e) {
         UUID uniqueId = e.getPlayer().getUniqueId();
-        this.leftSelection.remove(uniqueId);
-        this.rightSelection.remove(uniqueId);
+        leftSelection.remove(uniqueId);
+        rightSelection.remove(uniqueId);
         this.regionDisplays.remove(uniqueId);
         this.regionDisplaysInverted.remove(uniqueId);
     }
 
-    public static Location @NotNull [] toMinMax(@NotNull Location pos1, @NotNull Location pos2) {
+    public static @Nullable Cuboid getSelection(@NotNull UUID playerId) {
+        Location left = leftSelection.get(playerId);
+        Location right = rightSelection.get(playerId);
+
+        if (left != null && right != null) {
+            return new Cuboid(
+                    new Position(left.getX(), left.getY(), left.getZ()),
+                    new Position(right.getX(), right.getY(), right.getZ()));
+        }
+
+        return null;
+    }
+
+    private static Location @NotNull [] toMinMax(@NotNull Location pos1, @NotNull Location pos2) {
         double minX = Math.min(pos1.getX(), pos2.getX());
         double minY = Math.min(pos1.getY(), pos2.getY());
         double minZ = Math.min(pos1.getZ(), pos2.getZ());
