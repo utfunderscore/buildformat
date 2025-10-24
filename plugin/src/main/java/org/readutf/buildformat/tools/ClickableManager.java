@@ -2,7 +2,6 @@ package org.readutf.buildformat.tools;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.CustomModelData;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -18,8 +17,8 @@ import java.util.UUID;
 public class ClickableManager implements Listener {
     private static final Map<UUID, Runnable> tasks = new HashMap<>();
 
-    @Contract("_, _, _ -> param2")
-    public static @NotNull ItemStack setClickAction(Player player, @NotNull ItemStack itemStack, Runnable runnable) {
+    @Contract("_, _ -> param1")
+    public static @NotNull ItemStack setClickAction(@NotNull ItemStack itemStack, Runnable runnable) {
 
         UUID taskId = UUID.randomUUID();
 

@@ -14,9 +14,9 @@ public class RegionRequirementCollector extends RequirementCollector<Cuboid> {
 
     @Override
     public void start(@NotNull Player player) {
-//        player.getInventory().setItem(0, Tools);
+        player.getInventory().setItem(0, RegionSelectionTool.tool);
 
-        player.getInventory().setItem(8, ClickableManager.setClickAction(player, ItemStack.of(Material.EMERALD_BLOCK), () -> {
+        player.getInventory().setItem(8, ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
             Cuboid selection = RegionSelectionTool.getSelection(player.getUniqueId());
             if(selection == null) {
                 player.sendMessage(Component.text("Please make a full selection."));

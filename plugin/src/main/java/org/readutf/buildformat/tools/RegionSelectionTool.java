@@ -1,5 +1,9 @@
 package org.readutf.buildformat.tools;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.CustomModelData;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -7,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -15,19 +20,37 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
+import org.jspecify.annotations.NonNull;
 import org.readutf.buildformat.fakes.FakeItemDisplay;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public class RegionSelectionTool implements Listener {
 
     public static final ItemStack tool = ItemStack.of(Material.BLAZE_ROD);
+    private static final String toolIdentifier = UUID.randomUUID().toString();
 
     static {
+        tool.editMeta(itemMeta -> {
+           itemMeta.itemName(Component.text("Region Selector").color(LIGHT_PURPLE));
+           itemMeta.lore(List.of(
+                   Component.text("Used to define a cuboid region").color(WHITE),
+                   Component.text(""),
+                   Component.text("Right-Click ").color(LIGHT_PURPLE).append(Component.text("to set the first position").color(GRAY)),
+                   Component.text("Left-Click ").color(LIGHT_PURPLE).append(Component.text("to set the second position").color(GRAY)),
+                   Component.text("Drop ").color(LIGHT_PURPLE).append(Component.text("to clear your selection").color(GRAY))
+           ));
+        });
+        tool.setData(
+                DataComponentTypes.CUSTOM_MODEL_DATA,
+                CustomModelData.customModelData().addString(toolIdentifier).build());
     }
 
     private static final Map<UUID, Location> leftSelection = new HashMap<>();
@@ -45,7 +68,7 @@ public class RegionSelectionTool implements Listener {
     public void onClick(@NotNull PlayerInteractEvent e) {
 
         ItemStack item = e.getItem();
-        if (item == null || item.getType() != Material.BLAZE_ROD) return;
+        if (!isTool(item)) return;
 
         Block clickedBlock = e.getClickedBlock();
         if (clickedBlock == null) return;
@@ -58,8 +81,14 @@ public class RegionSelectionTool implements Listener {
 
         if (e.getAction().isRightClick()) {
             rightSelection.put(playerId, location);
+            String text = String.format("First position as been set to %s, %s, %s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+
+            player.sendMessage(Component.text(text).color(GRAY));
         } else if (e.getAction().isLeftClick()) {
             leftSelection.put(playerId, location);
+            String text = String.format("Second position as been set to %s, %s, %s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+
+            player.sendMessage(Component.text(text).color(GRAY));
         }
 
         Location left = leftSelection.get(playerId);
@@ -87,29 +116,38 @@ public class RegionSelectionTool implements Listener {
         Location min = minMax[0];
         Location max = minMax[1];
 
-        Vector3f translation = new Vector3f(
-                (min.getBlockX() + max.getBlockX()) / 2f,
-                (min.getBlockY() + max.getBlockY()) / 2f,
-                (min.getBlockZ() + max.getBlockZ()) / 2f);
-
         Vector3f scale = new Vector3f(
                 (max.getBlockX() - min.getBlockX() + 1),
                 (max.getBlockY() - min.getBlockY() + 1),
                 (max.getBlockZ() - min.getBlockZ()) + 1);
 
         fakeItemDisplay.setTransformation(new Transformation(
-                new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.mul(1.00002f), new AxisAngle4f()));
+                new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.add(0.15f, 0.15f, 0.15f), new AxisAngle4f()));
 
         fakeItemDisplay.teleport(min);
 
         fakeItemDisplayInv.setTransformation(new Transformation(
-                new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.mul(-1.00001f), new AxisAngle4f()));
+                new Vector3f(scale).mul(0.5f), new AxisAngle4f(), scale.mul(-1f), new AxisAngle4f()));
 
         fakeItemDisplayInv.teleport(min);
+    }
 
-        //        FakeItemDisplay test = new FakeItemDisplay(min);
-        //        test.addViewer(player);
-        //        test.setItem(new ItemStack(Material.DIAMOND_BLOCK));
+    @EventHandler
+    public void onDrop(@NotNull PlayerDropItemEvent e) {
+        Item itemDrop = e.getItemDrop();
+        ItemStack itemStack = itemDrop.getItemStack();
+        if(isTool(itemStack)) {
+            e.setCancelled(true);
+            UUID uniqueId = e.getPlayer().getUniqueId();
+            leftSelection.remove(uniqueId);
+            rightSelection.remove(uniqueId);
+            FakeItemDisplay normal = this.regionDisplays.remove(uniqueId);
+            FakeItemDisplay inverted = this.regionDisplaysInverted.remove(uniqueId);
+
+            normal.removeViewer(e.getPlayer());
+            inverted.removeViewer(e.getPlayer());
+        }
+
     }
 
     private @NotNull FakeItemDisplay spawnOutline(Location location, Player player, boolean flipped) {
@@ -148,6 +186,17 @@ public class RegionSelectionTool implements Listener {
         }
 
         return null;
+    }
+
+    private static boolean isTool(@Nullable ItemStack itemStack) {
+        if(itemStack == null) return false;
+
+        if(!itemStack.isSimilar(tool)) return false;
+        CustomModelData data = itemStack.getData(DataComponentTypes.CUSTOM_MODEL_DATA);
+        if(data == null) return false;
+        List<String> strings = data.strings();
+        if (strings.isEmpty()) return false;
+        return strings.getFirst().equalsIgnoreCase(toolIdentifier);
     }
 
     private static Location @NotNull [] toMinMax(@NotNull Location pos1, @NotNull Location pos2) {
