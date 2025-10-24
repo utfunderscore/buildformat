@@ -1,27 +1,26 @@
 package org.readutf.buildformat.builder;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.readutf.buildformat.BuildConstructor;
-import org.readutf.buildformat.types.Position;
+import org.readutf.buildformat.BuildFormatManager;
+import org.readutf.buildformat.requirement.Requirement;
 
+import java.lang.reflect.*;
 import java.util.List;
-import java.util.Map;
 
 public class BuildConstructorTest {
-
-    private final BuildConstructor buildConstructor = new BuildConstructor();
 
     @Test
     public void testBuildConstructor() throws Exception {
 
-//        buildConstructor.construct(SimpleTestCase.class, Map.of(
-//                "startPosition", List.of(new Position(0, 0, 0)),
-//                "endPosition", List.of(new Position(0, 0, 0)),
-//                "checkpoints", List.of(new Position(0, 0, 0))/*,
-//                "startPosition", List.of(new Position(0, 0, 0))*/
-//        ), Map.of("speedMultiplier", "1.5", "entityName", "test entity"));
+        BuildFormatManager buildFormatManager = new BuildFormatManager();
 
+        List<Requirement> requirements = buildFormatManager.generateRequirements(SimpleTestCase.class);
+        JsonNode node = buildFormatManager.serializeRequirements(requirements);
 
+        System.out.println(node);
+        System.out.println(buildFormatManager.deserializeRequirements(node));
 
     }
 }

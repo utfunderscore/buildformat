@@ -1,5 +1,5 @@
 plugins {
-    id("java")
+    id("java-library")
 }
 
 group = "org.readutf.buildformat"
@@ -10,11 +10,12 @@ repositories {
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.platform:junit-platform-launcher")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.20.0")
-    implementation("org.jspecify:jspecify:1.0.0")
+    api("com.fasterxml.jackson.core:jackson-databind:2.20.0")
+    api("org.jetbrains:annotations:26.0.2")
 }
 
 tasks {

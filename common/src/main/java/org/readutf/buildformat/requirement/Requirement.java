@@ -1,6 +1,13 @@
 package org.readutf.buildformat.requirement;
 
-public record Requirement(
-        Class<?> dataType,
-        String attributeName
-) {}
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+
+public interface Requirement {
+
+    String getName();
+
+    Class<?> getType();
+
+}

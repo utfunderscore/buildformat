@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.fakes.FakeItemDisplay;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
@@ -39,14 +39,19 @@ public class RegionSelectionTool implements Listener {
 
     static {
         tool.editMeta(itemMeta -> {
-           itemMeta.itemName(Component.text("Region Selector").color(LIGHT_PURPLE));
-           itemMeta.lore(List.of(
-                   Component.text("Used to define a cuboid region").color(WHITE),
-                   Component.text(""),
-                   Component.text("Right-Click ").color(LIGHT_PURPLE).append(Component.text("to set the first position").color(GRAY)),
-                   Component.text("Left-Click ").color(LIGHT_PURPLE).append(Component.text("to set the second position").color(GRAY)),
-                   Component.text("Drop ").color(LIGHT_PURPLE).append(Component.text("to clear your selection").color(GRAY))
-           ));
+            itemMeta.itemName(Component.text("Region Selector").color(LIGHT_PURPLE));
+            itemMeta.lore(List.of(
+                    Component.text("Used to define a cuboid region").color(WHITE),
+                    Component.text(""),
+                    Component.text("Right-Click ")
+                            .color(LIGHT_PURPLE)
+                            .append(Component.text("to set the first position").color(GRAY)),
+                    Component.text("Left-Click ")
+                            .color(LIGHT_PURPLE)
+                            .append(Component.text("to set the second position").color(GRAY)),
+                    Component.text("Drop ")
+                            .color(LIGHT_PURPLE)
+                            .append(Component.text("to clear your selection").color(GRAY))));
         });
         tool.setData(
                 DataComponentTypes.CUSTOM_MODEL_DATA,
@@ -81,12 +86,16 @@ public class RegionSelectionTool implements Listener {
 
         if (e.getAction().isRightClick()) {
             rightSelection.put(playerId, location);
-            String text = String.format("First position as been set to %s, %s, %s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+            String text = String.format(
+                    "First position as been set to %s, %s, %s",
+                    location.getBlockX(), location.getBlockY(), location.getBlockZ());
 
             player.sendMessage(Component.text(text).color(GRAY));
         } else if (e.getAction().isLeftClick()) {
             leftSelection.put(playerId, location);
-            String text = String.format("Second position as been set to %s, %s, %s", location.getBlockX(), location.getBlockY(), location.getBlockZ());
+            String text = String.format(
+                    "Second position as been set to %s, %s, %s",
+                    location.getBlockX(), location.getBlockY(), location.getBlockZ());
 
             player.sendMessage(Component.text(text).color(GRAY));
         }
@@ -136,7 +145,7 @@ public class RegionSelectionTool implements Listener {
     public void onDrop(@NotNull PlayerDropItemEvent e) {
         Item itemDrop = e.getItemDrop();
         ItemStack itemStack = itemDrop.getItemStack();
-        if(isTool(itemStack)) {
+        if (isTool(itemStack)) {
             e.setCancelled(true);
             UUID uniqueId = e.getPlayer().getUniqueId();
             leftSelection.remove(uniqueId);
@@ -144,10 +153,13 @@ public class RegionSelectionTool implements Listener {
             FakeItemDisplay normal = this.regionDisplays.remove(uniqueId);
             FakeItemDisplay inverted = this.regionDisplaysInverted.remove(uniqueId);
 
-            normal.removeViewer(e.getPlayer());
-            inverted.removeViewer(e.getPlayer());
+            if (normal != null) {
+                normal.removeViewer(e.getPlayer());
+            }
+            if (inverted != null) {
+                inverted.removeViewer(e.getPlayer());
+            }
         }
-
     }
 
     private @NotNull FakeItemDisplay spawnOutline(Location location, Player player, boolean flipped) {
@@ -189,11 +201,11 @@ public class RegionSelectionTool implements Listener {
     }
 
     private static boolean isTool(@Nullable ItemStack itemStack) {
-        if(itemStack == null) return false;
+        if (itemStack == null) return false;
 
-        if(!itemStack.isSimilar(tool)) return false;
+        if (!itemStack.isSimilar(tool)) return false;
         CustomModelData data = itemStack.getData(DataComponentTypes.CUSTOM_MODEL_DATA);
-        if(data == null) return false;
+        if (data == null) return false;
         List<String> strings = data.strings();
         if (strings.isEmpty()) return false;
         return strings.getFirst().equalsIgnoreCase(toolIdentifier);

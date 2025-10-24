@@ -2,8 +2,8 @@ package org.readutf.buildformat.postgres;
 
 import org.jooq.*;
 import org.jooq.Record;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.Build;
 import org.readutf.buildformat.postgres.jooq.Tables;
 import org.readutf.buildformat.postgres.jooq.tables.BuildMeta;
@@ -39,11 +39,11 @@ public class BuildDatabaseManager {
      * @param formats     the list of supported format names for this build version
      */
     public static void saveBuild(
-            @NonNull DSLContext context,
-            @NonNull String name,
-            @NonNull String description,
+            @NotNull DSLContext context,
+            @NotNull String name,
+            @NotNull String description,
             String checksum,
-            @NonNull List<String> formats) {
+            @NotNull List<String> formats) {
 
         context.transaction(config -> {
             DSLContext dsl = config.dsl();
@@ -107,7 +107,7 @@ public class BuildDatabaseManager {
      * @param name    the name of the build to retrieve
      * @return a {@link Build} object representing the latest build version, or null if not found
      */
-    public static @Nullable Build getBuild(@NonNull DSLContext context, @NonNull String name) {
+    public static @Nullable Build getBuild(@NotNull DSLContext context, @NotNull String name) {
 
         Result<Record> records = context.transactionResult(configuration -> {
             DSLContext dsl = configuration.dsl();
@@ -151,7 +151,7 @@ public class BuildDatabaseManager {
      *
      * @return a list of build names supporting the latest version of a format
      */
-    public static @NonNull List<String> getBuildsByFormat(DSLContext context, String format) {
+    public static @NotNull List<String> getBuildsByFormat(DSLContext context, String format) {
 
         context.transaction(configuration -> {
             DSLContext dsl = configuration.dsl();

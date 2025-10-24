@@ -6,9 +6,8 @@ import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
 import dev.rollczi.litecommands.annotations.execute.Execute;
 import org.bukkit.entity.Player;
-import org.readutf.buildformat.BuildFormat;
-import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.SessionManager;
+import org.readutf.buildformat.requirement.types.SimpleRequirement;
 import org.readutf.buildformat.types.Cuboid;
 
 import java.util.List;
@@ -19,9 +18,7 @@ public class BuildCommand {
     @Execute(name = "create")
     public void create(@Context Player player, @Arg String format) throws Exception {
 
-        SessionManager.get().startInputSession(player, new BuildFormat("test", List.of(new Requirement(
-                Cuboid.class, "first"
-        ))));
+        SessionManager.get().startInputSession(player, List.of(new SimpleRequirement(Cuboid.class, "first")));
     }
 
 }

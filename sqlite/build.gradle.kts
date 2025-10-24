@@ -32,7 +32,7 @@ dependencies {
 
 
     implementation("org.jooq:jooq:3.20.8")
-    implementation("org.jspecify:jspecify:1.0.0")
+    implementation("org.jetbrains:annotations:26.0.2")
     implementation("com.zaxxer:HikariCP:7.0.2")
 }
 

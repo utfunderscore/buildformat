@@ -2,9 +2,9 @@ package org.readutf.buildformat.requirement;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.BuildFormat;
 import org.readutf.buildformat.requirement.impl.PositionRequirementCollector;
 import org.readutf.buildformat.requirement.impl.RegionRequirementCollector;
+import org.readutf.buildformat.requirement.impl.RequirementCollectorFactory;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 
@@ -13,28 +13,32 @@ import java.util.*;
 public class SessionManager {
 
     private final Map<UUID, Session> sessions;
-    private final Map<Class<?>, RequirementCollector<?>> collectors;
+    private final Map<Class<?>, RequirementCollectorFactory> collectors;
 
     private static SessionManager sessionManager = new SessionManager();
 
     public SessionManager() {
         this.sessions = new HashMap<>();
         this.collectors = Map.of(
-                Position.class, new PositionRequirementCollector(),
-                Cuboid.class, new RegionRequirementCollector());
+                Position.class, PositionRequirementCollector::new,
+                Cuboid.class, RegionRequirementCollector::new);
     }
 
-    public void startInputSession(@NotNull Player player, @NotNull BuildFormat buildFormat) throws Exception {
+    public void startInputSession(@NotNull Player player, @NotNull List<Requirement> requirements) throws Exception {
         if (sessions.containsKey(player.getUniqueId())) {
             throw new Exception("Session already active");
         }
         Map<String, RequirementCollector<?>> sessionCollectors = new HashMap<>();
-        for (Requirement requirement : buildFormat.requirements()) {
-            RequirementCollector<?> requirementCollector = collectors.get(requirement.dataType());
+
+        for (int i = 0; i < requirements.size(); i++) {
+            Requirement requirement = requirements.get(i);
+
+            RequirementCollectorFactory requirementCollector = collectors.get(requirement.getType());
             if (requirementCollector == null) {
-                throw new Exception("No collector available for " + requirement.dataType());
+                throw new Exception("No collector available for " + requirement.getType());
             }
-            sessionCollectors.put(requirement.attributeName(), requirementCollector);
+            RequirementCollector<?> collector = requirementCollector.createCollector(requirement.getName(), i + 1);
+            sessionCollectors.put(requirement.getName(), collector);
         }
 
         player.getInventory().clear();
@@ -47,7 +51,8 @@ public class SessionManager {
                 results.put(s, requirementCollector.awaitBlocking());
             });
 
-            System.out.println(results);
+
+            player.getInventory().clear();
         });
     }
 
