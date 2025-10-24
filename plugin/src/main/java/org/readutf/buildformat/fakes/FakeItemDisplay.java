@@ -102,6 +102,8 @@ public class FakeItemDisplay implements FakeEntity {
 
     @Override
     public void removeViewer(Player player) {
+        if(!viewerPlayers.contains(player)) return;
+
         Extensions.sendPacket(player, Extensions.getDespawnPacket(entity));
         viewerPlayers.remove(player);
     }
