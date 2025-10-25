@@ -1,4 +1,4 @@
-package org.readutf.buildformat.requirement.impl;
+package org.readutf.buildformat.requirement.collectors;
 
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.requirement.RequirementCollector;

@@ -1,7 +1,8 @@
-package org.readutf.buildformat.requirement.impl;
+package org.readutf.buildformat.requirement.collectors;
 
 import org.bukkit.entity.Player;
 import org.readutf.buildformat.requirement.RequirementCollector;
+import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.types.Position;
 
 public class PositionRequirementCollector extends RequirementCollector<Position> {
@@ -16,7 +17,9 @@ public class PositionRequirementCollector extends RequirementCollector<Position>
 
     @Override
     protected void start(Player player) {
-        player.sendMessage("");
+
+        PositionTool.giveTool(player, name);
+
     }
 
     @Override

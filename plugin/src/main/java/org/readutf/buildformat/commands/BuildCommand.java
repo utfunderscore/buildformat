@@ -1,6 +1,5 @@
 package org.readutf.buildformat.commands;
 
-
 import dev.rollczi.litecommands.annotations.argument.Arg;
 import dev.rollczi.litecommands.annotations.command.Command;
 import dev.rollczi.litecommands.annotations.context.Context;
@@ -9,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.readutf.buildformat.requirement.SessionManager;
 import org.readutf.buildformat.requirement.types.SimpleRequirement;
 import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.types.Position;
 
 import java.util.List;
 
@@ -18,7 +18,6 @@ public class BuildCommand {
     @Execute(name = "create")
     public void create(@Context Player player, @Arg String format) throws Exception {
 
-        SessionManager.get().startInputSession(player, List.of(new SimpleRequirement(Cuboid.class, "first")));
+        SessionManager.get().startInputSession(player, List.of(new SimpleRequirement("first", Position.class)));
     }
-
 }

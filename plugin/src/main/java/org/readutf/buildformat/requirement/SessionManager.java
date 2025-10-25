@@ -2,9 +2,9 @@ package org.readutf.buildformat.requirement;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.requirement.impl.PositionRequirementCollector;
-import org.readutf.buildformat.requirement.impl.RegionRequirementCollector;
-import org.readutf.buildformat.requirement.impl.RequirementCollectorFactory;
+import org.readutf.buildformat.requirement.collectors.PositionRequirementCollector;
+import org.readutf.buildformat.requirement.collectors.RegionRequirementCollector;
+import org.readutf.buildformat.requirement.collectors.RequirementCollectorFactory;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 
@@ -44,9 +44,12 @@ public class SessionManager {
         player.getInventory().clear();
 
         Thread.startVirtualThread(() -> {
+
+
             Map<String, Object> results = new HashMap<>();
 
             sessionCollectors.forEach((s, requirementCollector) -> {
+                player.getInventory().clear();
                 requirementCollector.start(player);
                 results.put(s, requirementCollector.awaitBlocking());
             });

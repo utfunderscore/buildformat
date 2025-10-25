@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":common"))
 
     implementation("dev.rollczi:litecommands-bukkit:3.9.7")
+    implementation("net.kyori:adventure-text-minimessage:4.25.0")
 
     paperweight.paperDevBundle("1.21.10-R0.1-SNAPSHOT")
 }
