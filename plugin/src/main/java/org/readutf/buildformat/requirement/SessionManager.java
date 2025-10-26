@@ -28,9 +28,14 @@ public class SessionManager {
         if (sessions.containsKey(player.getUniqueId())) {
             throw new Exception("Session already active");
         }
-        Map<String, RequirementCollector<?>> sessionCollectors = new HashMap<>();
+
+        player.getInventory().clear();
+
+        Map<String, Object> results = new HashMap<>();
+        List<RequirementCollector<?>> completed = new ArrayList<>();
 
         for (int i = 0; i < requirements.size(); i++) {
+
             Requirement requirement = requirements.get(i);
 
             RequirementCollectorFactory requirementCollector = collectors.get(requirement.getType());
@@ -38,25 +43,23 @@ public class SessionManager {
                 throw new Exception("No collector available for " + requirement.getType());
             }
             RequirementCollector<?> collector = requirementCollector.createCollector(requirement.getName(), i + 1);
-            sessionCollectors.put(requirement.getName(), collector);
+
+            player.getInventory().clear();
+            collector.start(player);
+            results.put(requirement.getName(), collector.awaitBlocking());
+            completed.add(collector);
+        }
+
+        for (RequirementCollector<?> collector : completed) {
+            collector.cleanup(player);
         }
 
         player.getInventory().clear();
 
-        Thread.startVirtualThread(() -> {
-
-
-            Map<String, Object> results = new HashMap<>();
-
-            sessionCollectors.forEach((s, requirementCollector) -> {
-                player.getInventory().clear();
-                requirementCollector.start(player);
-                results.put(s, requirementCollector.awaitBlocking());
-            });
-
-
-            player.getInventory().clear();
-        });
+        player.sendMessage("Data collected:");
+        for (Map.Entry<String, Object> stringObjectEntry : results.entrySet()) {
+            player.sendMessage(" - " + stringObjectEntry.getKey() + ": " + stringObjectEntry.getValue());
+        }
     }
 
     public RequirementCollector<?> getCurrentCollector(UUID playerId) {

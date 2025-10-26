@@ -31,7 +31,7 @@ public class RegionSelectionTool implements Listener {
 
     private static final Map<UUID, Selection> tools = new HashMap<>();
 
-    public static @NotNull UUID givePlayerTool(@NotNull Player player, String name) {
+    public static @NotNull Tool givePlayerTool(@NotNull String name) {
         ItemStack tool = ItemStack.of(Material.BLAZE_ROD);
         UUID toolIdentifier = UUID.randomUUID();
 
@@ -59,8 +59,28 @@ public class RegionSelectionTool implements Listener {
                         .build());
 
 
-        player.give(tool);
-        return toolIdentifier;
+
+        return new Tool(toolIdentifier, tool);
+    }
+
+    public static void clearTool(UUID toolId) {
+        Selection selection = tools.get(toolId);
+        if(selection == null) {
+            return;
+        }
+
+        FakeItemDisplay normalDisplay = selection.getNormalDisplay();
+        if(normalDisplay != null) {
+            for (Player viewerPlayer : normalDisplay.getViewerPlayers()) {
+                normalDisplay.removeViewer(viewerPlayer);
+            }
+        }
+        FakeItemDisplay invertedDisplay = selection.getInvertedDisplay();
+        if(invertedDisplay != null) {
+            for (Player viewerPlayer : invertedDisplay.getViewerPlayers()) {
+                invertedDisplay.removeViewer(viewerPlayer);
+            }
+        }
     }
 
     @EventHandler
@@ -81,21 +101,21 @@ public class RegionSelectionTool implements Listener {
             selection.setPosition2(location);
             selection.setPosition1(location);
 
-            if (e.getAction().isRightClick()) {
-                player.sendMessage(Lang.getPositionSet("first position", location));
-            } else if (e.getAction().isLeftClick()) {
-                player.sendMessage(Lang.getPositionSet("second position", location));
-            }
+//            if (e.getAction().isRightClick()) {
+//                player.sendMessage(Lang.getPositionSet("first position", location));
+//            } else if (e.getAction().isLeftClick()) {
+//                player.sendMessage(Lang.getPositionSet("second position", location));
+//            }
 
             selection.updateDisplays(player);
             return;
         }
 
         if (e.getAction().isRightClick()) {
-            player.sendMessage(Lang.getPositionSet("first position", location));
+//            player.sendMessage(Lang.getPositionSet("first position", location));
             selection.setPosition2(location);
         } else if (e.getAction().isLeftClick()) {
-            player.sendMessage(Lang.getPositionSet("second position", location));
+//            player.sendMessage(Lang.getPositionSet("second position", location));
             selection.setPosition1(location);
         }
 
@@ -182,7 +202,6 @@ public class RegionSelectionTool implements Listener {
             Location max = minMax[1];
 
             if (normalDisplay == null) {
-                player.sendMessage("Spawned at " + min);
 
                 FakeItemDisplay normalDisplay1 = new FakeItemDisplay(min);
                 normalDisplay1.addViewer(player);

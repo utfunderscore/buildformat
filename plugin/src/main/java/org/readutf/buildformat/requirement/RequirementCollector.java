@@ -14,7 +14,7 @@ public abstract class RequirementCollector<T> {
 
     protected abstract void start(Player player);
 
-    protected abstract void cancel(Player player);
+    protected abstract void cleanup(Player player);
 
     public void complete(T result) {
         resultFuture.complete(result);

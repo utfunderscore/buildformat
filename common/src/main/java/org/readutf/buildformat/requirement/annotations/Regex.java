@@ -1,8 +1,7 @@
 package org.readutf.buildformat.requirement.annotations;
 
-public @interface Range {
+public @interface Regex {
 
-    int min();
+    String value();
 
-    int max();
 }

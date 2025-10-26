@@ -16,6 +16,12 @@ public class Lang {
                 Placeholder.component("name", Component.text(property)), Placeholder.component("step", Component.text(stepNumber)));
     }
 
+    public static @NotNull Component getPositionQuery(@NotNull String property, int stepNumber) {
+        return miniMessage.deserialize(
+                "<white><step>.</white> <gray>Select a position for property '<light_purple><name></light_purple>'",
+                Placeholder.component("name", Component.text(property)), Placeholder.component("step", Component.text(stepNumber)));
+    }
+
     public static @NotNull Component getPositionSet(@NotNull String position, @NotNull Location location) {
         String x = String.format("%.2f", location.getX());
         String y = String.format("%.2f", location.getY());

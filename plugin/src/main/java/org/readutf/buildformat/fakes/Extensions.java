@@ -25,6 +25,8 @@ import org.bukkit.entity.ItemDisplay.ItemDisplayTransform;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 public class Extensions {
 
@@ -86,6 +88,16 @@ public class Extensions {
                 true);
         entity.setYHeadRot(location.getYaw());
         entity.setLevel(getMinecraftLevel(location.getWorld()));
+    }
+
+    @Contract(pure = true)
+    public static BillboardConstraints toVanilla(@NotNull Billboard billboard) {
+        return switch (billboard) {
+            case FIXED -> BillboardConstraints.FIXED;
+            case VERTICAL -> BillboardConstraints.VERTICAL;
+            case HORIZONTAL -> BillboardConstraints.HORIZONTAL;
+            case CENTER -> BillboardConstraints.CENTER;
+        };
     }
 
     public static Level getMinecraftLevel(World world) {
