@@ -117,6 +117,10 @@ public class BuildFormatManager {
         return this.serializers.get(requirement.getClass());
     }
 
+    public Map<Class<? extends Requirement>, RequirementFactory> getSerializers() {
+        return serializers;
+    }
+
     public Map<Class<?>, RequirementFactory> getFactories() {
         return factories;
     }

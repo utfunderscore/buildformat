@@ -14,7 +14,9 @@ public class BuildFormatPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
 
-        LiteBukkitFactory.builder(this).commands(new BuildCommand()).build();
+        LiteBukkitFactory.builder(this)
+                .commands(new BuildCommand())
+                .build();
 
         Bukkit.getPluginManager().registerEvents(new RegionSelectionTool(), this);
         Bukkit.getPluginManager().registerEvents(new PositionTool(), this);

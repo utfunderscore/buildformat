@@ -47,8 +47,7 @@ public class ListRequirementFactory implements RequirementFactory {
 
                     case ParameterizedType inner -> createRequirement(name, List.class, annotations, inner);
                     case Class<?> innerClass -> {
-                        RequirementFactory factory =
-                                buildFormatManager.getFactories().get(innerClass);
+                        RequirementFactory factory = buildFormatManager.getFactories().get(innerClass);
                         if (factory == null) {
                             throw new Exception("No factory found for type: " + innerClass.getName());
                         }
@@ -97,7 +96,8 @@ public class ListRequirementFactory implements RequirementFactory {
         int min = jsonNode.get("min").asInt();
         String innerType = jsonNode.get("innerType").asText();
 
-        RequirementFactory innerFactory = buildFormatManager.getFactories()
+
+        RequirementFactory innerFactory = buildFormatManager.getSerializers().get(Class.forName(innerType).asSubclass(Requirement.class));
         if (innerFactory == null) {
             throw new Exception("No factory found for type: " + innerType);
         }

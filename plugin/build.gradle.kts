@@ -32,6 +32,13 @@ dependencies {
     implementation("net.kyori:adventure-text-minimessage:4.25.0")
     implementation("net.kyori:adventure-text-serializer-plain:4.25.0")
 
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core:2.14.0")
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.14.0")
+
+    implementation("net.minestom:minestom:2025.10.18-1.21.10")
+    implementation("dev.hollowcube:schem:2.0.0")
+    implementation("dev.hollowcube:polar:1.15.0")
+
     paperweight.paperDevBundle("1.21.10-R0.1-SNAPSHOT")
 }
 
@@ -48,12 +55,19 @@ tasks.runServer {
 
 tasks {
     compileJava {
-        options.release = 23
+        options.release = 25
     }
     javadoc {
         options.encoding = Charsets.UTF_8.name()
     }
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+}
+
 
 bukkitPluginYaml {
     name = "buildformat"
