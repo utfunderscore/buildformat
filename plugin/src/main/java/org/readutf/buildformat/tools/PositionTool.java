@@ -7,7 +7,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Rotatable;
-import org.bukkit.craftbukkit.block.CraftBlock;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,7 +26,7 @@ public class PositionTool implements Listener {
     private static Map<UUID, PositionHighlight> positions = new HashMap<>();
     private static Map<UUID, String> toolNames = new HashMap<>();
 
-    public static @NotNull Tool giveTool(@NotNull String name) {
+    public static @NotNull Tool getTool(@NotNull String name) {
         ItemStack tool = ItemStack.of(Material.PLAYER_HEAD);
         UUID toolIdentifier = UUID.randomUUID();
 

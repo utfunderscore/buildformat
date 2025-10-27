@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.Lang;
+import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.RegionSelectionTool;
@@ -16,18 +17,21 @@ import org.readutf.buildformat.tools.Tool;
 import org.readutf.buildformat.types.Cuboid;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-public class RegionRequirementCollector extends RequirementCollector<Cuboid> {
-
+public class RegionRequirementCollector implements RequirementCollector<Cuboid> {
 
     @NotNull
     private final String name;
     private final int stepNumber;
+    private final CompletableFuture<Cuboid> future;
+
     private UUID toolId;
 
-    public RegionRequirementCollector(@NotNull String name, int stepNumber) {
-        this.name = name;
+    public RegionRequirementCollector(@NotNull Requirement requirement, int stepNumber) {
+        this.name = requirement.getName();
         this.stepNumber = stepNumber;
+        this.future = new CompletableFuture<>();
     }
 
     @Override
@@ -47,8 +51,8 @@ public class RegionRequirementCollector extends RequirementCollector<Cuboid> {
                         Component.text("Please make a full selection.").color(NamedTextColor.RED));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 5, 1);
             } else {
-                complete(selection);
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 3, 1);
+                future.complete(selection);
+                player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 3, 1);
             }
         }));
     }
@@ -66,5 +70,10 @@ public class RegionRequirementCollector extends RequirementCollector<Cuboid> {
         player.getInventory().setItem(0, ItemStack.of(Material.AIR));
 
         RegionSelectionTool.clearTool(toolId);
+    }
+
+    @Override
+    public Cuboid awaitBlocking() {
+        return future.join();
     }
 }

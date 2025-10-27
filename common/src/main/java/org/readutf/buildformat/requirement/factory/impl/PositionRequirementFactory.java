@@ -7,16 +7,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.factory.RequirementFactory;
-import org.readutf.buildformat.requirement.types.SimpleRequirement;
+import org.readutf.buildformat.requirement.types.PositionRequirement;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 
-public class SimpleRequirementFactory implements RequirementFactory {
+public class PositionRequirementFactory implements RequirementFactory {
 
     @Override
-    public Requirement createRequirement(@NotNull String name, @NotNull Class<?> type, @NotNull Annotation[] annotations, @Nullable ParameterizedType parameterizedType) {
-        return new SimpleRequirement(name, type);
+    public Requirement createRequirement(
+            @NotNull String name,
+            @NotNull Class<?> type,
+            @NotNull Annotation[] annotations,
+            @Nullable ParameterizedType parameterizedType) {
+        return new PositionRequirement(name);
     }
 
     @Override
@@ -26,14 +30,11 @@ public class SimpleRequirementFactory implements RequirementFactory {
 
     @Override
     public Requirement deserialize(@NotNull ObjectMapper objectMapper, JsonNode jsonNode) throws JsonProcessingException {
-        return objectMapper.treeToValue(jsonNode, SimpleRequirement.class);
+        return objectMapper.treeToValue(jsonNode, PositionRequirement.class);
     }
 
     @Override
     public Class<? extends Requirement> getRequirementType() {
-        return SimpleRequirement.class;
+        return PositionRequirement.class;
     }
-
-
-
 }

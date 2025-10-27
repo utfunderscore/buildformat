@@ -1,7 +1,6 @@
 package org.readutf.buildformat.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.readutf.buildformat.BuildFormatManager;
 import org.readutf.buildformat.requirement.Requirement;

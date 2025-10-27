@@ -2,26 +2,12 @@ package org.readutf.buildformat.requirement;
 
 import org.bukkit.entity.Player;
 
-import java.util.concurrent.CompletableFuture;
+public interface RequirementCollector<T> {
 
-public abstract class RequirementCollector<T> {
+    void start(Player player);
 
-    private final CompletableFuture<T> resultFuture;
+    void cleanup(Player player);
 
-    public RequirementCollector() {
-        this.resultFuture = new CompletableFuture<>();
-    }
-
-    protected abstract void start(Player player);
-
-    protected abstract void cleanup(Player player);
-
-    public void complete(T result) {
-        resultFuture.complete(result);
-    }
-
-    public T awaitBlocking() {
-        return resultFuture.join();
-    }
+    T awaitBlocking();
 
 }

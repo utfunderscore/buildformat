@@ -7,7 +7,11 @@ import dev.rollczi.litecommands.annotations.context.Context;
 import dev.rollczi.litecommands.annotations.execute.Execute;
 import org.bukkit.entity.Player;
 import org.readutf.buildformat.requirement.SessionManager;
-import org.readutf.buildformat.requirement.types.SimpleRequirement;
+import org.readutf.buildformat.requirement.types.CuboidRequirement;
+import org.readutf.buildformat.requirement.types.NumberRequirement;
+import org.readutf.buildformat.requirement.types.PositionRequirement;
+import org.readutf.buildformat.requirement.types.StringRequirement;
+import org.readutf.buildformat.requirement.types.number.IntegerRequirement;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 
@@ -23,8 +27,10 @@ public class BuildCommand {
                 .startInputSession(
                         player,
                         List.of(
-                                new SimpleRequirement("spawn1", Position.class),
-                                new SimpleRequirement("spawn2", Position.class),
-                                new SimpleRequirement("safezone", Cuboid.class)));
+                                new PositionRequirement("spawn1"),
+                                new PositionRequirement("spawn2"),
+                                new CuboidRequirement("safezone"),
+                                new StringRequirement("lobbyName"),
+                                new IntegerRequirement("maxPlayers",1, 100)));
     }
 }

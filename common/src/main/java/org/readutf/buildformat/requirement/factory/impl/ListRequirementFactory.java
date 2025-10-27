@@ -11,6 +11,7 @@ import org.readutf.buildformat.requirement.annotations.Min;
 import org.readutf.buildformat.requirement.annotations.Range;
 import org.readutf.buildformat.requirement.factory.RequirementFactory;
 import org.readutf.buildformat.requirement.types.ListRequirement;
+import org.readutf.buildformat.requirement.types.StringRequirement;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedParameterizedType;
@@ -83,6 +84,7 @@ public class ListRequirementFactory implements RequirementFactory {
         return objectMapper.valueToTree(Map.of(
                 "name", requirement.getName(),
                 "innerRequirement", innerFactory.serialize(objectMapper, listRequirement.innerRequirement()),
+                "innerType", innerFactory.getRequirementType().getName(),
                 "max", listRequirement.max(),
                 "min", listRequirement.min()));
     }
@@ -93,13 +95,11 @@ public class ListRequirementFactory implements RequirementFactory {
         JsonNode innerNode = jsonNode.get("innerRequirement");
         int max = jsonNode.get("max").asInt();
         int min = jsonNode.get("min").asInt();
+        String innerType = jsonNode.get("innerType").asText();
 
-        String innerRequirementTypeName = innerNode.get("type").asText();
-
-        RequirementFactory innerFactory =
-                buildFormatManager.getFactories().get(Class.forName(innerRequirementTypeName));
+        RequirementFactory innerFactory = buildFormatManager.getFactories()
         if (innerFactory == null) {
-            throw new Exception("No factory found for type: " + innerRequirementTypeName);
+            throw new Exception("No factory found for type: " + innerType);
         }
         Requirement innerRequirement = innerFactory.deserialize(objectMapper, innerNode);
         return new ListRequirement(name, innerRequirement, max, min);

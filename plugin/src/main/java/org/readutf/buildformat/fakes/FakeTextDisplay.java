@@ -127,10 +127,4 @@ public class FakeTextDisplay implements FakeEntity {
         entity.setGlowColorOverride(color.asRGB());
         sendMetadata();
     }
-
-    @Contract(pure = true)
-    private @Nullable Component toMiniMessage(String text) {
-        // TODO: Implement this based on your Kotlin extension.
-        return null;
-    }
 }

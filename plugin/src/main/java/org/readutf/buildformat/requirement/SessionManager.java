@@ -2,9 +2,15 @@ package org.readutf.buildformat.requirement;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.requirement.collectors.PositionRequirementCollector;
+import org.readutf.buildformat.requirement.collectors.position.PositionRequirementCollector;
 import org.readutf.buildformat.requirement.collectors.RegionRequirementCollector;
 import org.readutf.buildformat.requirement.collectors.RequirementCollectorFactory;
+import org.readutf.buildformat.requirement.collectors.text.TextInputCollector;
+import org.readutf.buildformat.requirement.types.CuboidRequirement;
+import org.readutf.buildformat.requirement.types.NumberRequirement;
+import org.readutf.buildformat.requirement.types.PositionRequirement;
+import org.readutf.buildformat.requirement.types.StringRequirement;
+import org.readutf.buildformat.requirement.types.number.IntegerRequirement;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 
@@ -13,15 +19,17 @@ import java.util.*;
 public class SessionManager {
 
     private final Map<UUID, Session> sessions;
-    private final Map<Class<?>, RequirementCollectorFactory> collectors;
-
+    private final Map<Class<? extends Requirement>, RequirementCollectorFactory> collectors;
     private static SessionManager sessionManager = new SessionManager();
 
     public SessionManager() {
         this.sessions = new HashMap<>();
         this.collectors = Map.of(
-                Position.class, PositionRequirementCollector::new,
-                Cuboid.class, RegionRequirementCollector::new);
+                PositionRequirement.class, PositionRequirementCollector::new,
+                CuboidRequirement.class, RegionRequirementCollector::new,
+                StringRequirement.class, (requirement, step) -> new TextInputCollector<>(requirement.getName(), step, str -> str),
+                IntegerRequirement.class, (requirement, step) -> new TextInputCollector<>(requirement.getName(), step, Integer::parseInt)
+        );
     }
 
     public void startInputSession(@NotNull Player player, @NotNull List<Requirement> requirements) throws Exception {
@@ -38,11 +46,11 @@ public class SessionManager {
 
             Requirement requirement = requirements.get(i);
 
-            RequirementCollectorFactory requirementCollector = collectors.get(requirement.getType());
+            RequirementCollectorFactory requirementCollector = collectors.get(requirement.getClass());
             if (requirementCollector == null) {
-                throw new Exception("No collector available for " + requirement.getType());
+                throw new Exception("No collector available for " + requirement.getClass());
             }
-            RequirementCollector<?> collector = requirementCollector.createCollector(requirement.getName(), i + 1);
+            RequirementCollector<?> collector = requirementCollector.createCollector(requirement, i + 1);
 
             player.getInventory().clear();
             collector.start(player);

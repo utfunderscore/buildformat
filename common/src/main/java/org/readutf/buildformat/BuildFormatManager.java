@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.factory.RequirementFactory;
-import org.readutf.buildformat.requirement.factory.impl.SimpleRequirementFactory;
-import org.readutf.buildformat.requirement.factory.impl.ListRequirementFactory;
-import org.readutf.buildformat.requirement.factory.impl.NumberRequirementFactory;
+import org.readutf.buildformat.requirement.factory.impl.*;
 import org.readutf.buildformat.types.Position;
 
 import java.lang.reflect.ParameterizedType;
@@ -28,20 +26,18 @@ public class BuildFormatManager {
         this.registerFactory(List.class, new ListRequirementFactory(this));
 
         // Position
-        this.registerFactory(Position.class, new SimpleRequirementFactory());
+        this.registerFactory(Position.class, new PositionRequirementFactory());
 
         // Numbers
-        this.registerFactory(Integer.class, new NumberRequirementFactory<>(Integer.MIN_VALUE, Integer.MAX_VALUE));
-        this.registerFactory(int.class, new NumberRequirementFactory<>(Integer.MIN_VALUE, Integer.MAX_VALUE));
-        this.registerFactory(Double.class, new NumberRequirementFactory<>(Double.MIN_VALUE, Double.MAX_VALUE));
-        this.registerFactory(double.class, new NumberRequirementFactory<>(Double.MIN_VALUE, Double.MAX_VALUE));
-        this.registerFactory(Float.class, new NumberRequirementFactory<>(Long.MIN_VALUE, Long.MAX_VALUE));
-        this.registerFactory(float.class, new NumberRequirementFactory<>(Long.MIN_VALUE, Long.MAX_VALUE));
-        this.registerFactory(Long.class, new NumberRequirementFactory<>(Long.MIN_VALUE, Long.MAX_VALUE));
-        this.registerFactory(long.class, new NumberRequirementFactory<>(Long.MIN_VALUE, Long.MAX_VALUE));
+        this.registerFactory(Integer.class, new IntegerRequirementFactory());
+        this.registerFactory(int.class, new IntegerRequirementFactory());
+        this.registerFactory(Double.class, new DoubleRequirementFactory());
+        this.registerFactory(double.class, new DoubleRequirementFactory());
+        this.registerFactory(Long.class, new LongRequirementFactory());
+        this.registerFactory(long.class, new LongRequirementFactory());
 
         // Text
-        this.registerFactory(String.class, new SimpleRequirementFactory());
+        this.registerFactory(String.class, new PositionRequirementFactory());
     }
 
     public void registerFactory(@NotNull Class<?> type, @NotNull RequirementFactory factory) {
@@ -85,8 +81,7 @@ public class BuildFormatManager {
         for (Requirement requirement : requirements) {
             RequirementFactory factory = this.serializers.get(requirement.getClass());
             if (factory == null) {
-                throw new Exception("No serializer found for requirement type: "
-                        + requirement.getClass().getName());
+                throw new Exception("No serializer found for requirement type: " + requirement.getClass().getName());
             }
 
             Map<String, Object> serializerData = new HashMap<>();
@@ -111,6 +106,7 @@ public class BuildFormatManager {
                 throw new Exception("No deserializer found for requirement type: " + name);
             }
 
+            System.out.println(name);
             Requirement requirement = factory.deserialize(objectMapper, data);
             requirements.add(requirement);
         }
