@@ -6,15 +6,21 @@ import org.readutf.buildformat.BuildData;
 import org.readutf.buildformat.store.BuildDataStore;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
+import software.amazon.awssdk.transfer.s3.model.DownloadFileRequest;
 import software.amazon.awssdk.transfer.s3.model.Upload;
 import software.amazon.awssdk.transfer.s3.model.UploadRequest;
+import software.amazon.awssdk.transfer.s3.progress.LoggingTransferListener;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
 
 public class S3BuildDataStore implements BuildDataStore {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String polarKeyFormat = "%s/%d/polar.dat";
+    private static final String schematicKeyFormat = "%s/%d/schematic.dat";
 
     @NotNull
     private final S3TransferManager transferManager;
@@ -32,19 +38,23 @@ public class S3BuildDataStore implements BuildDataStore {
         byte[] polarData = buildData.polarData();
         byte[] schemData = buildData.schematicData();
 
-        String polarKey = String.format("%s/%d/polar.dat", buildName, version);
-        String schemKey = String.format("%s/%d/schematic.dat", buildName, version);
+        String polarKey = String.format(polarKeyFormat, buildName, version);
+        String schemKey = String.format(schematicKeyFormat, buildName, version);
 
         uploadBytesToS3(polarData, bucketName, polarKey);
         uploadBytesToS3(schemData, bucketName, schemKey);
     }
 
     @Override
-    public void delete(String buildName, int version) {}
+    public BuildData get(String buildName, int version) throws IOException {
 
-    @Override
-    public BuildData get(String buildName, int version) {
-        return null;
+        String polarKey = String.format(polarKeyFormat, buildName, version);
+        String schemKey = String.format(schematicKeyFormat, buildName, version);
+
+        byte[] polarData = downloadBytesFromS3(polarKey);
+        byte[] schemData = downloadBytesFromS3(schemKey);
+
+        return new BuildData(polarData, schemData);
     }
 
     private void uploadBytesToS3(byte[] bytes, String bucket, String key) {
@@ -59,4 +69,24 @@ public class S3BuildDataStore implements BuildDataStore {
 
         transferManager.close();
     }
+
+    public byte[] downloadBytesFromS3(String key) throws IOException {
+
+        Path tempDirectory = Files.createTempDirectory("s3-download-");
+        Path outputFile = tempDirectory.resolve(UUID.randomUUID().toString());
+
+        DownloadFileRequest downloadFileRequest = DownloadFileRequest.builder()
+                .getObjectRequest(b -> b.bucket(bucketName).key(key))
+                .addTransferListener(LoggingTransferListener.create())  // Add listener.
+                .destination(outputFile)
+                .build();
+
+        transferManager.downloadFile(downloadFileRequest).completionFuture().join();
+
+        byte[] data = Files.readAllBytes(outputFile);
+        Files.delete(outputFile);
+        Files.delete(tempDirectory);
+        return data;
+    }
+
 }
