@@ -18,14 +18,14 @@ public class BuildManager {
     }
 
     @Blocking
-    public void saveBuild(@NotNull String name, @NotNull String format, @NotNull BuildData buildData) {
+    public void saveBuild(@NotNull String name, @NotNull String format, @NotNull BuildData buildData) throws Exception {
         int checksum = buildData.hashCode();
         int version = buildMetaStore.saveBuild(name, String.valueOf(checksum), format);
         buildDataStore.save(name, version, buildData);
     }
 
     @Blocking
-    public Build loadBuild(@NotNull String name, int version) {
+    public Build loadBuild(@NotNull String name, int version) throws Exception {
         buildMetaStore.getBuild(name, version);
         BuildData buildData = buildDataStore.get(name, version);
         BuildMeta buildMeta = buildMetaStore.getBuild(name, version);
