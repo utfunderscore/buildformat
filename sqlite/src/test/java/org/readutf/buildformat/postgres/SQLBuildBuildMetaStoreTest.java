@@ -10,15 +10,16 @@ import org.jooq.impl.DSL;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.readutf.buildformat.Build;
+import org.readutf.buildformat.BuildMeta;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-class BuildDatabaseManagerTest {
+class SQLBuildBuildMetaStoreTest {
 
     private DSLContext context;
+    private SQLBuildMetaStore metaStore;
 
     @BeforeEach
     public void beforeEach() {
@@ -39,14 +40,19 @@ class BuildDatabaseManagerTest {
 
         Flyway load = flywayConfig.load();
         load.migrate();
+        
+        metaStore = new SQLBuildMetaStore(context);
     }
 
     @Test
     void saveBuild() {
-        BuildDatabaseManager.saveBuild(context, "test1", "Test description", "test", List.of("1", "2"));
-        BuildDatabaseManager.saveBuild(context, "test2", "Test description", "test", List.of("1", "2"));
-        BuildDatabaseManager.saveBuild(context, "test2", "Test description", "test", List.of("1", "2"));
-        BuildDatabaseManager.saveBuild(context, "test2", "Test description", "test", List.of("3", "4"));
+        int i = metaStore.saveBuild("test1", "test", "2");
+        metaStore.saveBuild("test2", "test", "2");
+        metaStore.saveBuild("test2", "test", "3");
+        int last = metaStore.saveBuild("test2", "test", "3");
+
+        Assertions.assertEquals(1, i);
+        Assertions.assertEquals(3, last);
     }
 
     @Test
@@ -55,20 +61,19 @@ class BuildDatabaseManagerTest {
         String description = "Test description";
         LocalDateTime creationTime = LocalDateTime.now();
         String checksum = "test";
-        List<String> supportedFormats = List.of("1", "2");
+        String supportedFormats = "2";
 
-        BuildDatabaseManager.saveBuild(context, name, description, checksum, supportedFormats);
-        Build test1 = BuildDatabaseManager.getBuild(context, name);
+        metaStore.saveBuild(name, checksum, supportedFormats);
+        BuildMeta test1 = metaStore.getBuild(name);
 
         System.out.println(test1);
 
         Assertions.assertNotNull(test1);
         Assertions.assertEquals(name, test1.name());
-        Assertions.assertEquals(description, test1.description());
         Assertions.assertEquals(checksum, test1.checksum());
         Assertions.assertEquals(1, test1.version());
-        Assertions.assertEquals(creationTime.truncatedTo(ChronoUnit.MILLIS), test1.creationTimestamp().truncatedTo(ChronoUnit.MILLIS));
-        Assertions.assertEquals(supportedFormats, test1.formats());
+        Assertions.assertEquals(creationTime.truncatedTo(ChronoUnit.SECONDS), test1.creationTimestamp().truncatedTo(ChronoUnit.SECONDS));
+        Assertions.assertEquals(supportedFormats, test1.format());
 
     }
 
@@ -78,33 +83,48 @@ class BuildDatabaseManagerTest {
         String description = "Test description";
         LocalDateTime creationTime = LocalDateTime.now().minusDays(1);
         String checksum = "test";
-        List<String> supportedFormats = List.of("1", "2");
+        String supportedFormat = "2";
 
-        BuildDatabaseManager.saveBuild(context, name, description, checksum, supportedFormats);
+        metaStore.saveBuild(name, checksum, supportedFormat);
 
         String otherDesc = "Test 2 desc";
         String otherChecksum = "checksum";
-        List<String> secondFormats = List.of("3");
+        String secondFormat = "3";
 
-        BuildDatabaseManager.saveBuild(context, name, otherDesc, otherChecksum, secondFormats);
-        Build test1 = BuildDatabaseManager.getBuild(context, name);
+        metaStore.saveBuild(name, otherChecksum, secondFormat);
+        BuildMeta test1 = metaStore.getBuild(name);
 
         Assertions.assertNotNull(test1);
         Assertions.assertEquals(name, test1.name());
-        Assertions.assertEquals(otherDesc, test1.description());
         Assertions.assertEquals(otherChecksum, test1.checksum());
         Assertions.assertEquals(2, test1.version());
-        Assertions.assertEquals(secondFormats, test1.formats());
+        Assertions.assertEquals(secondFormat, test1.format());
 
     }
 
     @Test
     void getLatestBuildsByFormat() {
 
-        BuildDatabaseManager.saveBuild(context, "test1", "Test description", "test", List.of("1", "2"));
-        BuildDatabaseManager.saveBuild(context, "test1", "Test description", "test", List.of("1", "2"));
-        BuildDatabaseManager.saveBuild(context, "test1", "Test description", "test", List.of("1"));
-        BuildDatabaseManager.saveBuild(context, "test1", "Test description", "test", List.of("1"));
-        BuildDatabaseManager.getBuildsByFormat(context, "2");
+        metaStore.saveBuild("test1", "test", "2");
+        metaStore.saveBuild("test1", "test", "2");
+        metaStore.saveBuild("test2", "test", "1");
+        metaStore.saveBuild("test2", "test", "2");
+        metaStore.saveBuild("test2", "test", "3");
+
+        Assertions.assertEquals(2, metaStore.getBuildsByFormat("2").size());
     }
+
+    @Test
+    void getBuildByVersion() {
+
+        metaStore.saveBuild("test2", "test", "1");
+        metaStore.saveBuild("test2", "different", "2");
+        metaStore.saveBuild("test2", "test", "3");
+
+        BuildMeta build = metaStore.getBuild("test2", 2);
+        Assertions.assertNotNull(build);
+        Assertions.assertEquals("different", build.checksum());
+        Assertions.assertEquals(2, build.version());
+    }
+
 }

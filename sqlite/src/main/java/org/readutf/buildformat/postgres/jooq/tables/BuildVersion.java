@@ -70,11 +70,6 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
     public final TableField<BuildVersionRecord, Integer> BUILD_META_ID = createField(DSL.name("build_meta_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>build_version.description</code>.
-     */
-    public final TableField<BuildVersionRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.VARCHAR(128).nullable(false), this, "");
-
-    /**
      * The column <code>build_version.version_number</code>.
      */
     public final TableField<BuildVersionRecord, Integer> VERSION_NUMBER = createField(DSL.name("version_number"), SQLDataType.INTEGER.nullable(false), this, "");

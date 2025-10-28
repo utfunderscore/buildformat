@@ -14,7 +14,6 @@ CREATE TABLE build_version
 (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
     build_meta_id  INTEGER      NOT NULL,
-    description    VARCHAR(128) NOT NULL,
     version_number INTEGER      NOT NULL,
     checksum       VARCHAR(64)  NOT NULL,
     FOREIGN KEY (build_meta_id) REFERENCES build_meta (id)

@@ -48,25 +48,10 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     }
 
     /**
-     * Setter for <code>build_version.description</code>.
-     */
-    public BuildVersionRecord setDescription(String value) {
-        set(2, value);
-        return this;
-    }
-
-    /**
-     * Getter for <code>build_version.description</code>.
-     */
-    public String getDescription() {
-        return (String) get(2);
-    }
-
-    /**
      * Setter for <code>build_version.version_number</code>.
      */
     public BuildVersionRecord setVersionNumber(Integer value) {
-        set(3, value);
+        set(2, value);
         return this;
     }
 
@@ -74,14 +59,14 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
      * Getter for <code>build_version.version_number</code>.
      */
     public Integer getVersionNumber() {
-        return (Integer) get(3);
+        return (Integer) get(2);
     }
 
     /**
      * Setter for <code>build_version.checksum</code>.
      */
     public BuildVersionRecord setChecksum(String value) {
-        set(4, value);
+        set(3, value);
         return this;
     }
 
@@ -89,7 +74,7 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
      * Getter for <code>build_version.checksum</code>.
      */
     public String getChecksum() {
-        return (String) get(4);
+        return (String) get(3);
     }
 
     // -------------------------------------------------------------------------
@@ -115,12 +100,11 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     /**
      * Create a detached, initialised BuildVersionRecord
      */
-    public BuildVersionRecord(Integer id, Integer buildMetaId, String description, Integer versionNumber, String checksum) {
+    public BuildVersionRecord(Integer id, Integer buildMetaId, Integer versionNumber, String checksum) {
         super(BuildVersion.BUILD_VERSION);
 
         setId(id);
         setBuildMetaId(buildMetaId);
-        setDescription(description);
         setVersionNumber(versionNumber);
         setChecksum(checksum);
         resetTouchedOnNotNull();
