@@ -1,14 +1,5 @@
 package org.readutf.buildformat;
 
-import java.time.LocalDateTime;
-import java.util.List;
+public record Build(BuildMeta buildMeta, BuildData buildData) {
 
-public record Build(
-        String name,
-        String description,
-        LocalDateTime creationTimestamp,
-        String checksum,
-        int version,
-        List<String> formats
-) {
 }

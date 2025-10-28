@@ -8,7 +8,7 @@ import org.readutf.buildformat.requirement.Requirement;
 import java.lang.reflect.*;
 import java.util.List;
 
-public class BuildConstructorTest {
+public class BuildMetaConstructorTest {
 
     @Test
     public void testBuildConstructor() throws Exception {
