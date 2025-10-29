@@ -2,8 +2,6 @@ plugins {
     id("java-library")
 }
 
-group = "org.readutf.buildformat"
-version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()

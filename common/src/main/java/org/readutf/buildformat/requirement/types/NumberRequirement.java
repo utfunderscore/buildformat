@@ -17,7 +17,7 @@ public abstract class NumberRequirement<T extends Number> implements Requirement
     }
 
     @Override
-    public @NotNull String getName() {
+    public @NotNull String name() {
         return name;
     }
 

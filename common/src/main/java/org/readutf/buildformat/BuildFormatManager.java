@@ -1,47 +1,43 @@
 package org.readutf.buildformat;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
+import org.readutf.buildformat.requirement.RegisteredRequirement;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.factory.RequirementFactory;
 import org.readutf.buildformat.requirement.factory.impl.*;
+import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.types.Position;
+import org.readutf.buildformat.utils.ClassUtils;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class BuildFormatManager {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final BuildFormatManager INSTANCE = new BuildFormatManager();
 
-    private final Map<Class<?>, RequirementFactory> factories;
+    private final List<RegisteredRequirement> factories;
     private final Map<Class<? extends Requirement>, RequirementFactory> serializers = new HashMap<>();
 
     public BuildFormatManager() {
-        this.factories = new HashMap<>();
+        this.factories = new ArrayList<>();
 
-        // List
-        this.registerFactory(List.class, new ListRequirementFactory(this));
-
-        // Position
-        this.registerFactory(Position.class, new PositionRequirementFactory());
-
-        // Numbers
-        this.registerFactory(Integer.class, new IntegerRequirementFactory());
-        this.registerFactory(int.class, new IntegerRequirementFactory());
-        this.registerFactory(Double.class, new DoubleRequirementFactory());
-        this.registerFactory(double.class, new DoubleRequirementFactory());
-        this.registerFactory(Long.class, new LongRequirementFactory());
-        this.registerFactory(long.class, new LongRequirementFactory());
-
-        // Text
-        this.registerFactory(String.class, new PositionRequirementFactory());
+        this.registerFactory(new TypeReference<List<Position>>() {}, new PositionListRequirementFactory());
+        this.registerFactory(new TypeReference<Position>() {}, new PositionRequirementFactory());
+        this.registerFactory(new TypeReference<Integer>() {}, new IntegerRequirementFactory());
+        this.registerFactory(new TypeReference<Double>() {}, new DoubleRequirementFactory());
+        this.registerFactory(new TypeReference<Long>() {}, new LongRequirementFactory());
+        this.registerFactory(new TypeReference<String>() {}, new StringRequirementFactory());
     }
 
-    public void registerFactory(@NotNull Class<?> type, @NotNull RequirementFactory factory) {
-        this.factories.put(type, factory);
+    public void registerFactory(@NotNull TypeReference<?> reference, @NotNull RequirementFactory factory) {
+        this.factories.add(new RegisteredRequirement(reference, factory));
         this.serializers.put(factory.getRequirementType(), factory);
     }
 
@@ -50,27 +46,46 @@ public class BuildFormatManager {
             throw new Exception("Class must be a record");
         }
         List<Requirement> requirements = new ArrayList<>();
+
         for (RecordComponent recordComponent : clazz.getRecordComponents()) {
-            RequirementFactory requirementFactory = this.factories.get(recordComponent.getType());
-            if (requirementFactory == null) {
-                throw new Exception("No factory found for type: "
-                        + recordComponent.getType().getName());
+            Class<?> parameterType = recordComponent.getType();
+
+            if (parameterType.isPrimitive()) {
+                parameterType = ClassUtils.getWrapperClass(parameterType);
             }
 
-            Requirement requirement;
-            if (recordComponent.getGenericType() instanceof ParameterizedType) {
-                requirement = requirementFactory.createRequirement(
-                        recordComponent.getName(),
-                        recordComponent.getType(),
-                        recordComponent.getAnnotations(),
-                        (ParameterizedType) recordComponent.getGenericType());
-            } else {
-                requirement = requirementFactory.createRequirement(
-                        recordComponent.getName(), recordComponent.getType(), recordComponent.getAnnotations(), null);
+            RequirementFactory factory = null;
+            for (RegisteredRequirement registeredRequirement : getFactories()) {
+                Type type = registeredRequirement.reference().getType();
+                if (type instanceof ParameterizedType parameterizedType
+                        && recordComponent.getGenericType() instanceof ParameterizedType parameterizedType2) {
+                    if (ClassUtils.equals(parameterizedType, parameterizedType2)) {
+                        factory = registeredRequirement.factory();
+                        break;
+                    }
+                }
+                if (type instanceof Class<?> cls && parameterType.isAssignableFrom(cls)) {
+                    factory = registeredRequirement.factory();
+                    break;
+                }
             }
+            if (factory == null) {
+                throw new Exception("No factory found for type: " + parameterType.getName());
+            }
+
+            ParameterizedType parameterizedType = null;
+            if(recordComponent.getGenericType() instanceof ParameterizedType p) {
+                parameterizedType = p;
+            }
+
+            Requirement requirement = factory.createRequirement(
+                    recordComponent.getName(),
+                    recordComponent.getType(),
+                    recordComponent.getAnnotations(),
+                    parameterizedType);
             requirements.add(requirement);
-        }
 
+        }
         return requirements;
     }
 
@@ -81,7 +96,8 @@ public class BuildFormatManager {
         for (Requirement requirement : requirements) {
             RequirementFactory factory = this.serializers.get(requirement.getClass());
             if (factory == null) {
-                throw new Exception("No serializer found for requirement type: " + requirement.getClass().getName());
+                throw new Exception("No serializer found for requirement type: "
+                        + requirement.getClass().getName());
             }
 
             Map<String, Object> serializerData = new HashMap<>();
@@ -113,15 +129,16 @@ public class BuildFormatManager {
         return requirements;
     }
 
-    public RequirementFactory getFactory(@NotNull Requirement requirement) {
-        return this.serializers.get(requirement.getClass());
+    public List<RegisteredRequirement> getFactories() {
+        return factories;
     }
 
     public Map<Class<? extends Requirement>, RequirementFactory> getSerializers() {
         return serializers;
     }
 
-    public Map<Class<?>, RequirementFactory> getFactories() {
-        return factories;
+    public static BuildFormatManager getInstance() {
+        return INSTANCE;
     }
+
 }
