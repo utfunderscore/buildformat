@@ -15,6 +15,7 @@ import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.Tool;
 import org.readutf.buildformat.types.Position;
+import org.readutf.buildformat.utils.TaskUtils;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -31,7 +32,7 @@ public class PositionRequirementCollector implements RequirementCollector<Positi
     private @Nullable UUID toolId;
 
     public PositionRequirementCollector(@NotNull Requirement requirement, int stepNumber) {
-        this.name = requirement.getName();
+        this.name = requirement.name();
         this.stepNumber = stepNumber;
         this.future = new CompletableFuture<>();
     }
@@ -43,19 +44,23 @@ public class PositionRequirementCollector implements RequirementCollector<Positi
 
         player.sendMessage(Lang.getPositionQuery(name, stepNumber));
 
-        player.getInventory().setItem(0, tool.itemStack());
 
-        player.getInventory().setItem(8, ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
+        ItemStack itemStack = ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
             @Nullable Position position = PositionTool.getPosition(tool.id());
 
-            if(position == null) {
+            if (position == null) {
                 player.sendMessage(Component.text("Use the tool provided to set a position.").color(NamedTextColor.RED));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 5, 1);
             } else {
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 3, 1);
                 future.complete(position);
             }
-        }));
+        });
+
+        TaskUtils.runSync(() -> {
+            player.getInventory().setItem(0, tool.itemStack());
+            player.getInventory().setItem(8, itemStack);
+        });
     }
 
     @Override

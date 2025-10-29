@@ -48,7 +48,10 @@ public class ClickableManager implements Listener {
                 UUID uuid = UUID.fromString(first);
 
                 Runnable runnable = tasks.get(uuid);
-                if (runnable != null) runnable.run();
+                if (runnable != null) {
+                    e.setCancelled(true);
+                    runnable.run();
+                }
 
             } catch (Exception ignore) {
             }

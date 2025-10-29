@@ -1,0 +1,13 @@
+database:
+  host: localhost
+  port: "5432"
+  database: devdb
+  user: devuser
+  password: devpassword
+
+aws:
+  accessKey: minioadmin
+  secretKey: minioadmin
+  endpoint: http://localhost:9000
+  region: us-east-1
+  pathStyleAccessEnabled: true

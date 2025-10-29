@@ -11,12 +11,13 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
-import org.readutf.buildformat.requirement.types.ListRequirement;
 import org.readutf.buildformat.requirement.types.PositionRequirement;
+import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.Tool;
 import org.readutf.buildformat.types.Position;
+import org.readutf.buildformat.utils.TaskUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,40 +27,31 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class MultiPositionRequirementCollector implements RequirementCollector<List<Position>> {
 
-    @NotNull
-    private final Requirement requirement;
-
+    private final String name;
     private final int stepNumber;
-
-    private final int minimum;
-    private final int maximum;
 
     private final List<Position> positions;
     private final CompletableFuture<List<Position>> future;
     private final List<UUID> toolIds = new ArrayList<>();
 
-    public MultiPositionRequirementCollector(@NotNull ListRequirement requirement, int stepNumber) throws Exception {
-        this.requirement = requirement;
+    public MultiPositionRequirementCollector(@NotNull Requirement requirement, int stepNumber) {
+        if (!(requirement instanceof PositionListRequirement positionListRequirement)) {
+            throw new IllegalArgumentException("Requirement must be a PositionRequirement");
+        }
+        this.name = requirement.name();
         this.stepNumber = stepNumber;
         this.future = new CompletableFuture<>();
         this.positions = new ArrayList<>();
-        if (!(requirement.innerRequirement() instanceof PositionRequirement)) {
-            throw new Exception("MultiPositionRequirementCollector requires a ListRequirement of Position type");
-        }
-        this.minimum = requirement.min();
-        this.maximum = requirement.max();
     }
 
     @Override
     public void start(@NotNull Player player) {
-        AtomicReference<Tool> tool = new AtomicReference<>(PositionTool.getTool(requirement.getName()));
+        AtomicReference<Tool> tool = new AtomicReference<>(PositionTool.getTool(name));
         this.toolIds.add(tool.get().id());
 
-        player.sendMessage(Lang.getPositionQuery(requirement.getName(), stepNumber));
+        player.sendMessage(Lang.getPositionQuery(name, stepNumber));
 
-        player.getInventory().setItem(0, tool.get().itemStack());
-
-        player.getInventory().setItem(7, ClickableManager.setClickAction(ItemStack.of(Material.LIME_WOOL), () -> {
+        ItemStack itemStack1 = ClickableManager.setClickAction(ItemStack.of(Material.LIME_WOOL), () -> {
             @Nullable Position position = PositionTool.getPosition(tool.get().id());
 
             if (position == null) {
@@ -72,13 +64,18 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
                         .color(NamedTextColor.GREEN));
                 player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 3, 1);
 
-                tool.set(PositionTool.getTool(requirement.getName()));
+                tool.set(PositionTool.getTool(name));
                 this.toolIds.add(tool.get().id());
             }
-        }));
+        });
 
-        player.getInventory()
-                .setItem(8, ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {}));
+        ItemStack itemStack = ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {});
+
+        TaskUtils.runSync(() -> {
+            player.getInventory().setItem(7, itemStack1);
+            player.getInventory().setItem(8, itemStack);
+            player.getInventory().setItem(0, tool.get().itemStack());
+        });
     }
 
     @Override

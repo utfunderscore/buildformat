@@ -8,10 +8,6 @@ plugins {
     id("com.gradleup.shadow") version "9.0.0-beta13"
 }
 
-group = "io.papermc.paperweight"
-version = "1.0.0-SNAPSHOT"
-description = "Test plugin for paperweight-userdev"
-
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(23)
 }
@@ -27,6 +23,8 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
+    implementation(project(":sql"))
+    implementation(project(":s3"))
 
     implementation("dev.rollczi:litecommands-bukkit:3.9.7")
     implementation("net.kyori:adventure-text-minimessage:4.25.0")
@@ -38,6 +36,7 @@ dependencies {
     implementation("net.minestom:minestom:2025.10.18-1.21.10")
     implementation("dev.hollowcube:schem:2.0.0")
     implementation("dev.hollowcube:polar:1.15.0")
+    implementation("org.postgresql:postgresql:42.7.8")
 
     paperweight.paperDevBundle("1.21.10-R0.1-SNAPSHOT")
 }

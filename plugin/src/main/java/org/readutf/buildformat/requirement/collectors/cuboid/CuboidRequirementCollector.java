@@ -15,6 +15,7 @@ import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.RegionSelectionTool;
 import org.readutf.buildformat.tools.Tool;
 import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.utils.TaskUtils;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -23,13 +24,14 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
 
     @NotNull
     private final String name;
+
     private final int stepNumber;
     private final CompletableFuture<Cuboid> future;
 
     private UUID toolId;
 
     public CuboidRequirementCollector(@NotNull Requirement requirement, int stepNumber) {
-        this.name = requirement.getName();
+        this.name = requirement.name();
         this.stepNumber = stepNumber;
         this.future = new CompletableFuture<>();
     }
@@ -38,12 +40,10 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
     public void start(@NotNull Player player) {
 
         player.sendMessage(Lang.getRegionQuery(name, stepNumber));
-        Tool tool = RegionSelectionTool.givePlayerTool(name);
-        player.give(tool.itemStack());
-
+        Tool tool = RegionSelectionTool.getTool(name);
         this.toolId = tool.id();
 
-        player.getInventory().setItem(8, ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
+        ItemStack itemStack = ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
             @Nullable Cuboid selection = getSelection(tool.id());
 
             if (selection == null) {
@@ -54,7 +54,11 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
                 future.complete(selection);
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 3, 1);
             }
-        }));
+        });
+        TaskUtils.runSync(() -> {
+            player.getInventory().setItem(0, tool.itemStack());
+            player.getInventory().setItem(8, itemStack);
+        });
     }
 
     private static @Nullable Cuboid getSelection(UUID toolId) {
@@ -67,7 +71,7 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
 
     @Override
     public void cleanup(@NotNull Player player) {
-        player.getInventory().setItem(0, ItemStack.of(Material.AIR));
+        TaskUtils.runSync(() -> player.getInventory().setItem(0, ItemStack.of(Material.AIR)));
 
         RegionSelectionTool.clearTool(toolId);
     }

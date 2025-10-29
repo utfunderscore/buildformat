@@ -8,6 +8,8 @@ import dev.rollczi.litecommands.annotations.execute.Execute;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
+import org.readutf.buildformat.format.FormatRegistry;
+import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.SessionManager;
 import org.readutf.buildformat.requirement.types.CuboidRequirement;
 import org.readutf.buildformat.requirement.types.PositionRequirement;
@@ -15,23 +17,31 @@ import org.readutf.buildformat.requirement.types.StringRequirement;
 import org.readutf.buildformat.requirement.types.number.IntegerRequirement;
 
 import java.util.List;
+import java.util.Map;
 
 @Command(name = "build")
 public class BuildCommand {
+
+    private final SessionManager sessionManager;
+    private final FormatRegistry formatRegistry;
+
+    public BuildCommand(SessionManager sessionManager, FormatRegistry formatRegistry) {
+        this.sessionManager = sessionManager;
+        this.formatRegistry = formatRegistry;
+    }
 
     @Execute(name = "create")
     @Async
     public void create(@Context Player player, @Arg String format) {
         try {
-            SessionManager.get()
-                    .startInputSession(
-                            player,
-                            List.of(
-                                    new PositionRequirement("spawn1"),
-                                    new PositionRequirement("spawn2"),
-                                    new CuboidRequirement("safezone"),
-                                    new StringRequirement("lobbyName"),
-                                    new IntegerRequirement("maxPlayers", 1, 100)));
+            Map<String, List<Requirement>> formats = this.formatRegistry.readFormats();
+            List<Requirement> requirements = formats.get(format);
+            if (requirements == null) {
+                player.sendMessage(Component.text("Format not found").color(NamedTextColor.RED));
+                return;
+            }
+
+            sessionManager.startInputSession(player, format, requirements);
         } catch (Exception e) {
             player.sendMessage(Component.text("Error starting build session: " + e.getMessage())
                     .color(NamedTextColor.RED));

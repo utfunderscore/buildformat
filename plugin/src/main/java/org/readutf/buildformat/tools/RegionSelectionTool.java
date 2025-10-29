@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
-import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.fakes.FakeItemDisplay;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
@@ -31,7 +30,7 @@ public class RegionSelectionTool implements Listener {
 
     private static final Map<UUID, Selection> tools = new HashMap<>();
 
-    public static @NotNull Tool givePlayerTool(@NotNull String name) {
+    public static @NotNull Tool getTool(@NotNull String name) {
         ItemStack tool = ItemStack.of(Material.BLAZE_ROD);
         UUID toolIdentifier = UUID.randomUUID();
 

@@ -8,37 +8,36 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.readutf.buildformat.Lang;
-import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.RegionSelectionTool;
 import org.readutf.buildformat.tools.Tool;
 import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.utils.TaskUtils;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class BuildRequirementCollector implements RequirementCollector<Cuboid> {
+public class BuildCuboidCollector implements RequirementCollector<Cuboid> {
 
     private final CompletableFuture<Cuboid> future;
 
     private UUID toolId;
 
-    public BuildRequirementCollector() {
+    public BuildCuboidCollector() {
         this.future = new CompletableFuture<>();
     }
 
     @Override
     public void start(@NotNull Player player) {
 
-        player.sendMessage(Component.text("Please select a region containing your build").color(NamedTextColor.GRAY));
-        Tool tool = RegionSelectionTool.givePlayerTool("build");
-        player.give(tool.itemStack());
+        player.sendMessage(
+                Component.text("Please select the region containing your build").color(NamedTextColor.GRAY));
+        Tool tool = RegionSelectionTool.getTool("build");
 
         this.toolId = tool.id();
 
-        player.getInventory().setItem(8, ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
+        ItemStack itemStack = ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
             @Nullable Cuboid selection = getSelection(tool.id());
 
             if (selection == null) {
@@ -49,7 +48,12 @@ public class BuildRequirementCollector implements RequirementCollector<Cuboid> {
                 future.complete(selection);
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 3, 1);
             }
-        }));
+        });
+
+        TaskUtils.runSync(() -> {
+            player.getInventory().setItem(0, tool.itemStack());
+            player.getInventory().setItem(8, itemStack);
+        });
     }
 
     private static @Nullable Cuboid getSelection(UUID toolId) {
@@ -62,7 +66,7 @@ public class BuildRequirementCollector implements RequirementCollector<Cuboid> {
 
     @Override
     public void cleanup(@NotNull Player player) {
-        player.getInventory().setItem(0, ItemStack.of(Material.AIR));
+        TaskUtils.runSync(() -> player.getInventory().setItem(0, ItemStack.of(Material.AIR)));
 
         RegionSelectionTool.clearTool(toolId);
     }
