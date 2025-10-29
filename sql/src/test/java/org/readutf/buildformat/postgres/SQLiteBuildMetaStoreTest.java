@@ -14,9 +14,8 @@ import org.readutf.buildformat.BuildMeta;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 
-class SQLBuildBuildMetaStoreTest {
+class SQLiteBuildMetaStoreTest {
 
     private DSLContext context;
     private SQLBuildMetaStore metaStore;
@@ -34,7 +33,7 @@ class SQLBuildBuildMetaStoreTest {
 
         FluentConfiguration flywayConfig = Flyway.configure()
                 .dataSource(hikariDataSource)
-                .locations("classpath:db/migration");
+                .locations("classpath:db/migration/sqlite");
 
         context = DSL.using(hikariDataSource, SQLDialect.SQLITE);
 

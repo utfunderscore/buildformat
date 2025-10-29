@@ -5,6 +5,7 @@ import org.jooq.*;
 import org.jooq.Record;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.impl.DSL;
 import org.readutf.buildformat.BuildMeta;
 import org.readutf.buildformat.postgres.jooq.Tables;
 import org.readutf.buildformat.postgres.jooq.tables.records.BuildMetaRecord;
@@ -14,6 +15,8 @@ import org.readutf.buildformat.store.BuildMetaStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,10 +33,17 @@ public class SQLBuildMetaStore implements BuildMetaStore {
 
     private final DSLContext context;
 
+    public SQLBuildMetaStore(DataSource dataSource, SQLDialect sqlDialect) {
+        this.context = DSL.using(dataSource, sqlDialect);
+    }
+
+    public SQLBuildMetaStore(Connection connection, SQLDialect sqlDialect) {
+        this.context = DSL.using(connection, sqlDialect);
+    }
+
     public SQLBuildMetaStore(DSLContext context) {
         this.context = context;
     }
-
 
     public int saveBuild(
              @NotNull String name, String checksum, @NotNull String format) {

@@ -13,9 +13,9 @@ CREATE UNIQUE INDEX idx_build_meta_name ON build_meta (build_name);
 CREATE TABLE build_version
 (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    build_meta_id  INTEGER      NOT NULL,
-    version_number INTEGER      NOT NULL,
-    checksum       VARCHAR(64)  NOT NULL,
+    build_meta_id  INTEGER     NOT NULL,
+    version_number INTEGER     NOT NULL,
+    checksum       VARCHAR(64) NOT NULL,
     FOREIGN KEY (build_meta_id) REFERENCES build_meta (id)
 );
 
