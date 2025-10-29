@@ -1,93 +1,51 @@
 package org.readutf.buildformat.s3;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.schematic.BuildData;
+import org.readutf.buildformat.BuildData;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
-import software.amazon.awssdk.services.s3.S3Configuration;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class S3BuildDataStoreTest {
 
-    @BeforeAll
-    public static void beforeAll() {}
+    static LocalStackContainer localStack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.0"));
+    private static final String BUCKET_NAME = "build-data-bucket";
+    private S3BuildDataStore dataStore;
 
-    @Test
-    void testUploadAndRetrieval() throws IOException, BuildFormatException {
+    @BeforeEach
+    public void beforeAll() throws IOException, InterruptedException {
+        localStack.start();
 
-        DockerImageName localstackImage = DockerImageName.parse("localstack/localstack:3.5.0");
+        localStack.execInContainer("awslocal", "s3", "mb", "s3://" + BUCKET_NAME);
 
-        LocalStackContainer localstack =
-                new LocalStackContainer(localstackImage).withServices(LocalStackContainer.Service.S3);
-
-        localstack.start();
-
-        S3AsyncClient s3 = S3AsyncClient.builder()
-                .endpointOverride(localstack.getEndpoint())
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey())))
-                .region(Region.of(localstack.getRegion()))
-                .build();
-
-        CreateBucketResponse bucketResponse = s3.createBucket(
-                        CreateBucketRequest.builder().bucket("test").build())
-                .join();
-
-        System.out.println(bucketResponse);
-
-        S3BuildSchematicStore store = new S3BuildSchematicStore(s3, "test");
-
-//        // Load Atlantis.schem from resources
-//        BuildData schematic = new BuildData(
-//                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
-//
-//        store.save(schematic);
-
-        BuildData downloaded = store.load("Atlantis");
-
-        System.out.println(downloaded);
+        dataStore = new S3BuildDataStore(
+                S3AsyncClient.builder()
+                        .endpointOverride(localStack.getEndpointOverride(LocalStackContainer.Service.S3))
+                        .credentialsProvider(StaticCredentialsProvider.create(
+                                AwsBasicCredentials.create(localStack.getAccessKey(), localStack.getSecretKey())))
+                        .region(Region.US_EAST_1)
+                        .build(),
+                BUCKET_NAME);
     }
 
     @Test
-    void testS3() throws IOException, BuildFormatException {
+    void save() throws IOException {
 
-        String s3AccessKeyId = System.getenv("S3_ACCESS_KEY_ID");
-        String s3SecretAccessKey = System.getenv("S3_SECRET_ACCESS_KEY");
-        String bucket = System.getenv("S3_BUCKET");
+        dataStore.save("test123", 1, new BuildData("polar-data".getBytes(), "schematic-data".getBytes()));
 
-        AwsBasicCredentials credentials = AwsBasicCredentials.create(s3AccessKeyId, s3SecretAccessKey);
-
-        S3Configuration serviceConfiguration =
-                S3Configuration.builder().pathStyleAccessEnabled(true).build();
-
-        S3AsyncClient client = S3AsyncClient.builder()
-                .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .region(Region.US_EAST_1)
-                .serviceConfiguration(serviceConfiguration)
-                .build();
-
-        S3BuildSchematicStore store = new S3BuildSchematicStore(client, bucket);
-
-        // Load Atlantis.schem from resources
-//        BuildData schematic = new BuildData(
-//                "Atlantis", List.of(), Files.readAllBytes(Path.of("src", "test", "resources", "Atlantis.schem")));
-//
-//        store.save(schematic);
-
-        BuildData downloaded = store.load("Atlantis");
-
-        System.out.println(downloaded);
+        BuildData downloaded = dataStore.get("test123", 1);
+        assertArrayEquals("polar-data".getBytes(), downloaded.polarData());
+        assertArrayEquals("schematic-data".getBytes(), downloaded.schematicData());
     }
 }

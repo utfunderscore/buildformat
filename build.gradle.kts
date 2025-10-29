@@ -1,13 +1,18 @@
 plugins {
-    `java-library`
+    id("java")
     `maven-publish`
 }
 
 group = "org.readutf.buildformat"
-version = System.getenv("ARENA_VERSION") ?: "dev"
+version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 subprojects {
@@ -41,11 +46,6 @@ subprojects {
 
         }
     }
-}
-
-dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 tasks.test {
