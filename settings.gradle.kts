@@ -7,6 +7,6 @@ pluginManagement {
 
 rootProject.name = "buildformat"
 include("common")
-include("sqlite")
+include("sql")
 include("plugin")
 include("s3")
