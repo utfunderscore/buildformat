@@ -44,6 +44,8 @@ class S3BuildDataStoreTest {
 
         dataStore.save("test123", 1, new BuildData("polar-data".getBytes(), "schematic-data".getBytes()));
 
-        dataStore.get("test123", 1);
+        BuildData downloaded = dataStore.get("test123", 1);
+        assertArrayEquals("polar-data".getBytes(), downloaded.polarData());
+        assertArrayEquals("schematic-data".getBytes(), downloaded.schematicData());
     }
 }
