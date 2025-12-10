@@ -1,4 +1,4 @@
-package org.readutf.buildformat.requirement;
+package org.readutf.buildformat.session;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
@@ -19,8 +19,11 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.BuildData;
+import org.readutf.buildformat.BuildFormatManager;
 import org.readutf.buildformat.BuildManager;
 import org.readutf.buildformat.converter.SchemPolarConverter;
+import org.readutf.buildformat.requirement.Requirement;
+import org.readutf.buildformat.requirement.RequirementCollector;
 import org.readutf.buildformat.requirement.collectors.cuboid.BuildCuboidCollector;
 import org.readutf.buildformat.requirement.collectors.position.MultiPositionRequirementCollector;
 import org.readutf.buildformat.requirement.collectors.position.PositionRequirementCollector;
@@ -33,6 +36,8 @@ import org.readutf.buildformat.requirement.types.PositionRequirement;
 import org.readutf.buildformat.requirement.types.StringRequirement;
 import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.requirement.types.number.IntegerRequirement;
+import org.readutf.buildformat.tools.PositionTool;
+import org.readutf.buildformat.tools.RegionSelectionTool;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 import org.slf4j.Logger;
@@ -47,26 +52,27 @@ public class SessionManager {
 
     private static final Logger log = LoggerFactory.getLogger(SessionManager.class);
 
-    private final BuildManager buildManager;
-    private final HashSet<UUID> sessions;
+    private final @NotNull BuildManager buildManager;
     private final Map<Class<? extends Requirement>, RequirementCollectorFactory> collectors;
+    private final Map<UUID, List<RequirementCollector<?>>> sessionMap;
 
-    public SessionManager(BuildManager buildManager) {
+    public SessionManager(@NotNull BuildManager buildManager) {
         this.buildManager = buildManager;
-        this.sessions = new HashSet<>();
+        this.sessionMap = new HashMap<>();
         this.collectors = Map.of(
                 PositionRequirement.class, PositionRequirementCollector::new,
                 CuboidRequirement.class, CuboidRequirementCollector::new,
-                StringRequirement.class, (requirement, step) -> new TextInputCollector<>(requirement.name(), step, str -> str),
+                StringRequirement.class,
+                        (requirement, step) -> new TextInputCollector<>(requirement.name(), step, str -> str),
                 PositionListRequirement.class, MultiPositionRequirementCollector::new,
-                IntegerRequirement.class, (requirement, step) -> new TextInputCollector<>(requirement.name(), step, Integer::parseInt));
+                IntegerRequirement.class,
+                        (requirement, step) -> new TextInputCollector<>(requirement.name(), step, Integer::parseInt));
     }
 
     public void startInputSession(
             @NotNull Player player, @NotNull String format, @NotNull List<Requirement> requirements) throws Exception {
-        if (sessions.contains(player.getUniqueId())) throw new Exception("Session already active");
+        if (sessionMap.containsKey(player.getUniqueId())) throw new Exception("Session already active");
 
-        sessions.add(player.getUniqueId());
         player.getInventory().clear();
 
         String buildName = getBuildName(player);
@@ -80,14 +86,13 @@ public class SessionManager {
         for (Map.Entry<String, Object> stringObjectEntry : results.entrySet()) {
             player.sendMessage(" - " + stringObjectEntry.getKey() + ": " + stringObjectEntry.getValue());
         }
-        sessions.remove(player.getUniqueId());
 
         TextComponent upload = Component.text("[Upload]")
                 .color(NamedTextColor.LIGHT_PURPLE)
                 .decorate(TextDecoration.BOLD)
                 .clickEvent(ClickEvent.callback(_ -> {
                     CompletableFuture.runAsync(() -> {
-                        uploadBuild(player, cuboid, buildName, format);
+                        uploadBuild(player, BuildFormatManager.getInstance().checksum(requirements), cuboid, buildName, format);
                     });
                 }));
 
@@ -95,27 +100,29 @@ public class SessionManager {
                 Component.text("Upload build? ").color(NamedTextColor.GREEN).append(upload));
     }
 
-    private static String getBuildName(@NotNull Player player) {
+    private String getBuildName(@NotNull Player player) {
         BuildNameCollector nameCollector = new BuildNameCollector();
+        addCollectorToSession(player, nameCollector);
         nameCollector.start(player);
         String buildName = nameCollector.awaitBlocking();
         nameCollector.cleanup(player);
         return buildName;
     }
 
-    private static Cuboid getBuildRegion(@NotNull Player player) {
+    private Cuboid getBuildRegion(@NotNull Player player) {
         BuildCuboidCollector build = new BuildCuboidCollector();
+        addCollectorToSession(player, build);
         build.start(player);
         Cuboid cuboid = build.awaitBlocking();
         build.cleanup(player);
         return cuboid;
     }
 
-    private void uploadBuild(@NotNull Player player, Cuboid cuboid, String buildName, String format) {
+    private void uploadBuild(@NotNull Player player, int checksum, Cuboid cuboid, String buildName, String format) {
         try {
             byte[] schematicData = createSchematic(player.getWorld(), cuboid);
             byte[] polarWorld = createPolarWorld(schematicData);
-            buildManager.saveBuild(buildName, format, new BuildData(schematicData, polarWorld));
+            buildManager.saveBuild(buildName, format, checksum, new BuildData(schematicData, polarWorld));
             player.sendMessage(Component.text("Upload successful!").color(NamedTextColor.GREEN));
         } catch (Exception e) {
             player.sendMessage(
@@ -124,12 +131,23 @@ public class SessionManager {
         }
     }
 
-    public byte[] createPolarWorld(byte[] schematicData) throws Exception {
+    public void cancelSession(@NotNull Player player) {
+        List<RequirementCollector<?>> collectors = sessionMap.remove(player.getUniqueId());
+        PositionTool.clearTool(player.getUniqueId());
+        RegionSelectionTool.clearTool(player.getUniqueId());
+        player.getInventory().clear();
+
+        for (RequirementCollector<?> collector : collectors) {
+            collector.cleanup(player);
+        }
+    }
+
+    private byte @NotNull [] createPolarWorld(byte[] schematicData) throws Exception {
         Schematic schematic = SchematicReader.sponge().read(schematicData);
         return SchemPolarConverter.convert(schematic);
     }
 
-    public byte[] createSchematic(@NotNull World world, @NotNull Cuboid cuboid) throws IOException {
+    private byte @NotNull [] createSchematic(@NotNull World world, @NotNull Cuboid cuboid) throws IOException {
 
         Position min = cuboid.min();
         Position max = cuboid.max();
@@ -151,20 +169,29 @@ public class SessionManager {
         return outputStream.toByteArray();
     }
 
+    public void addCollectorToSession(@NotNull Player player, RequirementCollector<?> collector) {
+        List<RequirementCollector<?>> collectors =
+                this.sessionMap.getOrDefault(player.getUniqueId(), new ArrayList<>());
+        collectors.add(collector);
+        this.sessionMap.put(player.getUniqueId(), collectors);
+    }
+
     private @NotNull Map<String, Object> collectRequirements(
             @NotNull Player player, @NotNull List<Requirement> requirements) throws Exception {
         Map<String, Object> results = new HashMap<>();
         List<RequirementCollector<?>> completed = new ArrayList<>();
 
         for (int i = 0; i < requirements.size(); i++) {
-
             Requirement requirement = requirements.get(i);
+
+            player.sendMessage("Collecting for " + requirement.getClass().getSimpleName());
 
             RequirementCollectorFactory requirementCollector = collectors.get(requirement.getClass());
             if (requirementCollector == null) {
                 throw new Exception("No collector available for " + requirement.getClass());
             }
             RequirementCollector<?> collector = requirementCollector.createCollector(requirement, i + 1);
+            addCollectorToSession(player, collector);
 
             player.getInventory().clear();
             collector.start(player);

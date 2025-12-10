@@ -89,6 +89,10 @@ public class BuildFormatManager {
         return requirements;
     }
 
+    public int checksum(@NotNull List<Requirement> requirements) {
+        return requirements.hashCode();
+    }
+
     public JsonNode serializeRequirements(@NotNull List<Requirement> requirements) throws Exception {
 
         List<Map<String, Object>> data = new ArrayList<>();
@@ -116,8 +120,7 @@ public class BuildFormatManager {
             String name = node.get("name").asText();
             JsonNode data = node.get("data");
 
-            RequirementFactory factory =
-                    this.serializers.get(Class.forName(name).asSubclass(Requirement.class));
+            RequirementFactory factory = this.serializers.get(Class.forName(name).asSubclass(Requirement.class));
             if (factory == null) {
                 throw new Exception("No deserializer found for requirement type: " + name);
             }

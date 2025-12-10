@@ -7,11 +7,9 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
-import org.readutf.buildformat.requirement.types.PositionRequirement;
 import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.PositionTool;
@@ -23,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MultiPositionRequirementCollector implements RequirementCollector<List<Position>> {
@@ -46,35 +45,47 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
 
     @Override
     public void start(@NotNull Player player) {
-        AtomicReference<Tool> tool = new AtomicReference<>(PositionTool.getTool(name));
-        this.toolIds.add(tool.get().id());
-
         player.sendMessage(Lang.getPositionQuery(name, stepNumber));
+        AtomicInteger currentId = new AtomicInteger(1);
 
-        ItemStack itemStack1 = ClickableManager.setClickAction(ItemStack.of(Material.LIME_WOOL), () -> {
-            @Nullable Position position = PositionTool.getPosition(tool.get().id());
+        List<Position> positions = new ArrayList<>();
 
-            if (position == null) {
-                player.sendMessage(Component.text("Use the tool provided to set a position.")
-                        .color(NamedTextColor.RED));
+        AtomicReference<Tool> tool = new AtomicReference<>(PositionTool.getTool(name + " #" + currentId));
+        toolIds.add(tool.get().id());
+
+        ItemStack confirmButton = ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
+            Position position = PositionTool.getPosition(tool.get().id());
+            if(position != null) {
+                positions.add(position);
+            }
+
+            if (positions.isEmpty()) {
+                player.sendMessage(
+                        Component.text("Please make at least 1 selection.").color(NamedTextColor.RED));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 5, 1);
             } else {
-                positions.add(position);
-                player.sendMessage(Component.text("Position " + positions.size() + " recorded.")
-                        .color(NamedTextColor.GREEN));
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 3, 1);
 
-                tool.set(PositionTool.getTool(name));
-                this.toolIds.add(tool.get().id());
+                future.complete(positions);
+                player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 3, 1);
             }
         });
 
-        ItemStack itemStack = ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {});
+        ItemStack addPosition = ClickableManager.setClickAction(ItemStack.of(Material.LIME_WOOL), () -> {
+            currentId.addAndGet(1);
+
+            positions.add(PositionTool.getPosition(tool.get().id()));
+
+            tool.set(PositionTool.getTool(name + " #" + currentId));
+            toolIds.add(tool.get().id());
+
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1, 5);
+            player.getInventory().setItem(0, tool.get().itemStack());
+        });
 
         TaskUtils.runSync(() -> {
-            player.getInventory().setItem(7, itemStack1);
-            player.getInventory().setItem(8, itemStack);
             player.getInventory().setItem(0, tool.get().itemStack());
+            player.getInventory().setItem(7, addPosition);
+            player.getInventory().setItem(8, confirmButton);
         });
     }
 

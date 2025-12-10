@@ -10,15 +10,13 @@ import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.RequirementCollector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TextInputCollector<T> implements RequirementCollector<T> {
 
-    private static List<TextInputCollector<?>> activeCollectors = new ArrayList<>();
+    private static Map<UUID, List<TextInputCollector<?>>> activeCollectors = new HashMap<>();
 
     private final String name;
     private final int step;
@@ -34,12 +32,14 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
         this.future = new CompletableFuture<>();
         this.completed = new AtomicBoolean(false);
         this.waitingPlayers = new ArrayList<>();
-        activeCollectors.add(this);
     }
 
     @Override
     public void start(@NotNull Player player) {
         waitingPlayers.add(player.getUniqueId());
+        List<TextInputCollector<?>> collectors = activeCollectors.getOrDefault(player.getUniqueId(), new ArrayList<>());
+        collectors.add(this);
+        activeCollectors.put(player.getUniqueId(), collectors);
         player.sendMessage(Lang.getTextInput(name, step));
     }
 
@@ -66,7 +66,7 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
             Component message = e.message();
             String rawText = serializer.serialize(message);
 
-            for (TextInputCollector<?> activeCollector : activeCollectors) {
+            for (TextInputCollector<?> activeCollector : activeCollectors.getOrDefault(e.getPlayer().getUniqueId(), new ArrayList<>())) {
                 if(activeCollector.completed.get()) continue;
                 if (!activeCollector.waitingPlayers.contains(e.getPlayer().getUniqueId())) continue;
 

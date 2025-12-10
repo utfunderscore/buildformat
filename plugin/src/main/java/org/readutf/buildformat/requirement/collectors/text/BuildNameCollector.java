@@ -11,15 +11,13 @@ import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.RequirementCollector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BuildNameCollector implements RequirementCollector<String> {
 
-    private static List<BuildNameCollector> activeCollectors = new ArrayList<>();
+    private static Map<UUID, List<BuildNameCollector>> activeCollectors = new HashMap<>();
 
     private final CompletableFuture<String> future;
     private final AtomicBoolean completed;
@@ -29,17 +27,23 @@ public class BuildNameCollector implements RequirementCollector<String> {
         this.future = new CompletableFuture<>();
         this.completed = new AtomicBoolean(false);
         this.waitingPlayers = new ArrayList<>();
-        activeCollectors.add(this);
     }
 
     @Override
     public void start(@NotNull Player player) {
         waitingPlayers.add(player.getUniqueId());
+        List<BuildNameCollector> collectors = activeCollectors.getOrDefault(player.getUniqueId(), new ArrayList<>());
+        collectors.add(this);
+        activeCollectors.put(player.getUniqueId(), collectors);
         player.sendMessage(Component.text("Enter the name for this build").color(NamedTextColor.GREEN));
     }
 
     @Override
-    public void cleanup(Player player) {}
+    public void cleanup(Player player) {
+        List<BuildNameCollector> collectors = activeCollectors.get(player.getUniqueId());
+        collectors.remove(this);
+        activeCollectors.put(player.getUniqueId(), collectors);
+    }
 
     public void complete(String text) {
         future.complete(text);
@@ -61,7 +65,7 @@ public class BuildNameCollector implements RequirementCollector<String> {
             Component message = e.message();
             String rawText = serializer.serialize(message);
 
-            for (BuildNameCollector buildNameCollector : activeCollectors) {
+            for (BuildNameCollector buildNameCollector : activeCollectors.getOrDefault(e.getPlayer().getUniqueId(), new ArrayList<>())) {
                 if(buildNameCollector.completed.get()) continue;
                 if (!buildNameCollector.waitingPlayers.contains(e.getPlayer().getUniqueId())) continue;
 

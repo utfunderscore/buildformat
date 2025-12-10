@@ -10,11 +10,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.readutf.buildformat.format.FormatRegistry;
 import org.readutf.buildformat.requirement.Requirement;
-import org.readutf.buildformat.requirement.SessionManager;
-import org.readutf.buildformat.requirement.types.CuboidRequirement;
-import org.readutf.buildformat.requirement.types.PositionRequirement;
-import org.readutf.buildformat.requirement.types.StringRequirement;
-import org.readutf.buildformat.requirement.types.number.IntegerRequirement;
+import org.readutf.buildformat.session.SessionManager;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +26,11 @@ public class BuildCommand {
         this.formatRegistry = formatRegistry;
     }
 
+    @Execute(name = "cancel")
+    public void cancel(@Context Player player) {
+        sessionManager.cancelSession(player);
+    }
+
     @Execute(name = "create")
     @Async
     public void create(@Context Player player, @Arg String format) {
@@ -40,6 +41,8 @@ public class BuildCommand {
                 player.sendMessage(Component.text("Format not found").color(NamedTextColor.RED));
                 return;
             }
+
+            System.out.println(requirements);
 
             sessionManager.startInputSession(player, format, requirements);
         } catch (Exception e) {

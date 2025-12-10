@@ -5,13 +5,14 @@ import com.zaxxer.hikari.HikariDataSource;
 import dev.rollczi.litecommands.bukkit.LiteBukkitFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.flywaydb.core.Flyway;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.SQLDialect;
 import org.readutf.buildformat.commands.BuildCommand;
 import org.readutf.buildformat.format.FormatRegistry;
 import org.readutf.buildformat.postgres.SQLBuildMetaStore;
-import org.readutf.buildformat.requirement.SessionManager;
+import org.readutf.buildformat.session.SessionManager;
 import org.readutf.buildformat.requirement.collectors.text.BuildNameCollector;
 import org.readutf.buildformat.requirement.collectors.text.TextInputCollector;
 import org.readutf.buildformat.s3.S3BuildDataStore;
@@ -38,12 +39,12 @@ public class BuildFormatPlugin extends JavaPlugin {
 
         System.setProperty("org.jooq.no-logo", "true");
 
-
         getConfig().options().copyDefaults(true);
         saveDefaultConfig();
 
+        HikariDataSource dataSource = getDatabase();
         S3BuildDataStore buildDataStore = new S3BuildDataStore(this.getAwsClient(), "builds");
-        SQLBuildMetaStore buildMetaStore = new SQLBuildMetaStore(getDatabase(), SQLDialect.POSTGRES);
+        SQLBuildMetaStore buildMetaStore = new SQLBuildMetaStore(dataSource, SQLDialect.POSTGRES);
         SessionManager sessionManager = new SessionManager(new BuildManager(buildMetaStore, buildDataStore));
         FormatRegistry formatRegistry = new FormatRegistry(BuildFormatManager.getInstance(), getDataFolder());
 
@@ -51,12 +52,18 @@ public class BuildFormatPlugin extends JavaPlugin {
                 .commands(new BuildCommand(sessionManager, formatRegistry))
                 .build();
 
+        Flyway.configure()
+                .baselineOnMigrate(true)
+                .dataSource(dataSource)
+                .locations("classpath:db/migration/postgres")
+                .load()
+                .migrate();
+
         Bukkit.getPluginManager().registerEvents(new RegionSelectionTool(), this);
         Bukkit.getPluginManager().registerEvents(new PositionTool(), this);
         Bukkit.getPluginManager().registerEvents(new ClickableManager(), this);
         Bukkit.getPluginManager().registerEvents(new TextInputCollector.ChatListener(), this);
         Bukkit.getPluginManager().registerEvents(new BuildNameCollector.ChatListener(), this);
-
     }
 
     private @NotNull HikariDataSource getDatabase() {
