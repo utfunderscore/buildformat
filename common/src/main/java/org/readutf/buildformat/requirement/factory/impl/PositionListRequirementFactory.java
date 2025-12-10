@@ -26,7 +26,7 @@ public class PositionListRequirementFactory implements RequirementFactory {
 
     @Override
     public Requirement deserialize(@NotNull ObjectMapper objectMapper, JsonNode jsonNode) throws Exception {
-        return objectMapper.treeToValue(jsonNode, IntegerRequirement.class);
+        return objectMapper.treeToValue(jsonNode, PositionListRequirement.class);
     }
 
     @Override
