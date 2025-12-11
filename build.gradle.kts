@@ -27,6 +27,10 @@ subprojects {
     version = rootProject.version
     group = rootProject.group
 
+    java {
+        toolchain.languageVersion = JavaLanguageVersion.of(25)
+    }
+
     publishing {
         publications {
             create<MavenPublication>("mavenJava") {
@@ -46,6 +50,10 @@ subprojects {
 
         }
     }
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
 
 tasks.test {
