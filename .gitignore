@@ -3,7 +3,6 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-/sql/src/main/java/org/readutf/buildformat/postgres/jooq/**
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -42,5 +41,4 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-/postgres/src/main/java/org/readutf/buildformat/postgres/jooq/
 /plugin/run/
