@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS build_version
     build_meta_id  INTEGER     NOT NULL,
     version_number INTEGER     NOT NULL,
     checksum       VARCHAR(64) NOT NULL,
+    metadata       JSONB       NOT NULL,
     FOREIGN KEY (build_meta_id) REFERENCES build_meta (id)
 );
 
