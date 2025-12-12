@@ -78,7 +78,7 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
     /**
      * The column <code>public.build_version.checksum</code>.
      */
-    public final TableField<BuildVersionRecord, String> CHECKSUM = createField(DSL.name("checksum"), SQLDataType.VARCHAR(64).nullable(false), this, "");
+    public final TableField<BuildVersionRecord, Integer> CHECKSUM = createField(DSL.name("checksum"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
      * The column <code>public.build_version.metadata</code>.

@@ -24,7 +24,7 @@ public record FormatRegistry(BuildFormatManager buildFormatManager, File directo
         this.buildFormatManager = buildFormatManager;
         this.directory = new File(directory, "formats");
         if (!this.directory.exists() && this.directory.mkdirs()) {
-            System.out.println("Created formats directory at: " + this.directory.getAbsolutePath());
+            log.info("Created formats directory at: {}", this.directory.getAbsolutePath());
         }
     }
 

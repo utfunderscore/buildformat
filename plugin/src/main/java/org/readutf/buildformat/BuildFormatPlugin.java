@@ -102,7 +102,6 @@ public class BuildFormatPlugin extends JavaPlugin {
         String endpoint = getConfigValue("AWS_ENDPOINT", "aws.endpoint");
         String region = getConfigValue("AWS_REGION", "aws.region");
 
-        System.out.println("Using AWS credentials: " + accessKey + ", endpoint: " + endpoint + ", region: " + region);
 
         boolean pathStyleAccessEnabled = getConfig().getBoolean("aws.pathStyleAccessEnabled", true);
         if (accessKey == null || secretKey == null) {
@@ -129,7 +128,6 @@ public class BuildFormatPlugin extends JavaPlugin {
     public @Nullable String getConfigValue(String envKey, String confKey) {
         String env = System.getenv(envKey);
         if (env != null && !env.isEmpty()) return env;
-        System.out.println("Config " + confKey + " loaded from config file.");
         return getConfig().getString(confKey, null);
     }
 }

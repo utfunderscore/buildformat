@@ -43,7 +43,6 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
 
         waitingPlayers.add(player.getUniqueId());
         activeCollectors.put(player.getUniqueId(), this);
-        System.out.println("args: " + name + " " + step);
         player.sendMessage(Lang.getTextInput(name, step));
     }
 

@@ -23,7 +23,6 @@ public class ClassUtils {
         int length = parameterizedType.getActualTypeArguments().length;
 
         if (length != parameterizedType2.getActualTypeArguments().length) {
-            System.out.println("Length mismatch");
             return false;
         }
         for (int i = 0; i < length; i++) {
@@ -32,12 +31,10 @@ public class ClassUtils {
 
             if (typeArg1 instanceof ParameterizedType && typeArg2 instanceof ParameterizedType) {
                 if (!equals((ParameterizedType) typeArg1, (ParameterizedType) typeArg2)) {
-                    System.out.println("Nested parameterized type mismatch");
                     return false;
                 }
             } else {
                 if (!typeArg1.equals(typeArg2)) {
-                    System.out.println("Type argument mismatch: " + typeArg1 + " vs " + typeArg2);
                     return false;
                 }
             }

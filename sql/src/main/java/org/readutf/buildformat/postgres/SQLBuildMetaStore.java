@@ -16,6 +16,7 @@ import org.readutf.buildformat.postgres.jooq.Tables;
 import org.readutf.buildformat.postgres.jooq.tables.records.BuildMetaRecord;
 import org.readutf.buildformat.postgres.jooq.tables.records.BuildSupportedFormatsRecord;
 import org.readutf.buildformat.postgres.jooq.tables.records.BuildVersionRecord;
+import org.readutf.buildformat.settings.BuildMetadata;
 import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.store.BuildMetaStore;
 import org.slf4j.Logger;
@@ -42,7 +43,6 @@ public class SQLBuildMetaStore implements BuildMetaStore {
     static {
         BasicPolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder().allowIfBaseType(BuildSetting.class).allowIfBaseType(Object.class).build();
         mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.OBJECT_AND_NON_CONCRETE, JsonTypeInfo.As.PROPERTY);
-
     }
 
     private final DSLContext context;
@@ -59,7 +59,7 @@ public class SQLBuildMetaStore implements BuildMetaStore {
         this.context = context;
     }
 
-    public int saveBuild(@NotNull String name,  @NotNull String checksum, @NotNull String format, @NotNull Map<String, ?> settings) {
+    public int saveBuild(@NotNull String name,  int checksum, @NotNull String format, @NotNull BuildMetadata settings) {
 
         return context.transactionResult(config -> {
             DSLContext dsl = config.dsl();
@@ -136,7 +136,9 @@ public class SQLBuildMetaStore implements BuildMetaStore {
         String format = first.get(BUILD_SUPPORTED_FORMATS.FORMAT_NAME);
 
         JSONB metadata = first.get(BUILD_VERSION.METADATA);
-        Map<String, BuildSetting<?>> settings = mapper.readValue(metadata.data(), new TypeReference<>() {
+        System.out.println(metadata.data());
+
+        BuildMetadata settings = mapper.readValue(metadata.data(), new TypeReference<>() {
         });
 
         return new BuildMeta(first.get(org.readutf.buildformat.postgres.jooq.tables.BuildMeta.BUILD_META.BUILD_NAME), first.get(BUILD_META.CREATED_AT), first.get(BUILD_VERSION.CHECKSUM), first.get(BUILD_VERSION.VERSION_NUMBER), format, settings);

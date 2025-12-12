@@ -3,6 +3,7 @@ package org.readutf.buildformat.store;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.BuildMeta;
+import org.readutf.buildformat.settings.BuildMetadata;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ public interface BuildMetaStore {
      * @param format   the format of the build
      * @return the version number of the saved build
      */
-    int saveBuild(@NotNull String name, String checksum, String format, Map<String, ?> settings) throws Exception;
+    int saveBuild(@NotNull String name, int checksum, String format, BuildMetadata metadata) throws Exception;
 
     @Nullable
     BuildMeta getBuild(@NotNull String name) throws Exception;

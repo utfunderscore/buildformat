@@ -9,6 +9,7 @@ import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.factory.RequirementFactory;
 import org.readutf.buildformat.requirement.factory.impl.*;
 import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
+import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.types.Position;
 import org.readutf.buildformat.utils.ClassUtils;
 
@@ -91,15 +92,15 @@ public class BuildFormatManager {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T construct(@NotNull Class<T> clazz, @NotNull Map<String, Object> data) throws Exception {
+    public <T> T construct(@NotNull Class<T> clazz, @NotNull Map<String, BuildSetting<?>> data) throws Exception {
         if (!clazz.isRecord()) {
             throw new Exception("Class must be a record");
         }
 
         List<Object> constructorArgs = new ArrayList<>();
         for (RecordComponent recordComponent : clazz.getRecordComponents()) {
-            Object value = data.get(recordComponent.getName());
-            constructorArgs.add(objectMapper.convertValue(value, recordComponent.getType()));
+            BuildSetting<?> value = data.get(recordComponent.getName());
+            constructorArgs.add(objectMapper.convertValue(value.data(), recordComponent.getType()));
         }
 
         // This assumes that the record has a single canonical constructor
@@ -136,6 +137,7 @@ public class BuildFormatManager {
         objectMapper.writeValue(file, jsonNode);
     }
 
+
     public List<Requirement> deserializeRequirements(@NotNull JsonNode jsonNode) throws Exception {
 
         List<Requirement> requirements = new ArrayList<>();
@@ -148,7 +150,6 @@ public class BuildFormatManager {
                 throw new Exception("No deserializer found for requirement type: " + name);
             }
 
-            System.out.println(name);
             Requirement requirement = factory.deserialize(objectMapper, data);
             requirements.add(requirement);
         }

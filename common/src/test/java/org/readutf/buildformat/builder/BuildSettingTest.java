@@ -2,7 +2,6 @@ package org.readutf.buildformat.builder;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import org.junit.jupiter.api.Assertions;
@@ -12,6 +11,9 @@ import org.readutf.buildformat.settings.BuildSetting;
 import java.util.Map;
 
 public class BuildSettingTest {
+
+    // Helper wrapper to test Map serialization with type info
+    record SettingsWrapper(Map<String, BuildSetting<?>> settings) {}
 
     @Test
     public void testSerialization() throws JsonProcessingException {
@@ -48,20 +50,18 @@ public class BuildSettingTest {
         Assertions.assertTrue(deserializedIntSetting.data() instanceof Integer, 
                 "Integer setting data should be an Integer");
 
-        // Test Map serialization and deserialization directly
+        // Test Map serialization and deserialization using a wrapper
         Map<String, BuildSetting<?>> settings = Map.of(
                 "1", stringSetting, 
                 "2", intSetting
         );
+        SettingsWrapper wrapper = new SettingsWrapper(settings);
 
-        // Use writerFor to explicitly handle the Map type during serialization
-        String mapJson = mapper.writerFor(new TypeReference<Map<String, BuildSetting<?>>>() {})
-                .writeValueAsString(settings);
-        System.out.println("Serialized Map (direct): " + mapJson);
+        String wrapperJson = mapper.writeValueAsString(wrapper);
+        System.out.println("Serialized Wrapper: " + wrapperJson);
 
-        // Use readerFor to explicitly handle the Map type during deserialization
-        Map<String, BuildSetting<?>> deserializedMap = mapper.readerFor(new TypeReference<Map<String, BuildSetting<?>>>() {})
-                .readValue(mapJson);
+        SettingsWrapper deserializedWrapper = mapper.readValue("", SettingsWrapper.class);
+        Map<String, BuildSetting<?>> deserializedMap = deserializedWrapper.settings();
 
         Assertions.assertNotNull(deserializedMap);
         Assertions.assertEquals(2, deserializedMap.size());

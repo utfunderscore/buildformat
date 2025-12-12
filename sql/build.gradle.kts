@@ -26,6 +26,7 @@ dependencies {
     testImplementation("org.flywaydb:flyway-database-postgresql:11.14.1")
     testImplementation("org.testcontainers:postgresql:1.19.8")
     testImplementation("org.postgresql:postgresql:42.7.8")
+    testImplementation("org.xerial:sqlite-jdbc:3.48.0.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     implementation("org.flywaydb:flyway-database-postgresql:11.14.1")

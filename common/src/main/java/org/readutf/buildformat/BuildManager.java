@@ -2,6 +2,7 @@ package org.readutf.buildformat;
 
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
+import org.readutf.buildformat.settings.BuildMetadata;
 import org.readutf.buildformat.store.BuildDataStore;
 import org.readutf.buildformat.store.BuildMetaStore;
 
@@ -18,8 +19,8 @@ public class BuildManager {
     }
 
     @Blocking
-    public void saveBuild(@NotNull String name, @NotNull String format, int checksum, @NotNull BuildData buildData, @NotNull Map<String, ?> metadata) throws Exception {
-        int version = buildMetaStore.saveBuild(name, String.valueOf(checksum), format, metadata);
+    public void saveBuild(@NotNull String name, @NotNull String format, int checksum, @NotNull BuildData buildData, @NotNull BuildMetadata metadata) throws Exception {
+        int version = buildMetaStore.saveBuild(name, checksum, format, metadata);
         buildDataStore.save(name, version, buildData);
     }
 

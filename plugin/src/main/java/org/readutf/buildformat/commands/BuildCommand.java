@@ -45,8 +45,6 @@ public class BuildCommand {
                 return;
             }
 
-            System.out.println(requirements);
-
             sessionManager.startInputSession(player, format, requirements);
         } catch (Exception e) {
             log.error("Failed to start build session", e);

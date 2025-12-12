@@ -66,7 +66,7 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     /**
      * Setter for <code>public.build_version.checksum</code>.
      */
-    public BuildVersionRecord setChecksum(String value) {
+    public BuildVersionRecord setChecksum(Integer value) {
         set(3, value);
         return this;
     }
@@ -74,8 +74,8 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     /**
      * Getter for <code>public.build_version.checksum</code>.
      */
-    public String getChecksum() {
-        return (String) get(3);
+    public Integer getChecksum() {
+        return (Integer) get(3);
     }
 
     /**
@@ -116,7 +116,7 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     /**
      * Create a detached, initialised BuildVersionRecord
      */
-    public BuildVersionRecord(Integer id, Integer buildMetaId, Integer versionNumber, String checksum, JSONB metadata) {
+    public BuildVersionRecord(Integer id, Integer buildMetaId, Integer versionNumber, Integer checksum, JSONB metadata) {
         super(BuildVersion.BUILD_VERSION);
 
         setId(id);

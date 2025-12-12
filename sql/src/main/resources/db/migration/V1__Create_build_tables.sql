@@ -12,10 +12,10 @@ CREATE UNIQUE INDEX idx_build_meta_name ON build_meta (build_name);
 CREATE TABLE IF NOT EXISTS build_version
 (
     id             SERIAL PRIMARY KEY,
-    build_meta_id  INTEGER     NOT NULL,
-    version_number INTEGER     NOT NULL,
-    checksum       VARCHAR(64) NOT NULL,
-    metadata       JSONB       NOT NULL,
+    build_meta_id  INTEGER NOT NULL,
+    version_number INTEGER NOT NULL,
+    checksum       INTEGER NOT NULL,
+    metadata       JSONB   NOT NULL,
     FOREIGN KEY (build_meta_id) REFERENCES build_meta (id)
 );
 

@@ -37,6 +37,7 @@ import org.readutf.buildformat.requirement.types.StringRequirement;
 import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.requirement.types.number.DoubleRequirement;
 import org.readutf.buildformat.requirement.types.number.IntegerRequirement;
+import org.readutf.buildformat.settings.BuildMetadata;
 import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.RegionSelectionTool;
@@ -127,7 +128,7 @@ public class SessionManager {
         try {
             byte[] schematicData = createSchematic(player.getWorld(), cuboid);
             byte[] polarWorld = createPolarWorld(schematicData);
-            buildManager.saveBuild(buildName, format, checksum, new BuildData(schematicData, polarWorld), metadata);
+            buildManager.saveBuild(buildName, format, checksum, new BuildData(schematicData, polarWorld), new BuildMetadata(metadata));
             player.sendMessage(Component.text("Upload successful!").color(NamedTextColor.GREEN));
         } catch (Exception e) {
             player.sendMessage(
@@ -189,13 +190,10 @@ public class SessionManager {
         for (int i = 0; i < requirements.size(); i++) {
             Requirement requirement = requirements.get(i);
 
-            player.sendMessage("Collecting for " + requirement.getClass().getSimpleName());
-
             RequirementCollectorFactory<?> requirementCollector = collectors.get(requirement.getClass());
             if (requirementCollector == null) {
                 throw new Exception("No collector available for " + requirement.getClass());
             }
-            System.out.println(requirement);
 
             RequirementCollector<?> collector = requirementCollector.createCollector(requirement, i + 1);
             addCollectorToSession(player, collector);
