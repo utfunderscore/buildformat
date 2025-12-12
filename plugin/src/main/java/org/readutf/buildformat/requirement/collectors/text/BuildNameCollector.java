@@ -8,8 +8,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.RequirementCollector;
+import org.readutf.buildformat.settings.BuildSetting;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -51,8 +51,8 @@ public class BuildNameCollector implements RequirementCollector<String> {
     }
 
     @Override
-    public String awaitBlocking() {
-        return future.join();
+    public BuildSetting<String> awaitBlocking() {
+        return new BuildSetting<>(future.join());
     }
 
     public static class ChatListener implements Listener {

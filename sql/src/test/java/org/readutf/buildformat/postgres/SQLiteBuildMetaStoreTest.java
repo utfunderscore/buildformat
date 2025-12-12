@@ -11,9 +11,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.readutf.buildformat.BuildMeta;
+import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.types.Position;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 
 class SQLiteBuildMetaStoreTest {
 
@@ -44,25 +48,41 @@ class SQLiteBuildMetaStoreTest {
     }
 
     @Test
-    void saveBuild() {
-        int i = metaStore.saveBuild("test1", "test", "2");
-        metaStore.saveBuild("test2", "test", "2");
-        metaStore.saveBuild("test2", "test", "3");
-        int last = metaStore.saveBuild("test2", "test", "3");
+    void saveBuild() throws Exception {
+        Map<String, Object> metadata = Map.of(
+                "position", new Position(10, 20, 30),
+                "cuboid", new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10)),
+                "positions", List.of(new Position(1, 2, 3), new Position(4, 5, 6)),
+                "count", 42,
+                "description", "Test build"
+        );
+        
+        int i = metaStore.saveBuild("test1", "test", "2", metadata);
+        metaStore.saveBuild("test2", "test", "2", metadata);
+        metaStore.saveBuild("test2", "test", "3", metadata);
+        int last = metaStore.saveBuild("test2", "test", "3", metadata);
 
         Assertions.assertEquals(1, i);
         Assertions.assertEquals(3, last);
     }
 
     @Test
-    void saveBuildTest() {
+    void saveBuildTest() throws Exception {
         String name = "test1";
         String description = "Test description";
         LocalDateTime creationTime = LocalDateTime.now();
         String checksum = "test";
         String supportedFormats = "2";
+        
+        Map<String, Object> metadata = Map.of(
+                "position", new Position(10, 20, 30),
+                "cuboid", new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10)),
+                "positions", List.of(new Position(1, 2, 3), new Position(4, 5, 6)),
+                "count", 42,
+                "description", "Test build"
+        );
 
-        metaStore.saveBuild(name, checksum, supportedFormats);
+        metaStore.saveBuild(name, checksum, supportedFormats, metadata);
         BuildMeta test1 = metaStore.getBuild(name);
 
         System.out.println(test1);
@@ -77,20 +97,36 @@ class SQLiteBuildMetaStoreTest {
     }
 
     @Test
-    void saveSecondBuild() {
+    void saveSecondBuild() throws Exception {
         String name = "test1";
         String description = "Test description";
         LocalDateTime creationTime = LocalDateTime.now().minusDays(1);
         String checksum = "test";
         String supportedFormat = "2";
+        
+        Map<String, Object> metadata = Map.of(
+                "position", new Position(5, 10, 15),
+                "cuboid", new Cuboid(new Position(0, 0, 0), new Position(5, 5, 5)),
+                "positions", List.of(new Position(1, 1, 1)),
+                "count", 10,
+                "description", description
+        );
 
-        metaStore.saveBuild(name, checksum, supportedFormat);
+        metaStore.saveBuild(name, checksum, supportedFormat, metadata);
 
         String otherDesc = "Test 2 desc";
         String otherChecksum = "checksum";
         String secondFormat = "3";
+        
+        Map<String, Object> metadata2 = Map.of(
+                "position", new Position(15, 25, 35),
+                "cuboid", new Cuboid(new Position(0, 0, 0), new Position(20, 20, 20)),
+                "positions", List.of(new Position(2, 2, 2), new Position(3, 3, 3)),
+                "count", 20,
+                "description", otherDesc
+        );
 
-        metaStore.saveBuild(name, otherChecksum, secondFormat);
+        metaStore.saveBuild(name, otherChecksum, secondFormat, metadata2);
         BuildMeta test1 = metaStore.getBuild(name);
 
         Assertions.assertNotNull(test1);
@@ -102,23 +138,53 @@ class SQLiteBuildMetaStoreTest {
     }
 
     @Test
-    void getLatestBuildsByFormat() {
+    void getLatestBuildsByFormat() throws Exception {
+        Map<String, Object> metadata = Map.of(
+                "position", new Position(10, 20, 30),
+                "cuboid", new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10)),
+                "positions", List.of(new Position(1, 2, 3)),
+                "count", 100,
+                "name", "test"
+        );
 
-        metaStore.saveBuild("test1", "test", "2");
-        metaStore.saveBuild("test1", "test", "2");
-        metaStore.saveBuild("test2", "test", "1");
-        metaStore.saveBuild("test2", "test", "2");
-        metaStore.saveBuild("test2", "test", "3");
+        metaStore.saveBuild("test1", "test", "2", metadata);
+        metaStore.saveBuild("test1", "test", "2", metadata);
+        metaStore.saveBuild("test2", "test", "1", metadata);
+        metaStore.saveBuild("test2", "test", "2", metadata);
+        metaStore.saveBuild("test2", "test", "3", metadata);
 
         Assertions.assertEquals(2, metaStore.getBuildsByFormat("2").size());
     }
 
     @Test
-    void getBuildByVersion() {
+    void getBuildByVersion() throws Exception {
+        Map<String, Object> metadata1 = Map.of(
+                "position", new Position(1, 2, 3),
+                "cuboid", new Cuboid(new Position(0, 0, 0), new Position(5, 5, 5)),
+                "positions", List.of(new Position(1, 1, 1)),
+                "version", 1,
+                "type", "test"
+        );
+        
+        Map<String, Object> metadata2 = Map.of(
+                "position", new Position(4, 5, 6),
+                "cuboid", new Cuboid(new Position(10, 10, 10), new Position(20, 20, 20)),
+                "positions", List.of(new Position(2, 2, 2), new Position(3, 3, 3)),
+                "version", 2,
+                "type", "different"
+        );
+        
+        Map<String, Object> metadata3 = Map.of(
+                "position", new Position(7, 8, 9),
+                "cuboid", new Cuboid(new Position(20, 20, 20), new Position(30, 30, 30)),
+                "positions", List.of(new Position(4, 4, 4)),
+                "version", 3,
+                "type", "test"
+        );
 
-        metaStore.saveBuild("test2", "test", "1");
-        metaStore.saveBuild("test2", "different", "2");
-        metaStore.saveBuild("test2", "test", "3");
+        metaStore.saveBuild("test2", "test", "1", metadata1);
+        metaStore.saveBuild("test2", "different", "2", metadata2);
+        metaStore.saveBuild("test2", "test", "3", metadata3);
 
         BuildMeta build = metaStore.getBuild("test2", 2);
         Assertions.assertNotNull(build);

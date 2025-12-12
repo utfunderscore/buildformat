@@ -18,7 +18,7 @@ dependencies {
 
 tasks {
     compileJava {
-        options.release = 23
+        options.release = 25
     }
     javadoc {
         options.encoding = Charsets.UTF_8.name()

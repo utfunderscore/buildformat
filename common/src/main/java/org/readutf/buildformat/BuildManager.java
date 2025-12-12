@@ -18,8 +18,8 @@ public class BuildManager {
     }
 
     @Blocking
-    public void saveBuild(@NotNull String name, @NotNull String format, int checksum, @NotNull BuildData buildData) throws Exception {
-        int version = buildMetaStore.saveBuild(name, String.valueOf(checksum), format);
+    public void saveBuild(@NotNull String name, @NotNull String format, int checksum, @NotNull BuildData buildData, @NotNull Map<String, ?> metadata) throws Exception {
+        int version = buildMetaStore.saveBuild(name, String.valueOf(checksum), format, metadata);
         buildDataStore.save(name, version, buildData);
     }
 

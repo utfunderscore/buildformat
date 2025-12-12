@@ -1,6 +1,7 @@
 package org.readutf.buildformat.requirement;
 
 import org.bukkit.entity.Player;
+import org.readutf.buildformat.settings.BuildSetting;
 
 public interface RequirementCollector<T> {
 
@@ -8,6 +9,6 @@ public interface RequirementCollector<T> {
 
     void cleanup(Player player);
 
-    T awaitBlocking();
+    BuildSetting<T> awaitBlocking();
 
 }

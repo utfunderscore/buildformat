@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.requirement.RequirementCollector;
+import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.RegionSelectionTool;
 import org.readutf.buildformat.tools.Tool;
@@ -72,7 +73,7 @@ public class BuildCuboidCollector implements RequirementCollector<Cuboid> {
     }
 
     @Override
-    public Cuboid awaitBlocking() {
-        return future.join();
+    public BuildSetting<Cuboid> awaitBlocking() {
+        return new BuildSetting<>(future.join());
     }
 }

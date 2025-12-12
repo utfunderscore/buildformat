@@ -30,7 +30,7 @@ public class StringRequirementFactory implements RequirementFactory {
 
     @Override
     public Requirement deserialize(@NotNull ObjectMapper objectMapper, JsonNode jsonNode) throws Exception {
-        return objectMapper.treeToValue(jsonNode, IntegerRequirement.class);
+        return objectMapper.treeToValue(jsonNode, StringRequirement.class);
     }
 
     @Override

@@ -4,6 +4,7 @@
 package org.readutf.buildformat.postgres.jooq.tables.records;
 
 
+import org.jooq.JSONB;
 import org.jooq.Record1;
 import org.jooq.impl.UpdatableRecordImpl;
 import org.readutf.buildformat.postgres.jooq.tables.BuildVersion;
@@ -18,7 +19,7 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>build_version.id</code>.
+     * Setter for <code>public.build_version.id</code>.
      */
     public BuildVersionRecord setId(Integer value) {
         set(0, value);
@@ -26,14 +27,14 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     }
 
     /**
-     * Getter for <code>build_version.id</code>.
+     * Getter for <code>public.build_version.id</code>.
      */
     public Integer getId() {
         return (Integer) get(0);
     }
 
     /**
-     * Setter for <code>build_version.build_meta_id</code>.
+     * Setter for <code>public.build_version.build_meta_id</code>.
      */
     public BuildVersionRecord setBuildMetaId(Integer value) {
         set(1, value);
@@ -41,14 +42,14 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     }
 
     /**
-     * Getter for <code>build_version.build_meta_id</code>.
+     * Getter for <code>public.build_version.build_meta_id</code>.
      */
     public Integer getBuildMetaId() {
         return (Integer) get(1);
     }
 
     /**
-     * Setter for <code>build_version.version_number</code>.
+     * Setter for <code>public.build_version.version_number</code>.
      */
     public BuildVersionRecord setVersionNumber(Integer value) {
         set(2, value);
@@ -56,14 +57,14 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     }
 
     /**
-     * Getter for <code>build_version.version_number</code>.
+     * Getter for <code>public.build_version.version_number</code>.
      */
     public Integer getVersionNumber() {
         return (Integer) get(2);
     }
 
     /**
-     * Setter for <code>build_version.checksum</code>.
+     * Setter for <code>public.build_version.checksum</code>.
      */
     public BuildVersionRecord setChecksum(String value) {
         set(3, value);
@@ -71,10 +72,25 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     }
 
     /**
-     * Getter for <code>build_version.checksum</code>.
+     * Getter for <code>public.build_version.checksum</code>.
      */
     public String getChecksum() {
         return (String) get(3);
+    }
+
+    /**
+     * Setter for <code>public.build_version.metadata</code>.
+     */
+    public BuildVersionRecord setMetadata(JSONB value) {
+        set(4, value);
+        return this;
+    }
+
+    /**
+     * Getter for <code>public.build_version.metadata</code>.
+     */
+    public JSONB getMetadata() {
+        return (JSONB) get(4);
     }
 
     // -------------------------------------------------------------------------
@@ -100,13 +116,14 @@ public class BuildVersionRecord extends UpdatableRecordImpl<BuildVersionRecord> 
     /**
      * Create a detached, initialised BuildVersionRecord
      */
-    public BuildVersionRecord(Integer id, Integer buildMetaId, Integer versionNumber, String checksum) {
+    public BuildVersionRecord(Integer id, Integer buildMetaId, Integer versionNumber, String checksum, JSONB metadata) {
         super(BuildVersion.BUILD_VERSION);
 
         setId(id);
         setBuildMetaId(buildMetaId);
         setVersionNumber(versionNumber);
         setChecksum(checksum);
+        setMetadata(metadata);
         resetTouchedOnNotNull();
     }
 }

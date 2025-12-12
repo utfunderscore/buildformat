@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
+import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.Tool;
@@ -69,7 +70,7 @@ public class PositionRequirementCollector implements RequirementCollector<Positi
     }
 
     @Override
-    public Position awaitBlocking() {
-        return future.join();
+    public BuildSetting<Position> awaitBlocking() {
+        return new BuildSetting<>(future.join());
     }
 }

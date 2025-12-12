@@ -33,7 +33,7 @@ dependencies {
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core:2.14.0")
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.14.0")
 
-    implementation("org.flywaydb:flyway-core:9.22.3")
+    implementation("org.flywaydb:flyway-database-postgresql:11.19.0")
 
     implementation("net.minestom:minestom:2025.10.18-1.21.10")
     implementation("dev.hollowcube:schem:2.0.0")

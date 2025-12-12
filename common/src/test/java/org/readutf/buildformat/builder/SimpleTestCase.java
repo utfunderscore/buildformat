@@ -1,9 +1,13 @@
 package org.readutf.buildformat.builder;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.readutf.buildformat.BuildFormatManager;
+import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.annotations.Range;
 import org.readutf.buildformat.requirement.annotations.Regex;
 import org.readutf.buildformat.types.Position;
 
+import java.io.File;
 import java.util.List;
 
 public record SimpleTestCase(
@@ -13,4 +17,5 @@ public record SimpleTestCase(
         Position endPosition,
         List<Position> checkpoints
 ) {
+
 }

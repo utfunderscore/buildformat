@@ -21,11 +21,23 @@ public abstract class NumberRequirement<T extends Number> implements Requirement
         return name;
     }
 
+    public @NotNull String getName() {
+        return name;
+    }
+
     public T getMin() {
         return min;
     }
 
     public T getMax() {
         return max;
+    }
+
+    @Override public String toString() {
+        return "NumberRequirement{" +
+                "name='" + name + '\'' +
+                ", min=" + min +
+                ", max=" + max +
+                '}';
     }
 }

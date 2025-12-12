@@ -35,7 +35,9 @@ import org.readutf.buildformat.requirement.types.CuboidRequirement;
 import org.readutf.buildformat.requirement.types.PositionRequirement;
 import org.readutf.buildformat.requirement.types.StringRequirement;
 import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
+import org.readutf.buildformat.requirement.types.number.DoubleRequirement;
 import org.readutf.buildformat.requirement.types.number.IntegerRequirement;
+import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.RegionSelectionTool;
 import org.readutf.buildformat.types.Cuboid;
@@ -66,7 +68,10 @@ public class SessionManager {
                         (requirement, step) -> new TextInputCollector<>(requirement.name(), step, str -> str),
                 PositionListRequirement.class, MultiPositionRequirementCollector::new,
                 IntegerRequirement.class,
-                        (requirement, step) -> new TextInputCollector<>(requirement.name(), step, Integer::parseInt));
+                (requirement, step) -> new TextInputCollector<>(requirement.name(), step, Integer::parseInt),
+                DoubleRequirement.class,
+                (requirement, step) -> new TextInputCollector<>(requirement.name(), step, Double::parseDouble)
+        );
     }
 
     public void startInputSession(
@@ -75,16 +80,16 @@ public class SessionManager {
 
         player.getInventory().clear();
 
-        String buildName = getBuildName(player);
-        Cuboid cuboid = getBuildRegion(player);
+        String buildName = getBuildName(player).data();
+        Cuboid cuboid = getBuildRegion(player).data();
 
-        Map<String, Object> results = collectRequirements(player, requirements);
+        @NotNull Map<String, BuildSetting<?>> results = collectRequirements(player, requirements);
 
         player.getInventory().clear();
 
         player.sendMessage("Data collected:");
-        for (Map.Entry<String, Object> stringObjectEntry : results.entrySet()) {
-            player.sendMessage(" - " + stringObjectEntry.getKey() + ": " + stringObjectEntry.getValue());
+        for (Map.Entry<String, BuildSetting<?>> stringObjectEntry : results.entrySet()) {
+            player.sendMessage(" - " + stringObjectEntry.getKey() + ": " + stringObjectEntry.getValue().data());
         }
 
         TextComponent upload = Component.text("[Upload]")
@@ -92,7 +97,7 @@ public class SessionManager {
                 .decorate(TextDecoration.BOLD)
                 .clickEvent(ClickEvent.callback(_ -> {
                     CompletableFuture.runAsync(() -> {
-                        uploadBuild(player, BuildFormatManager.getInstance().checksum(requirements), cuboid, buildName, format);
+                        uploadBuild(player, BuildFormatManager.getInstance().checksum(requirements), cuboid, buildName, format, results);
                     });
                 }));
 
@@ -100,29 +105,29 @@ public class SessionManager {
                 Component.text("Upload build? ").color(NamedTextColor.GREEN).append(upload));
     }
 
-    private String getBuildName(@NotNull Player player) {
+    private BuildSetting<String> getBuildName(@NotNull Player player) {
         BuildNameCollector nameCollector = new BuildNameCollector();
         addCollectorToSession(player, nameCollector);
         nameCollector.start(player);
-        String buildName = nameCollector.awaitBlocking();
+        BuildSetting<String> buildName = nameCollector.awaitBlocking();
         nameCollector.cleanup(player);
         return buildName;
     }
 
-    private Cuboid getBuildRegion(@NotNull Player player) {
+    private BuildSetting<Cuboid> getBuildRegion(@NotNull Player player) {
         BuildCuboidCollector build = new BuildCuboidCollector();
         addCollectorToSession(player, build);
         build.start(player);
-        Cuboid cuboid = build.awaitBlocking();
+        BuildSetting<Cuboid> cuboid = build.awaitBlocking();
         build.cleanup(player);
         return cuboid;
     }
 
-    private void uploadBuild(@NotNull Player player, int checksum, Cuboid cuboid, String buildName, String format) {
+    private void uploadBuild(@NotNull Player player, int checksum, Cuboid cuboid, String buildName, String format, Map<String, BuildSetting<?>> metadata) {
         try {
             byte[] schematicData = createSchematic(player.getWorld(), cuboid);
             byte[] polarWorld = createPolarWorld(schematicData);
-            buildManager.saveBuild(buildName, format, checksum, new BuildData(schematicData, polarWorld));
+            buildManager.saveBuild(buildName, format, checksum, new BuildData(schematicData, polarWorld), metadata);
             player.sendMessage(Component.text("Upload successful!").color(NamedTextColor.GREEN));
         } catch (Exception e) {
             player.sendMessage(
@@ -176,9 +181,9 @@ public class SessionManager {
         this.sessionMap.put(player.getUniqueId(), collectors);
     }
 
-    private @NotNull Map<String, Object> collectRequirements(
+    private @NotNull Map<String, BuildSetting<?>> collectRequirements(
             @NotNull Player player, @NotNull List<Requirement> requirements) throws Exception {
-        Map<String, Object> results = new HashMap<>();
+        Map<String, BuildSetting<?>> results = new HashMap<>();
         List<RequirementCollector<?>> completed = new ArrayList<>();
 
         for (int i = 0; i < requirements.size(); i++) {
@@ -186,10 +191,12 @@ public class SessionManager {
 
             player.sendMessage("Collecting for " + requirement.getClass().getSimpleName());
 
-            RequirementCollectorFactory requirementCollector = collectors.get(requirement.getClass());
+            RequirementCollectorFactory<?> requirementCollector = collectors.get(requirement.getClass());
             if (requirementCollector == null) {
                 throw new Exception("No collector available for " + requirement.getClass());
             }
+            System.out.println(requirement);
+
             RequirementCollector<?> collector = requirementCollector.createCollector(requirement, i + 1);
             addCollectorToSession(player, collector);
 

@@ -9,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.RequirementCollector;
+import org.readutf.buildformat.settings.BuildSetting;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TextInputCollector<T> implements RequirementCollector<T> {
 
-    private static Map<UUID, List<TextInputCollector<?>>> activeCollectors = new HashMap<>();
+    private static Map<UUID, TextInputCollector<?>> activeCollectors = new HashMap<>();
 
     private final String name;
     private final int step;
@@ -36,10 +37,13 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
 
     @Override
     public void start(@NotNull Player player) {
+        if(activeCollectors.containsKey(player.getUniqueId())) {
+            throw new IllegalStateException("Player " + player.getName() + " is already in a text input collection process.");
+        }
+
         waitingPlayers.add(player.getUniqueId());
-        List<TextInputCollector<?>> collectors = activeCollectors.getOrDefault(player.getUniqueId(), new ArrayList<>());
-        collectors.add(this);
-        activeCollectors.put(player.getUniqueId(), collectors);
+        activeCollectors.put(player.getUniqueId(), this);
+        System.out.println("args: " + name + " " + step);
         player.sendMessage(Lang.getTextInput(name, step));
     }
 
@@ -52,8 +56,8 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
     }
 
     @Override
-    public T awaitBlocking() {
-        return future.join();
+    public BuildSetting<T> awaitBlocking() {
+        return new BuildSetting<>(future.join());
     }
 
     public static class ChatListener implements Listener {
@@ -66,18 +70,18 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
             Component message = e.message();
             String rawText = serializer.serialize(message);
 
-            for (TextInputCollector<?> activeCollector : activeCollectors.getOrDefault(e.getPlayer().getUniqueId(), new ArrayList<>())) {
-                if(activeCollector.completed.get()) continue;
-                if (!activeCollector.waitingPlayers.contains(e.getPlayer().getUniqueId())) continue;
+            TextInputCollector<?> collector = activeCollectors.get(e.getPlayer().getUniqueId());
+            if (collector == null) return;
+            if (collector.completed.get()) return;
+            e.setCancelled(true);
 
-                e.setCancelled(true);
-
-                try {
-                    Object convert = activeCollector.convertor.convert(rawText);
-                    activeCollector.complete(convert);
-                } catch (Exception ex) {
-                    e.getPlayer().sendMessage("Invalid input: " + ex.getMessage());
-                }
+            try {
+                Object convert = collector.convertor.convert(rawText);
+                collector.complete(convert);
+                activeCollectors.remove(e.getPlayer().getUniqueId());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                e.getPlayer().sendMessage("Invalid input: " + ex.getMessage());
             }
         }
     }

@@ -31,9 +31,9 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
-import org.readutf.buildformat.postgres.jooq.DefaultSchema;
 import org.readutf.buildformat.postgres.jooq.Indexes;
 import org.readutf.buildformat.postgres.jooq.Keys;
+import org.readutf.buildformat.postgres.jooq.Public;
 import org.readutf.buildformat.postgres.jooq.tables.BuildVersion.BuildVersionPath;
 import org.readutf.buildformat.postgres.jooq.tables.records.BuildMetaRecord;
 
@@ -47,7 +47,7 @@ public class BuildMeta extends TableImpl<BuildMetaRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>build_meta</code>
+     * The reference instance of <code>public.build_meta</code>
      */
     public static final BuildMeta BUILD_META = new BuildMeta();
 
@@ -60,19 +60,19 @@ public class BuildMeta extends TableImpl<BuildMetaRecord> {
     }
 
     /**
-     * The column <code>build_meta.id</code>.
+     * The column <code>public.build_meta.id</code>.
      */
-    public final TableField<BuildMetaRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.identity(true), this, "");
+    public final TableField<BuildMetaRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>build_meta.build_name</code>.
+     * The column <code>public.build_meta.build_name</code>.
      */
     public final TableField<BuildMetaRecord, String> BUILD_NAME = createField(DSL.name("build_name"), SQLDataType.VARCHAR(16).nullable(false), this, "");
 
     /**
-     * The column <code>build_meta.created_at</code>.
+     * The column <code>public.build_meta.created_at</code>.
      */
-    public final TableField<BuildMetaRecord, LocalDateTime> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.LOCALDATETIME(0).nullable(false), this, "");
+    public final TableField<BuildMetaRecord, LocalDateTime> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.LOCALDATETIME(6).nullable(false), this, "");
 
     private BuildMeta(Name alias, Table<BuildMetaRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -83,21 +83,21 @@ public class BuildMeta extends TableImpl<BuildMetaRecord> {
     }
 
     /**
-     * Create an aliased <code>build_meta</code> table reference
+     * Create an aliased <code>public.build_meta</code> table reference
      */
     public BuildMeta(String alias) {
         this(DSL.name(alias), BUILD_META);
     }
 
     /**
-     * Create an aliased <code>build_meta</code> table reference
+     * Create an aliased <code>public.build_meta</code> table reference
      */
     public BuildMeta(Name alias) {
         this(alias, BUILD_META);
     }
 
     /**
-     * Create a <code>build_meta</code> table reference
+     * Create a <code>public.build_meta</code> table reference
      */
     public BuildMeta() {
         this(DSL.name("build_meta"), null);
@@ -138,7 +138,7 @@ public class BuildMeta extends TableImpl<BuildMetaRecord> {
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+        return aliased() ? null : Public.PUBLIC;
     }
 
     @Override
@@ -153,18 +153,18 @@ public class BuildMeta extends TableImpl<BuildMetaRecord> {
 
     @Override
     public UniqueKey<BuildMetaRecord> getPrimaryKey() {
-        return Keys.BUILD_META__PK_BUILD_META;
+        return Keys.BUILD_META_PKEY;
     }
 
     private transient BuildVersionPath _buildVersion;
 
     /**
-     * Get the implicit to-many join path to the <code>build_version</code>
-     * table
+     * Get the implicit to-many join path to the
+     * <code>public.build_version</code> table
      */
     public BuildVersionPath buildVersion() {
         if (_buildVersion == null)
-            _buildVersion = new BuildVersionPath(this, null, Keys.BUILD_VERSION__FK_BUILD_VERSION_PK_BUILD_META.getInverseKey());
+            _buildVersion = new BuildVersionPath(this, null, Keys.BUILD_VERSION__BUILD_VERSION_BUILD_META_ID_FKEY.getInverseKey());
 
         return _buildVersion;
     }

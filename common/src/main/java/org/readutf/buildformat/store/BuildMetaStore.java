@@ -18,13 +18,13 @@ public interface BuildMetaStore {
      * @param format   the format of the build
      * @return the version number of the saved build
      */
-    int saveBuild(@NotNull String name, String checksum, String format);
+    int saveBuild(@NotNull String name, String checksum, String format, Map<String, ?> settings) throws Exception;
 
     @Nullable
-    BuildMeta getBuild(@NotNull String name);
+    BuildMeta getBuild(@NotNull String name) throws Exception;
 
     @Nullable
-    BuildMeta getBuild(@NotNull String name, int version);
+    BuildMeta getBuild(@NotNull String name, int version) throws Exception;
 
     @NotNull Map<String, Integer> getBuildsByFormat(String format);
 

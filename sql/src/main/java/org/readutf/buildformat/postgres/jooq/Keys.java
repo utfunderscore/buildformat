@@ -21,8 +21,8 @@ import org.readutf.buildformat.postgres.jooq.tables.records.FlywaySchemaHistoryR
 
 
 /**
- * A class modelling foreign key relationships and constraints of tables in the
- * default schema.
+ * A class modelling foreign key relationships and constraints of tables in
+ * public.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Keys {
@@ -31,15 +31,15 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<BuildMetaRecord> BUILD_META__PK_BUILD_META = Internal.createUniqueKey(BuildMeta.BUILD_META, DSL.name("pk_build_meta"), new TableField[] { BuildMeta.BUILD_META.ID }, true);
-    public static final UniqueKey<BuildSupportedFormatsRecord> BUILD_SUPPORTED_FORMATS__PK_BUILD_SUPPORTED_FORMATS = Internal.createUniqueKey(BuildSupportedFormats.BUILD_SUPPORTED_FORMATS, DSL.name("pk_build_supported_formats"), new TableField[] { BuildSupportedFormats.BUILD_SUPPORTED_FORMATS.ID }, true);
-    public static final UniqueKey<BuildVersionRecord> BUILD_VERSION__PK_BUILD_VERSION = Internal.createUniqueKey(BuildVersion.BUILD_VERSION, DSL.name("pk_build_version"), new TableField[] { BuildVersion.BUILD_VERSION.ID }, true);
-    public static final UniqueKey<FlywaySchemaHistoryRecord> FLYWAY_SCHEMA_HISTORY__PK_FLYWAY_SCHEMA_HISTORY = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, DSL.name("pk_flyway_schema_history"), new TableField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
+    public static final UniqueKey<BuildMetaRecord> BUILD_META_PKEY = Internal.createUniqueKey(BuildMeta.BUILD_META, DSL.name("build_meta_pkey"), new TableField[] { BuildMeta.BUILD_META.ID }, true);
+    public static final UniqueKey<BuildSupportedFormatsRecord> BUILD_SUPPORTED_FORMATS_PKEY = Internal.createUniqueKey(BuildSupportedFormats.BUILD_SUPPORTED_FORMATS, DSL.name("build_supported_formats_pkey"), new TableField[] { BuildSupportedFormats.BUILD_SUPPORTED_FORMATS.ID }, true);
+    public static final UniqueKey<BuildVersionRecord> BUILD_VERSION_PKEY = Internal.createUniqueKey(BuildVersion.BUILD_VERSION, DSL.name("build_version_pkey"), new TableField[] { BuildVersion.BUILD_VERSION.ID }, true);
+    public static final UniqueKey<FlywaySchemaHistoryRecord> FLYWAY_SCHEMA_HISTORY_PK = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, DSL.name("flyway_schema_history_pk"), new TableField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final ForeignKey<BuildSupportedFormatsRecord, BuildVersionRecord> BUILD_SUPPORTED_FORMATS__FK_BUILD_SUPPORTED_FORMATS_PK_BUILD_VERSION = Internal.createForeignKey(BuildSupportedFormats.BUILD_SUPPORTED_FORMATS, DSL.name("fk_build_supported_formats_pk_build_version"), new TableField[] { BuildSupportedFormats.BUILD_SUPPORTED_FORMATS.BUILD_VERSION_ID }, Keys.BUILD_VERSION__PK_BUILD_VERSION, new TableField[] { BuildVersion.BUILD_VERSION.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
-    public static final ForeignKey<BuildVersionRecord, BuildMetaRecord> BUILD_VERSION__FK_BUILD_VERSION_PK_BUILD_META = Internal.createForeignKey(BuildVersion.BUILD_VERSION, DSL.name("fk_build_version_pk_build_meta"), new TableField[] { BuildVersion.BUILD_VERSION.BUILD_META_ID }, Keys.BUILD_META__PK_BUILD_META, new TableField[] { BuildMeta.BUILD_META.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<BuildSupportedFormatsRecord, BuildVersionRecord> BUILD_SUPPORTED_FORMATS__BUILD_SUPPORTED_FORMATS_BUILD_VERSION_ID_FKEY = Internal.createForeignKey(BuildSupportedFormats.BUILD_SUPPORTED_FORMATS, DSL.name("build_supported_formats_build_version_id_fkey"), new TableField[] { BuildSupportedFormats.BUILD_SUPPORTED_FORMATS.BUILD_VERSION_ID }, Keys.BUILD_VERSION_PKEY, new TableField[] { BuildVersion.BUILD_VERSION.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
+    public static final ForeignKey<BuildVersionRecord, BuildMetaRecord> BUILD_VERSION__BUILD_VERSION_BUILD_META_ID_FKEY = Internal.createForeignKey(BuildVersion.BUILD_VERSION, DSL.name("build_version_build_meta_id_fkey"), new TableField[] { BuildVersion.BUILD_VERSION.BUILD_META_ID }, Keys.BUILD_META_PKEY, new TableField[] { BuildMeta.BUILD_META.ID }, true, ForeignKeyRule.NO_ACTION, ForeignKeyRule.NO_ACTION);
 }

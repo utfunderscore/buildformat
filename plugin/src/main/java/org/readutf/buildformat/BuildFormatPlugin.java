@@ -52,12 +52,12 @@ public class BuildFormatPlugin extends JavaPlugin {
                 .commands(new BuildCommand(sessionManager, formatRegistry))
                 .build();
 
-        Flyway.configure()
-                .baselineOnMigrate(true)
-                .dataSource(dataSource)
-                .locations("classpath:db/migration/postgres")
-                .load()
-                .migrate();
+//        Flyway.configure()
+//                .baselineOnMigrate(true)
+//                .dataSource(dataSource)
+//                .locations("classpath:db/migration/postgres")
+//                .load()
+//                .migrate();
 
         Bukkit.getPluginManager().registerEvents(new RegionSelectionTool(), this);
         Bukkit.getPluginManager().registerEvents(new PositionTool(), this);
@@ -67,6 +67,14 @@ public class BuildFormatPlugin extends JavaPlugin {
     }
 
     private @NotNull HikariDataSource getDatabase() {
+
+
+
+
+
+
+
+
         String host = getConfigValue("DATABASE_HOST", "database.host");
         String port = getConfigValue("DATABASE_PORT", "database.port");
         String database = getConfigValue("DATABASE_NAME", "database.database");

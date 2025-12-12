@@ -11,28 +11,28 @@ import org.readutf.buildformat.postgres.jooq.tables.FlywaySchemaHistory;
 
 
 /**
- * Convenience access to all tables in the default schema.
+ * Convenience access to all tables in public.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
 
     /**
-     * The table <code>build_meta</code>.
+     * The table <code>public.build_meta</code>.
      */
     public static final BuildMeta BUILD_META = BuildMeta.BUILD_META;
 
     /**
-     * The table <code>build_supported_formats</code>.
+     * The table <code>public.build_supported_formats</code>.
      */
     public static final BuildSupportedFormats BUILD_SUPPORTED_FORMATS = BuildSupportedFormats.BUILD_SUPPORTED_FORMATS;
 
     /**
-     * The table <code>build_version</code>.
+     * The table <code>public.build_version</code>.
      */
     public static final BuildVersion BUILD_VERSION = BuildVersion.BUILD_VERSION;
 
     /**
-     * The table <code>flyway_schema_history</code>.
+     * The table <code>public.flyway_schema_history</code>.
      */
     public static final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
 }

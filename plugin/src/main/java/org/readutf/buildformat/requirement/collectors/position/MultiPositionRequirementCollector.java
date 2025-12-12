@@ -11,6 +11,7 @@ import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
 import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
+import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.Tool;
@@ -71,6 +72,13 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
         });
 
         ItemStack addPosition = ClickableManager.setClickAction(ItemStack.of(Material.LIME_WOOL), () -> {
+            if(PositionTool.getPosition(tool.get().id()) == null) {
+                player.sendMessage(
+                        Component.text("Please set a position before adding a new one.").color(NamedTextColor.RED));
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 5, 1);
+                return;
+            }
+
             currentId.addAndGet(1);
 
             positions.add(PositionTool.getPosition(tool.get().id()));
@@ -97,7 +105,7 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
     }
 
     @Override
-    public List<Position> awaitBlocking() {
-        return future.join();
+    public BuildSetting<List<Position>> awaitBlocking() {
+        return new BuildSetting<>(future.join());
     }
 }

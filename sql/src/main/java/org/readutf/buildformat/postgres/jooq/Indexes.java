@@ -15,7 +15,7 @@ import org.readutf.buildformat.postgres.jooq.tables.FlywaySchemaHistory;
 
 
 /**
- * A class modelling indexes of tables in the default schema.
+ * A class modelling indexes of tables in public.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Indexes {

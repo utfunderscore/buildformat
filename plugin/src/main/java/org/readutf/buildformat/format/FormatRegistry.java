@@ -40,6 +40,8 @@ public record FormatRegistry(BuildFormatManager buildFormatManager, File directo
             try {
                 JsonNode jsonNode = objectMapper.readTree(new FileReader(file));
                 List<Requirement> requirements = buildFormatManager.deserializeRequirements(jsonNode);
+                String name = file.getName().substring(0, file.getName().lastIndexOf('.'));
+
                 formats.put(file.getName(), requirements);
                 log.info("Loaded format: {} with {} requirements", file.getName(), requirements.size());
             } catch (Exception e) {

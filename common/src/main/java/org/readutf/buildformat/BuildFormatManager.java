@@ -12,6 +12,7 @@ import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.types.Position;
 import org.readutf.buildformat.utils.ClassUtils;
 
+import java.io.File;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -89,6 +90,23 @@ public class BuildFormatManager {
         return requirements;
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T construct(@NotNull Class<T> clazz, @NotNull Map<String, Object> data) throws Exception {
+        if (!clazz.isRecord()) {
+            throw new Exception("Class must be a record");
+        }
+
+        List<Object> constructorArgs = new ArrayList<>();
+        for (RecordComponent recordComponent : clazz.getRecordComponents()) {
+            Object value = data.get(recordComponent.getName());
+            constructorArgs.add(objectMapper.convertValue(value, recordComponent.getType()));
+        }
+
+        // This assumes that the record has a single canonical constructor
+        return (T) clazz.getDeclaredConstructors()[0].newInstance(constructorArgs.toArray());
+
+    }
+
     public int checksum(@NotNull List<Requirement> requirements) {
         return requirements.hashCode();
     }
@@ -111,6 +129,11 @@ public class BuildFormatManager {
         }
 
         return objectMapper.valueToTree(data);
+    }
+
+    public void serializeRequirements(@NotNull File file,  @NotNull List<Requirement> requirements) throws Exception {
+        JsonNode jsonNode = serializeRequirements(requirements);
+        objectMapper.writeValue(file, jsonNode);
     }
 
     public List<Requirement> deserializeRequirements(@NotNull JsonNode jsonNode) throws Exception {

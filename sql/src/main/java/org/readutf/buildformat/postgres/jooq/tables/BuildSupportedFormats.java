@@ -30,9 +30,9 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
-import org.readutf.buildformat.postgres.jooq.DefaultSchema;
 import org.readutf.buildformat.postgres.jooq.Indexes;
 import org.readutf.buildformat.postgres.jooq.Keys;
+import org.readutf.buildformat.postgres.jooq.Public;
 import org.readutf.buildformat.postgres.jooq.tables.BuildVersion.BuildVersionPath;
 import org.readutf.buildformat.postgres.jooq.tables.records.BuildSupportedFormatsRecord;
 
@@ -46,7 +46,7 @@ public class BuildSupportedFormats extends TableImpl<BuildSupportedFormatsRecord
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>build_supported_formats</code>
+     * The reference instance of <code>public.build_supported_formats</code>
      */
     public static final BuildSupportedFormats BUILD_SUPPORTED_FORMATS = new BuildSupportedFormats();
 
@@ -59,17 +59,17 @@ public class BuildSupportedFormats extends TableImpl<BuildSupportedFormatsRecord
     }
 
     /**
-     * The column <code>build_supported_formats.id</code>.
+     * The column <code>public.build_supported_formats.id</code>.
      */
-    public final TableField<BuildSupportedFormatsRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.identity(true), this, "");
+    public final TableField<BuildSupportedFormatsRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>build_supported_formats.build_version_id</code>.
+     * The column <code>public.build_supported_formats.build_version_id</code>.
      */
     public final TableField<BuildSupportedFormatsRecord, Integer> BUILD_VERSION_ID = createField(DSL.name("build_version_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>build_supported_formats.format_name</code>.
+     * The column <code>public.build_supported_formats.format_name</code>.
      */
     public final TableField<BuildSupportedFormatsRecord, String> FORMAT_NAME = createField(DSL.name("format_name"), SQLDataType.VARCHAR(32).nullable(false), this, "");
 
@@ -82,21 +82,23 @@ public class BuildSupportedFormats extends TableImpl<BuildSupportedFormatsRecord
     }
 
     /**
-     * Create an aliased <code>build_supported_formats</code> table reference
+     * Create an aliased <code>public.build_supported_formats</code> table
+     * reference
      */
     public BuildSupportedFormats(String alias) {
         this(DSL.name(alias), BUILD_SUPPORTED_FORMATS);
     }
 
     /**
-     * Create an aliased <code>build_supported_formats</code> table reference
+     * Create an aliased <code>public.build_supported_formats</code> table
+     * reference
      */
     public BuildSupportedFormats(Name alias) {
         this(alias, BUILD_SUPPORTED_FORMATS);
     }
 
     /**
-     * Create a <code>build_supported_formats</code> table reference
+     * Create a <code>public.build_supported_formats</code> table reference
      */
     public BuildSupportedFormats() {
         this(DSL.name("build_supported_formats"), null);
@@ -137,7 +139,7 @@ public class BuildSupportedFormats extends TableImpl<BuildSupportedFormatsRecord
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+        return aliased() ? null : Public.PUBLIC;
     }
 
     @Override
@@ -152,22 +154,23 @@ public class BuildSupportedFormats extends TableImpl<BuildSupportedFormatsRecord
 
     @Override
     public UniqueKey<BuildSupportedFormatsRecord> getPrimaryKey() {
-        return Keys.BUILD_SUPPORTED_FORMATS__PK_BUILD_SUPPORTED_FORMATS;
+        return Keys.BUILD_SUPPORTED_FORMATS_PKEY;
     }
 
     @Override
     public List<ForeignKey<BuildSupportedFormatsRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.BUILD_SUPPORTED_FORMATS__FK_BUILD_SUPPORTED_FORMATS_PK_BUILD_VERSION);
+        return Arrays.asList(Keys.BUILD_SUPPORTED_FORMATS__BUILD_SUPPORTED_FORMATS_BUILD_VERSION_ID_FKEY);
     }
 
     private transient BuildVersionPath _buildVersion;
 
     /**
-     * Get the implicit join path to the <code>build_version</code> table.
+     * Get the implicit join path to the <code>public.build_version</code>
+     * table.
      */
     public BuildVersionPath buildVersion() {
         if (_buildVersion == null)
-            _buildVersion = new BuildVersionPath(this, Keys.BUILD_SUPPORTED_FORMATS__FK_BUILD_SUPPORTED_FORMATS_PK_BUILD_VERSION, null);
+            _buildVersion = new BuildVersionPath(this, Keys.BUILD_SUPPORTED_FORMATS__BUILD_SUPPORTED_FORMATS_BUILD_VERSION_ID_FKEY, null);
 
         return _buildVersion;
     }

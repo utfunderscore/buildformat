@@ -18,7 +18,7 @@ public class BuildSupportedFormatsRecord extends UpdatableRecordImpl<BuildSuppor
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>build_supported_formats.id</code>.
+     * Setter for <code>public.build_supported_formats.id</code>.
      */
     public BuildSupportedFormatsRecord setId(Integer value) {
         set(0, value);
@@ -26,14 +26,14 @@ public class BuildSupportedFormatsRecord extends UpdatableRecordImpl<BuildSuppor
     }
 
     /**
-     * Getter for <code>build_supported_formats.id</code>.
+     * Getter for <code>public.build_supported_formats.id</code>.
      */
     public Integer getId() {
         return (Integer) get(0);
     }
 
     /**
-     * Setter for <code>build_supported_formats.build_version_id</code>.
+     * Setter for <code>public.build_supported_formats.build_version_id</code>.
      */
     public BuildSupportedFormatsRecord setBuildVersionId(Integer value) {
         set(1, value);
@@ -41,14 +41,14 @@ public class BuildSupportedFormatsRecord extends UpdatableRecordImpl<BuildSuppor
     }
 
     /**
-     * Getter for <code>build_supported_formats.build_version_id</code>.
+     * Getter for <code>public.build_supported_formats.build_version_id</code>.
      */
     public Integer getBuildVersionId() {
         return (Integer) get(1);
     }
 
     /**
-     * Setter for <code>build_supported_formats.format_name</code>.
+     * Setter for <code>public.build_supported_formats.format_name</code>.
      */
     public BuildSupportedFormatsRecord setFormatName(String value) {
         set(2, value);
@@ -56,7 +56,7 @@ public class BuildSupportedFormatsRecord extends UpdatableRecordImpl<BuildSuppor
     }
 
     /**
-     * Getter for <code>build_supported_formats.format_name</code>.
+     * Getter for <code>public.build_supported_formats.format_name</code>.
      */
     public String getFormatName() {
         return (String) get(2);

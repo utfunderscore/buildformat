@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
+import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.RegionSelectionTool;
 import org.readutf.buildformat.tools.Tool;
@@ -77,7 +78,7 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
     }
 
     @Override
-    public Cuboid awaitBlocking() {
-        return future.join();
+    public BuildSetting<Cuboid> awaitBlocking() {
+        return new BuildSetting<>(future.join());
     }
 }

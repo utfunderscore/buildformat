@@ -20,7 +20,7 @@ public class BuildMetaRecord extends UpdatableRecordImpl<BuildMetaRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>build_meta.id</code>.
+     * Setter for <code>public.build_meta.id</code>.
      */
     public BuildMetaRecord setId(Integer value) {
         set(0, value);
@@ -28,14 +28,14 @@ public class BuildMetaRecord extends UpdatableRecordImpl<BuildMetaRecord> {
     }
 
     /**
-     * Getter for <code>build_meta.id</code>.
+     * Getter for <code>public.build_meta.id</code>.
      */
     public Integer getId() {
         return (Integer) get(0);
     }
 
     /**
-     * Setter for <code>build_meta.build_name</code>.
+     * Setter for <code>public.build_meta.build_name</code>.
      */
     public BuildMetaRecord setBuildName(String value) {
         set(1, value);
@@ -43,14 +43,14 @@ public class BuildMetaRecord extends UpdatableRecordImpl<BuildMetaRecord> {
     }
 
     /**
-     * Getter for <code>build_meta.build_name</code>.
+     * Getter for <code>public.build_meta.build_name</code>.
      */
     public String getBuildName() {
         return (String) get(1);
     }
 
     /**
-     * Setter for <code>build_meta.created_at</code>.
+     * Setter for <code>public.build_meta.created_at</code>.
      */
     public BuildMetaRecord setCreatedAt(LocalDateTime value) {
         set(2, value);
@@ -58,7 +58,7 @@ public class BuildMetaRecord extends UpdatableRecordImpl<BuildMetaRecord> {
     }
 
     /**
-     * Getter for <code>build_meta.created_at</code>.
+     * Getter for <code>public.build_meta.created_at</code>.
      */
     public LocalDateTime getCreatedAt() {
         return (LocalDateTime) get(2);

@@ -14,6 +14,7 @@ import org.jooq.ForeignKey;
 import org.jooq.Identity;
 import org.jooq.Index;
 import org.jooq.InverseForeignKey;
+import org.jooq.JSONB;
 import org.jooq.Name;
 import org.jooq.Path;
 import org.jooq.PlainSQL;
@@ -30,9 +31,9 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
-import org.readutf.buildformat.postgres.jooq.DefaultSchema;
 import org.readutf.buildformat.postgres.jooq.Indexes;
 import org.readutf.buildformat.postgres.jooq.Keys;
+import org.readutf.buildformat.postgres.jooq.Public;
 import org.readutf.buildformat.postgres.jooq.tables.BuildMeta.BuildMetaPath;
 import org.readutf.buildformat.postgres.jooq.tables.BuildSupportedFormats.BuildSupportedFormatsPath;
 import org.readutf.buildformat.postgres.jooq.tables.records.BuildVersionRecord;
@@ -47,7 +48,7 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>build_version</code>
+     * The reference instance of <code>public.build_version</code>
      */
     public static final BuildVersion BUILD_VERSION = new BuildVersion();
 
@@ -60,24 +61,29 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
     }
 
     /**
-     * The column <code>build_version.id</code>.
+     * The column <code>public.build_version.id</code>.
      */
-    public final TableField<BuildVersionRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.identity(true), this, "");
+    public final TableField<BuildVersionRecord, Integer> ID = createField(DSL.name("id"), SQLDataType.INTEGER.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>build_version.build_meta_id</code>.
+     * The column <code>public.build_version.build_meta_id</code>.
      */
     public final TableField<BuildVersionRecord, Integer> BUILD_META_ID = createField(DSL.name("build_meta_id"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>build_version.version_number</code>.
+     * The column <code>public.build_version.version_number</code>.
      */
     public final TableField<BuildVersionRecord, Integer> VERSION_NUMBER = createField(DSL.name("version_number"), SQLDataType.INTEGER.nullable(false), this, "");
 
     /**
-     * The column <code>build_version.checksum</code>.
+     * The column <code>public.build_version.checksum</code>.
      */
     public final TableField<BuildVersionRecord, String> CHECKSUM = createField(DSL.name("checksum"), SQLDataType.VARCHAR(64).nullable(false), this, "");
+
+    /**
+     * The column <code>public.build_version.metadata</code>.
+     */
+    public final TableField<BuildVersionRecord, JSONB> METADATA = createField(DSL.name("metadata"), SQLDataType.JSONB.nullable(false), this, "");
 
     private BuildVersion(Name alias, Table<BuildVersionRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -88,21 +94,21 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
     }
 
     /**
-     * Create an aliased <code>build_version</code> table reference
+     * Create an aliased <code>public.build_version</code> table reference
      */
     public BuildVersion(String alias) {
         this(DSL.name(alias), BUILD_VERSION);
     }
 
     /**
-     * Create an aliased <code>build_version</code> table reference
+     * Create an aliased <code>public.build_version</code> table reference
      */
     public BuildVersion(Name alias) {
         this(alias, BUILD_VERSION);
     }
 
     /**
-     * Create a <code>build_version</code> table reference
+     * Create a <code>public.build_version</code> table reference
      */
     public BuildVersion() {
         this(DSL.name("build_version"), null);
@@ -143,7 +149,7 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+        return aliased() ? null : Public.PUBLIC;
     }
 
     @Override
@@ -158,22 +164,22 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
 
     @Override
     public UniqueKey<BuildVersionRecord> getPrimaryKey() {
-        return Keys.BUILD_VERSION__PK_BUILD_VERSION;
+        return Keys.BUILD_VERSION_PKEY;
     }
 
     @Override
     public List<ForeignKey<BuildVersionRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.BUILD_VERSION__FK_BUILD_VERSION_PK_BUILD_META);
+        return Arrays.asList(Keys.BUILD_VERSION__BUILD_VERSION_BUILD_META_ID_FKEY);
     }
 
     private transient BuildMetaPath _buildMeta;
 
     /**
-     * Get the implicit join path to the <code>build_meta</code> table.
+     * Get the implicit join path to the <code>public.build_meta</code> table.
      */
     public BuildMetaPath buildMeta() {
         if (_buildMeta == null)
-            _buildMeta = new BuildMetaPath(this, Keys.BUILD_VERSION__FK_BUILD_VERSION_PK_BUILD_META, null);
+            _buildMeta = new BuildMetaPath(this, Keys.BUILD_VERSION__BUILD_VERSION_BUILD_META_ID_FKEY, null);
 
         return _buildMeta;
     }
@@ -182,11 +188,11 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
 
     /**
      * Get the implicit to-many join path to the
-     * <code>build_supported_formats</code> table
+     * <code>public.build_supported_formats</code> table
      */
     public BuildSupportedFormatsPath buildSupportedFormats() {
         if (_buildSupportedFormats == null)
-            _buildSupportedFormats = new BuildSupportedFormatsPath(this, null, Keys.BUILD_SUPPORTED_FORMATS__FK_BUILD_SUPPORTED_FORMATS_PK_BUILD_VERSION.getInverseKey());
+            _buildSupportedFormats = new BuildSupportedFormatsPath(this, null, Keys.BUILD_SUPPORTED_FORMATS__BUILD_SUPPORTED_FORMATS_BUILD_VERSION_ID_FKEY.getInverseKey());
 
         return _buildSupportedFormats;
     }

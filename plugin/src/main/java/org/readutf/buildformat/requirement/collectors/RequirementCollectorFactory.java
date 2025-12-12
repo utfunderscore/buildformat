@@ -5,8 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.RequirementCollector;
 
-public interface RequirementCollectorFactory {
+public interface RequirementCollectorFactory<T> {
 
     @NotNull
-    RequirementCollector<?> createCollector(@NotNull Requirement requirement, int step);
+    RequirementCollector<T> createCollector(@NotNull Requirement requirement, int step);
 }
