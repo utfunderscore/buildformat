@@ -79,10 +79,6 @@ jooq {
     }
 }
 
-tasks.named("compileJava") {
-    dependsOn("jooqCodegen")
-}
-
 tasks.test {
     useJUnitPlatform()
 }
