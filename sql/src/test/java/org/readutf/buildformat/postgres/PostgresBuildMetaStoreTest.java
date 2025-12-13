@@ -1,5 +1,6 @@
 package org.readutf.buildformat.postgres;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
@@ -62,11 +63,12 @@ class PostgresBuildMetaStoreTest {
     @Test
     void saveBuild() throws Exception {
         BuildMetadata metadata = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(10, 20, 30)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10))),
-                "positions", new BuildSetting<>(List.of(new Position(1, 2, 3), new Position(4, 5, 6))),
-                "count", new BuildSetting<>(42),
-                "description", new BuildSetting<>("Test build")
+                "position", new BuildSetting<>(new Position(10, 20, 30), new TypeReference<>() {
+                }),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(1, 2, 3), new Position(4, 5, 6)), new TypeReference<>() {}),
+                "count", new BuildSetting<>(42, new TypeReference<>() {}),
+                "description", new BuildSetting<>("Test build", new TypeReference<>() {})
         ));
         
         int i = metaStore.saveBuild("test1", 12345, "2", metadata);
@@ -86,11 +88,11 @@ class PostgresBuildMetaStoreTest {
         String supportedFormats = "2";
         
         BuildMetadata metadata = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(10, 20, 30)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10))),
-                "positions", new BuildSetting<>(List.of(new Position(1, 2, 3), new Position(4, 5, 6))),
-                "count", new BuildSetting<>(42),
-                "description", new BuildSetting<>("Test build")
+                "position", new BuildSetting<>(new Position(10, 20, 30), new TypeReference<>() {}),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(1, 2, 3), new Position(4, 5, 6)), new TypeReference<>() {}),
+                "count", new BuildSetting<>(42, new TypeReference<>() {}),
+                "description", new BuildSetting<>("Test build", new TypeReference<>() {})
         ));
 
         metaStore.saveBuild(name, checksum, supportedFormats, metadata);
@@ -114,11 +116,11 @@ class PostgresBuildMetaStoreTest {
         String supportedFormat = "2";
         
         BuildMetadata metadata = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(5, 10, 15)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(5, 5, 5))),
-                "positions", new BuildSetting<>(List.of(new Position(1, 1, 1))),
-                "count", new BuildSetting<>(10),
-                "description", new BuildSetting<>(description)
+                "position", new BuildSetting<>(new Position(5, 10, 15), new TypeReference<>() {}),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(5, 5, 5)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(1, 1, 1)), new TypeReference<>() {}),
+                "count", new BuildSetting<>(10, new TypeReference<>() {}),
+                "description", new BuildSetting<>(description, new TypeReference<>() {})
         ));
 
         metaStore.saveBuild(name, checksum, supportedFormat, metadata);
@@ -128,11 +130,11 @@ class PostgresBuildMetaStoreTest {
         String secondFormat = "3";
         
         BuildMetadata metadata2 = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(15, 25, 35)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(20, 20, 20))),
-                "positions", new BuildSetting<>(List.of(new Position(2, 2, 2), new Position(3, 3, 3))),
-                "count", new BuildSetting<>(20),
-                "description", new BuildSetting<>(otherDesc)
+                "position", new BuildSetting<>(new Position(15, 25, 35), new TypeReference<>() {}),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(20, 20, 20)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(2, 2, 2), new Position(3, 3, 3)), new TypeReference<>() {}),
+                "count", new BuildSetting<>(20, new TypeReference<>() {}),
+                "description", new BuildSetting<>(otherDesc, new TypeReference<>() {})
         ));
 
         metaStore.saveBuild(name, otherChecksum, secondFormat, metadata2);
@@ -149,11 +151,11 @@ class PostgresBuildMetaStoreTest {
     @Test
     void getLatestBuildsByFormat() throws Exception {
         BuildMetadata metadata = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(10, 20, 30)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10))),
-                "positions", new BuildSetting<>(List.of(new Position(1, 2, 3))),
-                "count", new BuildSetting<>(100),
-                "name", new BuildSetting<>("test")
+                "position", new BuildSetting<>(new Position(10, 20, 30), new TypeReference<>() {}),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(10, 10, 10)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(1, 2, 3)), new TypeReference<>() {}),
+                "count", new BuildSetting<>(100, new TypeReference<>() {}),
+                "name", new BuildSetting<>("test", new TypeReference<>() {})
         ));
 
         metaStore.saveBuild("test1", 33333, "2", metadata);
@@ -168,27 +170,27 @@ class PostgresBuildMetaStoreTest {
     @Test
     void getBuildByVersion() throws Exception {
         BuildMetadata metadata1 = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(1, 2, 3)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(5, 5, 5))),
-                "positions", new BuildSetting<>(List.of(new Position(1, 1, 1))),
-                "version", new BuildSetting<>(1),
-                "type", new BuildSetting<>("test")
+                "position", new BuildSetting<>(new Position(1, 2, 3), new TypeReference<>() {}),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(0, 0, 0), new Position(5, 5, 5)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(1, 1, 1)), new TypeReference<>() {}),
+                "version", new BuildSetting<>(1, new TypeReference<>() {}),
+                "type", new BuildSetting<>("test", new TypeReference<>() {})
         ));
         
         BuildMetadata metadata2 = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(4, 5, 6)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(10, 10, 10), new Position(20, 20, 20))),
-                "positions", new BuildSetting<>(List.of(new Position(2, 2, 2), new Position(3, 3, 3))),
-                "version", new BuildSetting<>(2),
-                "type", new BuildSetting<>("different")
+                "position", new BuildSetting<>(new Position(4, 5, 6), new TypeReference<>() {}),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(10, 10, 10), new Position(20, 20, 20)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(2, 2, 2), new Position(3, 3, 3)), new TypeReference<>() {}),
+                "version", new BuildSetting<>(2, new TypeReference<>() {}),
+                "type", new BuildSetting<>("different", new TypeReference<>() {})
         ));
         
         BuildMetadata metadata3 = new BuildMetadata(Map.of(
-                "position", new BuildSetting<>(new Position(7, 8, 9)),
-                "cuboid", new BuildSetting<>(new Cuboid(new Position(20, 20, 20), new Position(30, 30, 30))),
-                "positions", new BuildSetting<>(List.of(new Position(4, 4, 4))),
-                "version", new BuildSetting<>(3),
-                "type", new BuildSetting<>("test")
+                "position", new BuildSetting<>(new Position(7, 8, 9), new TypeReference<>() {}),
+                "cuboid", new BuildSetting<>(new Cuboid(new Position(20, 20, 20), new Position(30, 30, 30)), new TypeReference<>() {}),
+                "positions", new BuildSetting<>(List.of(new Position(4, 4, 4)), new TypeReference<>() {}),
+                "version", new BuildSetting<>(3, new TypeReference<>() {}),
+                "type", new BuildSetting<>("test", new TypeReference<>() {})
         ));
 
         metaStore.saveBuild("test2", 77777, "1", metadata1);
