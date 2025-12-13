@@ -10,6 +10,8 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.requirement.RequirementCollector;
 import org.readutf.buildformat.settings.BuildSetting;
+import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.types.Position;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +32,7 @@ public class BuildNameCollector implements RequirementCollector<String> {
     }
 
     @Override
-    public void start(@NotNull Player player) {
+    public void start(@NotNull Player player, @NotNull Cuboid bounds, @NotNull Position origin) {
         waitingPlayers.add(player.getUniqueId());
         List<BuildNameCollector> collectors = activeCollectors.getOrDefault(player.getUniqueId(), new ArrayList<>());
         collectors.add(this);

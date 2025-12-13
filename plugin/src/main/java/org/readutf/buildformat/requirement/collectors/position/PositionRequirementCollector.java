@@ -15,6 +15,7 @@ import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.Tool;
+import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 import org.readutf.buildformat.utils.TaskUtils;
 
@@ -39,7 +40,7 @@ public class PositionRequirementCollector implements RequirementCollector<Positi
     }
 
     @Override
-    public void start(@NotNull Player player) {
+    public void start(@NotNull Player player, @NotNull Cuboid bounds, @NotNull Position origin) {
         Tool tool = PositionTool.getTool(name);
         this.toolId = tool.id();
 
@@ -54,7 +55,7 @@ public class PositionRequirementCollector implements RequirementCollector<Positi
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 5, 1);
             } else {
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 3, 1);
-                future.complete(position);
+                future.complete(position.relative(origin));
             }
         });
 

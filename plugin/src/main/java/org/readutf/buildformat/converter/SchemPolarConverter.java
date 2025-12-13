@@ -26,12 +26,12 @@ public class SchemPolarConverter {
         server.start(new InetSocketAddress(0));
     }
 
-    public static byte @NotNull [] convert(Schematic schematic) throws Exception {
+    public static byte @NotNull [] convert(@NotNull Schematic schematic) throws Exception {
+        File temporaryFile = File.createTempFile("polar-", ".schem");
+        InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer(new PolarLoader(temporaryFile.toPath(), new PolarWorld()));
 
-        InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         try {
-            File temporaryFile = File.createTempFile("polar-", ".schem");
-            instance.setChunkSupplier(LightingChunk::new);
+             instance.setChunkSupplier(LightingChunk::new);
 
             Point size = schematic.size();
             Point offset = schematic.offset();
@@ -54,7 +54,6 @@ public class SchemPolarConverter {
             LightingChunk.relight(
                     instance, futures.stream().map(CompletableFuture::join).toList());
 
-            instance.setChunkLoader(new PolarLoader(temporaryFile.toPath(), new PolarWorld()));
             instance.saveChunksToStorage().join();
 
             return Files.readAllBytes(temporaryFile.toPath());

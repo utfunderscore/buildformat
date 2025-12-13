@@ -16,6 +16,7 @@ import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.RegionSelectionTool;
 import org.readutf.buildformat.tools.Tool;
 import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.types.Position;
 import org.readutf.buildformat.utils.TaskUtils;
 
 import java.util.UUID;
@@ -38,7 +39,7 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
     }
 
     @Override
-    public void start(@NotNull Player player) {
+    public void start(@NotNull Player player, @NotNull Cuboid bounds, @NotNull Position origin) {
 
         player.sendMessage(Lang.getRegionQuery(name, stepNumber));
         Tool tool = RegionSelectionTool.getTool(name);
@@ -52,7 +53,7 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
                         Component.text("Please make a full selection.").color(NamedTextColor.RED));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 5, 1);
             } else {
-                future.complete(selection);
+                future.complete(selection.relative(origin));
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 3, 1);
             }
         });

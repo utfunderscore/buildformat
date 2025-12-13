@@ -15,6 +15,7 @@ import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.tools.ClickableManager;
 import org.readutf.buildformat.tools.PositionTool;
 import org.readutf.buildformat.tools.Tool;
+import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 import org.readutf.buildformat.utils.TaskUtils;
 
@@ -45,7 +46,7 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
     }
 
     @Override
-    public void start(@NotNull Player player) {
+    public void start(@NotNull Player player, @NotNull Cuboid bounds, @NotNull Position origin) {
         player.sendMessage(Lang.getPositionQuery(name, stepNumber));
         AtomicInteger currentId = new AtomicInteger(1);
 
@@ -57,7 +58,7 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
         ItemStack confirmButton = ClickableManager.setClickAction(ItemStack.of(Material.EMERALD_BLOCK), () -> {
             Position position = PositionTool.getPosition(tool.get().id());
             if(position != null) {
-                positions.add(position);
+                positions.add(position.relative(origin));
             }
 
             if (positions.isEmpty()) {
@@ -80,8 +81,10 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
             }
 
             currentId.addAndGet(1);
-
-            positions.add(PositionTool.getPosition(tool.get().id()));
+            Position position = PositionTool.getPosition(tool.get().id());
+            if (position != null) {
+                positions.add(position.relative(origin));
+            }
 
             tool.set(PositionTool.getTool(name + " #" + currentId));
             toolIds.add(tool.get().id());

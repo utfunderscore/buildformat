@@ -10,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.Lang;
 import org.readutf.buildformat.requirement.RequirementCollector;
 import org.readutf.buildformat.settings.BuildSetting;
+import org.readutf.buildformat.types.Cuboid;
+import org.readutf.buildformat.types.Position;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -24,7 +26,6 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
     private final Convertor<T> convertor;
     private final CompletableFuture<T> future;
     private final AtomicBoolean completed;
-    private final List<UUID> waitingPlayers;
 
     public TextInputCollector(String name, int step, Convertor<T> convertor) {
         this.name = name;
@@ -32,16 +33,14 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
         this.convertor = convertor;
         this.future = new CompletableFuture<>();
         this.completed = new AtomicBoolean(false);
-        this.waitingPlayers = new ArrayList<>();
     }
 
     @Override
-    public void start(@NotNull Player player) {
+    public void start(@NotNull Player player, @NotNull Cuboid bounds, @NotNull Position origin) {
         if(activeCollectors.containsKey(player.getUniqueId())) {
             throw new IllegalStateException("Player " + player.getName() + " is already in a text input collection process.");
         }
 
-        waitingPlayers.add(player.getUniqueId());
         activeCollectors.put(player.getUniqueId(), this);
         player.sendMessage(Lang.getTextInput(name, step));
     }

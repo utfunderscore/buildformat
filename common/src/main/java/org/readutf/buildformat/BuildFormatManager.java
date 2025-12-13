@@ -117,9 +117,9 @@ public class BuildFormatManager {
         List<Map<String, Object>> data = new ArrayList<>();
 
         for (Requirement requirement : requirements) {
-            RequirementFactory factory = this.serializers.get(requirement.getClass());
+            RequirementFactory factory = this.requirementFactories.get(requirement.getClass());
             if (factory == null) {
-                throw new Exception("No serializer found for requirement type: "
+                throw new Exception("No serializer found for requirement typeReference: "
                         + requirement.getClass().getName());
             }
 
@@ -145,9 +145,9 @@ public class BuildFormatManager {
             String name = node.get("name").asText();
             JsonNode data = node.get("data");
 
-            RequirementFactory factory = this.serializers.get(Class.forName(name).asSubclass(Requirement.class));
+            RequirementFactory factory = this.requirementFactories.get(Class.forName(name).asSubclass(Requirement.class));
             if (factory == null) {
-                throw new Exception("No deserializer found for requirement type: " + name);
+                throw new Exception("No deserializer found for requirement typeReference: " + name);
             }
 
             Requirement requirement = factory.deserialize(objectMapper, data);
@@ -160,8 +160,8 @@ public class BuildFormatManager {
         return factories;
     }
 
-    public Map<Class<? extends Requirement>, RequirementFactory> getSerializers() {
-        return serializers;
+    public Map<Class<? extends Requirement>, RequirementFactory> getRequirementFactories() {
+        return requirementFactories;
     }
 
     public static BuildFormatManager getInstance() {
