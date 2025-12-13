@@ -104,6 +104,8 @@ public class SessionManager {
 
         player.sendMessage(
                 Component.text("Upload build? ").color(NamedTextColor.GREEN).append(upload));
+
+        endSession(player);
     }
 
     private BuildSetting<String> getBuildName(@NotNull Player player) {
@@ -137,7 +139,7 @@ public class SessionManager {
         }
     }
 
-    public void cancelSession(@NotNull Player player) {
+    public void endSession(@NotNull Player player) {
         List<RequirementCollector<?>> collectors = sessionMap.remove(player.getUniqueId());
         PositionTool.clearTool(player.getUniqueId());
         RegionSelectionTool.clearTool(player.getUniqueId());

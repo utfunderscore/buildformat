@@ -31,7 +31,7 @@ public class BuildCommand {
 
     @Execute(name = "cancel")
     public void cancel(@Context Player player) {
-        sessionManager.cancelSession(player);
+        sessionManager.endSession(player);
     }
 
     @Execute(name = "create")
