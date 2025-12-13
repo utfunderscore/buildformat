@@ -52,7 +52,7 @@ public class BuildMeta extends TableImpl<BuildMetaRecord> {
     public static final BuildMeta BUILD_META = new BuildMeta();
 
     /**
-     * The class holding records for this type
+     * The class holding records for this typeReference
      */
     @Override
     public Class<BuildMetaRecord> getRecordType() {

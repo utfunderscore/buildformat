@@ -4,11 +4,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
+import org.readutf.buildformat.adapter.RegisteredTypeAdapter;
+import org.readutf.buildformat.adapter.TypeAdapter;
 import org.readutf.buildformat.requirement.RegisteredRequirement;
 import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.requirement.factory.RequirementFactory;
 import org.readutf.buildformat.requirement.factory.impl.*;
-import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.types.Position;
 import org.readutf.buildformat.utils.ClassUtils;
@@ -25,7 +26,8 @@ public class BuildFormatManager {
     private static final BuildFormatManager INSTANCE = new BuildFormatManager();
 
     private final List<RegisteredRequirement> factories;
-    private final Map<Class<? extends Requirement>, RequirementFactory> serializers = new HashMap<>();
+    private final Map<Class<? extends Requirement>, RequirementFactory> requirementFactories = new HashMap<>();
+    private final List<RegisteredTypeAdapter> adapters = new ArrayList<>();
 
     public BuildFormatManager() {
         this.factories = new ArrayList<>();
@@ -40,7 +42,11 @@ public class BuildFormatManager {
 
     public void registerFactory(@NotNull TypeReference<?> reference, @NotNull RequirementFactory factory) {
         this.factories.add(new RegisteredRequirement(reference, factory));
-        this.serializers.put(factory.getRequirementType(), factory);
+        this.requirementFactories.put(factory.getRequirementType(), factory);
+    }
+
+    public <A, B> void registerAdapter(@NotNull TypeReference<A> inputType, @NotNull TypeReference<B> outputType, TypeAdapter<A, B> adapter) {
+        adapters.add(new RegisteredTypeAdapter(inputType.getType(), outputType.getType(), adapter));
     }
 
     public List<Requirement> generateRequirements(@NotNull Class<?> clazz) throws Exception {
@@ -53,7 +59,7 @@ public class BuildFormatManager {
             Class<?> parameterType = recordComponent.getType();
 
             if (parameterType.isPrimitive()) {
-                parameterType = ClassUtils.getWrapperClass(parameterType);
+                parameterType = ClassUtils.getPrimitiveClass(parameterType);
             }
 
             RequirementFactory factory = null;
@@ -72,7 +78,7 @@ public class BuildFormatManager {
                 }
             }
             if (factory == null) {
-                throw new Exception("No factory found for type: " + parameterType.getName());
+                throw new Exception("No factory found for typeReference: " + parameterType.getName());
             }
 
             ParameterizedType parameterizedType = null;
@@ -99,8 +105,30 @@ public class BuildFormatManager {
 
         List<Object> constructorArgs = new ArrayList<>();
         for (RecordComponent recordComponent : clazz.getRecordComponents()) {
-            BuildSetting<?> value = data.get(recordComponent.getName());
-            constructorArgs.add(objectMapper.convertValue(value.data(), recordComponent.getType()));
+            BuildSetting<?> setting = data.get(recordComponent.getName());
+
+            Type genericType = recordComponent.getGenericType();
+            Type settingType = setting.getType();
+
+            if(recordComponent.getType().isPrimitive()) {
+                genericType = ClassUtils.getPrimitiveClass(recordComponent.getType());
+            }
+
+            if(ClassUtils.equals(genericType, settingType)) {
+                constructorArgs.add(setting.data());
+                continue;
+            }
+
+            for (RegisteredTypeAdapter adapter : adapters) {
+                System.out.println(adapter.inputType() + " " + genericType);
+                System.out.println(adapter.outputType() + " " + settingType);
+
+                if(ClassUtils.equals(adapter.inputType(), settingType) && ClassUtils.equals(adapter.outputType(), genericType)) {
+                    Object unknownOutput = adapter.adapter().convertUnknown(setting.data());
+                    constructorArgs.add(unknownOutput);
+                    break;
+                }
+            }
         }
 
         // This assumes that the record has a single canonical constructor

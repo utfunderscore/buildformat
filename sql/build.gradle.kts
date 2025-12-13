@@ -4,6 +4,10 @@ plugins {
     id("org.jooq.jooq-codegen-gradle") version "3.20.8"
 }
 
+val POSTGRES_USER = "postgres"
+val POSTGRES_PASSWORD = "postgres"
+val POSTGRES_DB = "builds"
+
 repositories {
     mavenCentral()
     maven {
@@ -44,9 +48,9 @@ dependencies {
 }
 
 flyway {
-    url = "jdbc:postgresql://localhost:5432/builds"
-    user = "devuser"
-    password = "devpassword"
+    url = "jdbc:postgresql://localhost:5432/$POSTGRES_DB"
+    user = POSTGRES_USER
+    password = POSTGRES_PASSWORD
     driver = "org.postgresql.Driver"
     cleanDisabled = false
     locations = arrayOf("filesystem:src/main/resources/db/migration/")
@@ -56,9 +60,9 @@ jooq {
     configuration {
         jdbc {
             driver = "org.postgresql.Driver"
-            url = "jdbc:postgresql://localhost:5432/builds"
-            user = "devuser"
-            password = "devpassword"
+            url = "jdbc:postgresql://localhost:5432/$POSTGRES_DB"
+            user = POSTGRES_USER
+            password = POSTGRES_PASSWORD
         }
         generator {
 

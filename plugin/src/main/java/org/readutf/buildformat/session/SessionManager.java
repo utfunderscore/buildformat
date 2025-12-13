@@ -84,7 +84,7 @@ public class SessionManager {
         String buildName = getBuildName(player).data();
         Cuboid cuboid = getBuildRegion(player).data();
 
-        @NotNull Map<String, BuildSetting<?>> results = collectRequirements(player, requirements);
+        @NotNull Map<String, BuildSetting<?>> results = collectRequirements(player, requirements, cuboid, cuboid.min());
 
         player.getInventory().clear();
 
@@ -109,7 +109,7 @@ public class SessionManager {
     private BuildSetting<String> getBuildName(@NotNull Player player) {
         BuildNameCollector nameCollector = new BuildNameCollector();
         addCollectorToSession(player, nameCollector);
-        nameCollector.start(player);
+        nameCollector.start(player, new Cuboid(new Position(0, 0, 0), new Position(0, 0, 0)), new Position(0, 0, 0));
         BuildSetting<String> buildName = nameCollector.awaitBlocking();
         nameCollector.cleanup(player);
         return buildName;
@@ -118,7 +118,7 @@ public class SessionManager {
     private BuildSetting<Cuboid> getBuildRegion(@NotNull Player player) {
         BuildCuboidCollector build = new BuildCuboidCollector();
         addCollectorToSession(player, build);
-        build.start(player);
+        build.start(player, new Cuboid(new Position(0, 0, 0), new Position(0, 0, 0)), new Position(0, 0, 0));
         BuildSetting<Cuboid> cuboid = build.awaitBlocking();
         build.cleanup(player);
         return cuboid;
@@ -160,6 +160,9 @@ public class SessionManager {
         BlockVector3 minVec3 = BlockVector3.at(min.x(), min.y(), min.z());
         BlockVector3 maxVec3 = BlockVector3.at(max.x(), max.y(), max.z());
 
+        System.out.println(min);
+        System.out.println(max);
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         CuboidRegion region = new CuboidRegion(BukkitAdapter.adapt(world), minVec3, maxVec3);
         try (BlockArrayClipboard clipboard = new BlockArrayClipboard(region)) {
@@ -168,7 +171,7 @@ public class SessionManager {
                     new ForwardExtentCopy(BukkitAdapter.adapt(world), region, clipboard, region.getMinimumPoint());
             Operations.complete(forwardExtentCopy);
 
-            try (ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(outputStream)) {
+            try (ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_V3_SCHEMATIC.getWriter(outputStream)) {
                 writer.write(clipboard);
             }
         }
@@ -183,7 +186,7 @@ public class SessionManager {
     }
 
     private @NotNull Map<String, BuildSetting<?>> collectRequirements(
-            @NotNull Player player, @NotNull List<Requirement> requirements) throws Exception {
+            @NotNull Player player, @NotNull List<Requirement> requirements, @NotNull Cuboid bounds, @NotNull Position origin) throws Exception {
         Map<String, BuildSetting<?>> results = new HashMap<>();
         List<RequirementCollector<?>> completed = new ArrayList<>();
 
@@ -199,7 +202,7 @@ public class SessionManager {
             addCollectorToSession(player, collector);
 
             player.getInventory().clear();
-            collector.start(player);
+            collector.start(player, bounds, origin);
             results.put(requirement.name(), collector.awaitBlocking());
             completed.add(collector);
         }

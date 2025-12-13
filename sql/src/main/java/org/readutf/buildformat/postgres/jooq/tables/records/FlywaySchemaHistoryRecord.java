@@ -65,7 +65,7 @@ public class FlywaySchemaHistoryRecord extends UpdatableRecordImpl<FlywaySchemaH
     }
 
     /**
-     * Setter for <code>public.flyway_schema_history.type</code>.
+     * Setter for <code>public.flyway_schema_history.typeReference</code>.
      */
     public FlywaySchemaHistoryRecord setType(String value) {
         set(3, value);
@@ -73,7 +73,7 @@ public class FlywaySchemaHistoryRecord extends UpdatableRecordImpl<FlywaySchemaH
     }
 
     /**
-     * Getter for <code>public.flyway_schema_history.type</code>.
+     * Getter for <code>public.flyway_schema_history.typeReference</code>.
      */
     public String getType() {
         return (String) get(3);

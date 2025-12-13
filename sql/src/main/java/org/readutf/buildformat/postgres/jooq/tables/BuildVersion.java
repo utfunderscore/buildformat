@@ -53,7 +53,7 @@ public class BuildVersion extends TableImpl<BuildVersionRecord> {
     public static final BuildVersion BUILD_VERSION = new BuildVersion();
 
     /**
-     * The class holding records for this type
+     * The class holding records for this typeReference
      */
     @Override
     public Class<BuildVersionRecord> getRecordType() {

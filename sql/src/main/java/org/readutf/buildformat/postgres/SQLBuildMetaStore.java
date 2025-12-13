@@ -39,7 +39,7 @@ public class SQLBuildMetaStore implements BuildMetaStore {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(SQLBuildMetaStore.class);
 
-    // Configure ObjectMapper to preserve type information for BuildSetting values
+    // Configure ObjectMapper to preserve typeReference information for BuildSetting values
     static {
         BasicPolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder().allowIfBaseType(BuildSetting.class).allowIfBaseType(Object.class).build();
         mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.OBJECT_AND_NON_CONCRETE, JsonTypeInfo.As.PROPERTY);

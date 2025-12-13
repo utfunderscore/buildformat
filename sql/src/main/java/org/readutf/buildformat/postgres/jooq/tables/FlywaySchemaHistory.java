@@ -46,7 +46,7 @@ public class FlywaySchemaHistory extends TableImpl<FlywaySchemaHistoryRecord> {
     public static final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = new FlywaySchemaHistory();
 
     /**
-     * The class holding records for this type
+     * The class holding records for this typeReference
      */
     @Override
     public Class<FlywaySchemaHistoryRecord> getRecordType() {
@@ -69,7 +69,7 @@ public class FlywaySchemaHistory extends TableImpl<FlywaySchemaHistoryRecord> {
     public final TableField<FlywaySchemaHistoryRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.VARCHAR(200).nullable(false), this, "");
 
     /**
-     * The column <code>public.flyway_schema_history.type</code>.
+     * The column <code>public.flyway_schema_history.typeReference</code>.
      */
     public final TableField<FlywaySchemaHistoryRecord, String> TYPE = createField(DSL.name("type"), SQLDataType.VARCHAR(20).nullable(false), this, "");
 

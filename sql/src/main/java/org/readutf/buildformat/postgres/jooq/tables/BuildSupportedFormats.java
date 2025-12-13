@@ -51,7 +51,7 @@ public class BuildSupportedFormats extends TableImpl<BuildSupportedFormatsRecord
     public static final BuildSupportedFormats BUILD_SUPPORTED_FORMATS = new BuildSupportedFormats();
 
     /**
-     * The class holding records for this type
+     * The class holding records for this typeReference
      */
     @Override
     public Class<BuildSupportedFormatsRecord> getRecordType() {

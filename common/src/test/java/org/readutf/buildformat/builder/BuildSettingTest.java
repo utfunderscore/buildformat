@@ -2,6 +2,7 @@ package org.readutf.buildformat.builder;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import org.junit.jupiter.api.Assertions;
@@ -12,18 +13,20 @@ import java.util.Map;
 
 public class BuildSettingTest {
 
-    // Helper wrapper to test Map serialization with type info
+    // Helper wrapper to test Map serialization with typeReference info
     record SettingsWrapper(Map<String, BuildSetting<?>> settings) {}
 
     @Test
     public void testSerialization() throws JsonProcessingException {
 
-        BuildSetting<String> stringSetting = new BuildSetting<>("test");
-        BuildSetting<Integer> intSetting = new BuildSetting<>(123);
+        BuildSetting<String> stringSetting = new BuildSetting<>("test", new TypeReference<>() {
+        });
+        BuildSetting<Integer> intSetting = new BuildSetting<>(123, new TypeReference<>() {
+        });
 
         ObjectMapper mapper = new ObjectMapper();
         
-        // Configure ObjectMapper to preserve type information for BuildSetting values
+        // Configure ObjectMapper to preserve typeReference information for BuildSetting values
         BasicPolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
                 .allowIfBaseType(BuildSetting.class)
                 .allowIfBaseType(Object.class)
