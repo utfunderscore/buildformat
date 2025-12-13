@@ -60,7 +60,7 @@ public class S3BuildDataStore implements BuildDataStore {
         byte[] polarData = downloadBytesFromS3(polarKey);
         byte[] schemData = downloadBytesFromS3(schemKey);
 
-        return new BuildData(polarData, schemData);
+        return new BuildData(schemData, polarData);
     }
 
     private void uploadBytesToS3(byte[] bytes, String bucket, String key) {
