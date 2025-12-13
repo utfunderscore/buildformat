@@ -1,5 +1,6 @@
 package org.readutf.buildformat.settings;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,8 @@ public record BuildSetting<T>(
     public BuildSetting(T data, @NotNull TypeReference<T> typeReference) {
         this(data, typeReference.getType().toString());
     }
-    
+
+    @JsonIgnore
     public Type getType() throws ClassNotFoundException {
         return DynamicTypeParser.parseType(typeName);
     }

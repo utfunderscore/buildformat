@@ -63,7 +63,7 @@ public class BuildSettingTest {
         String wrapperJson = mapper.writeValueAsString(wrapper);
         System.out.println("Serialized Wrapper: " + wrapperJson);
 
-        SettingsWrapper deserializedWrapper = mapper.readValue("", SettingsWrapper.class);
+        SettingsWrapper deserializedWrapper = mapper.readValue(wrapperJson, SettingsWrapper.class);
         Map<String, BuildSetting<?>> deserializedMap = deserializedWrapper.settings();
 
         Assertions.assertNotNull(deserializedMap);
