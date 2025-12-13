@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.readutf.buildformat"
-version = "2.0.7"
+version = System.getenv("GITHUB_REF_NAME") ?: "dev"
 
 repositories {
     mavenCentral()
