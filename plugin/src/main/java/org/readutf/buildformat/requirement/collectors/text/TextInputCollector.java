@@ -1,5 +1,6 @@
 package org.readutf.buildformat.requirement.collectors.text;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -55,7 +56,8 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
 
     @Override
     public BuildSetting<T> awaitBlocking() {
-        return new BuildSetting<>(future.join());
+        return new BuildSetting<>(future.join(), new TypeReference<>() {
+        });
     }
 
     public static class ChatListener implements Listener {

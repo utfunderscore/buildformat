@@ -1,5 +1,6 @@
 package org.readutf.buildformat.requirement.collectors.position;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
@@ -109,6 +110,7 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
 
     @Override
     public BuildSetting<List<Position>> awaitBlocking() {
-        return new BuildSetting<>(future.join());
+        return new BuildSetting<>(future.join(), new TypeReference<>() {
+        });
     }
 }

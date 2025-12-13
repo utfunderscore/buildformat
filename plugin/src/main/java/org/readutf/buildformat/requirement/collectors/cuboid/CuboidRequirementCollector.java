@@ -1,5 +1,6 @@
 package org.readutf.buildformat.requirement.collectors.cuboid;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
@@ -80,6 +81,7 @@ public class CuboidRequirementCollector implements RequirementCollector<Cuboid> 
 
     @Override
     public BuildSetting<Cuboid> awaitBlocking() {
-        return new BuildSetting<>(future.join());
+        return new BuildSetting<>(future.join(), new TypeReference<>() {
+        });
     }
 }
