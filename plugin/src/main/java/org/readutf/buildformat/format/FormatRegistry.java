@@ -42,7 +42,7 @@ public record FormatRegistry(BuildFormatManager buildFormatManager, File directo
                 List<Requirement> requirements = buildFormatManager.deserializeRequirements(jsonNode);
                 String name = file.getName().substring(0, file.getName().lastIndexOf('.'));
 
-                formats.put(file.getName(), requirements);
+                formats.put(name, requirements);
                 log.info("Loaded format: {} with {} requirements", file.getName(), requirements.size());
             } catch (Exception e) {
                 log.error("Failed to read format file: {}", file.getName(), e);
