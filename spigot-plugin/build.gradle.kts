@@ -22,6 +22,14 @@ repositories {
 }
 
 dependencies {
+
+    configurations.all {
+        resolutionStrategy.capabilitiesResolution.withCapability("org.lz4:lz4-java") {
+            select("at.yawk.lz4:lz4-java:0")  // Prefer the newer at.yawk variant
+        }
+    }
+
+
     implementation(project(":common"))
     implementation(project(":sql"))
     implementation(project(":s3"))
@@ -30,8 +38,8 @@ dependencies {
     implementation("net.kyori:adventure-text-minimessage:4.25.0")
     implementation("net.kyori:adventure-text-serializer-plain:4.25.0")
 
-    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core:2.14.0")
-    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.14.0")
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core:2.14.3")
+    compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.14.3")
 
     implementation("org.flywaydb:flyway-database-postgresql:11.19.0")
 
@@ -40,7 +48,7 @@ dependencies {
     implementation("dev.hollowcube:polar:1.15.0")
     implementation("org.postgresql:postgresql:42.7.8")
 
-    paperweight.paperDevBundle("1.21.10-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
 }
 
 tasks.compileJava {
@@ -48,7 +56,7 @@ tasks.compileJava {
 }
 
 tasks.runServer {
-    minecraftVersion("1.21.10")
+    minecraftVersion("1.21.11")
     jvmArgs(
         "-Xmx2G",
     )

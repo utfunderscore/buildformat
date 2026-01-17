@@ -35,10 +35,6 @@ public class Extensions {
                 t.getTranslation(), t.getLeftRotation(), t.getScale(), t.getRightRotation());
     }
 
-    public static Transformation toBukkit(com.mojang.math.Transformation t) {
-        return new Transformation(t.getTranslation(), t.getLeftRotation(), t.getScale(), t.getRightRotation());
-    }
-
     public static ClientboundAddEntityPacket getSpawnPacket(Entity entity) {
         return new ClientboundAddEntityPacket(entity, entity.getId(), entity.blockPosition());
     }
