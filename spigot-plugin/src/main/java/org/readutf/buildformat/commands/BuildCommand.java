@@ -8,9 +8,10 @@ import dev.rollczi.litecommands.annotations.execute.Execute;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
+import org.readutf.buildformat.BuildDataType;
 import org.readutf.buildformat.format.FormatRegistry;
 import org.readutf.buildformat.requirement.Requirement;
-import org.readutf.buildformat.session.SessionManager;
+import org.readutf.buildformat.session.SpigotSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,17 +22,17 @@ import java.util.Map;
 public class BuildCommand {
 
     private static final Logger log = LoggerFactory.getLogger(BuildCommand.class);
-    private final SessionManager sessionManager;
+    private final SpigotSessionManager spigotSessionManager;
     private final FormatRegistry formatRegistry;
 
-    public BuildCommand(SessionManager sessionManager, FormatRegistry formatRegistry) {
-        this.sessionManager = sessionManager;
+    public BuildCommand(SpigotSessionManager spigotSessionManager, FormatRegistry formatRegistry) {
+        this.spigotSessionManager = spigotSessionManager;
         this.formatRegistry = formatRegistry;
     }
 
     @Execute(name = "cancel")
     public void cancel(@Context Player player) {
-        sessionManager.endSession(player);
+        spigotSessionManager.endSession(player);
     }
 
     @Execute(name = "create")
@@ -45,7 +46,7 @@ public class BuildCommand {
                 return;
             }
 
-            sessionManager.startInputSession(player, format, requirements);
+            spigotSessionManager.startInputSession(player, BuildDataType.POLAR_WORLD, format, requirements);
         } catch (Exception e) {
             log.error("Failed to start build session", e);
             player.sendMessage(Component.text("Error starting build session: " + e.getMessage())

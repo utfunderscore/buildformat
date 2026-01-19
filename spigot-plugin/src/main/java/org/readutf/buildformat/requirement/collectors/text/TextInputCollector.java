@@ -49,16 +49,17 @@ public class TextInputCollector<T> implements RequirementCollector<T> {
     @Override
     public void cleanup(Player player) {}
 
+    @Override
+    public CompletableFuture<BuildSetting<T>> getFuture() {
+        return future.thenApply(t -> new BuildSetting<>(t, new TypeReference<>() {}));
+    }
+
     public void complete(Object object) {
         future.complete((T) object);
         this.completed.set(true);
     }
 
-    @Override
-    public BuildSetting<T> awaitBlocking() {
-        return new BuildSetting<>(future.join(), new TypeReference<>() {
-        });
-    }
+
 
     public static class ChatListener implements Listener {
 

@@ -48,15 +48,14 @@ public class BuildNameCollector implements RequirementCollector<String> {
         activeCollectors.put(player.getUniqueId(), collectors);
     }
 
+    @Override
+    public CompletableFuture<BuildSetting<String>> getFuture() {
+        return future.thenApply(s -> new BuildSetting<>(s, new TypeReference<>() {}));
+    }
+
     public void complete(String text) {
         future.complete(text);
         this.completed.set(true);
-    }
-
-    @Override
-    public BuildSetting<String> awaitBlocking() {
-        return new BuildSetting<>(future.join(), new TypeReference<>() {
-        });
     }
 
     public static class ChatListener implements Listener {

@@ -109,8 +109,7 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
     }
 
     @Override
-    public BuildSetting<List<Position>> awaitBlocking() {
-        return new BuildSetting<>(future.join(), new TypeReference<>() {
-        });
+    public CompletableFuture<BuildSetting<List<Position>>> getFuture() {
+        return future.thenApply(positions1 -> new BuildSetting<>(positions1, new TypeReference<>() {}));
     }
 }

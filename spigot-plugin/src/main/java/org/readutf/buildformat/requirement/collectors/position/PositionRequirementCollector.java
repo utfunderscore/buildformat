@@ -72,8 +72,8 @@ public class PositionRequirementCollector implements RequirementCollector<Positi
     }
 
     @Override
-    public BuildSetting<Position> awaitBlocking() {
-        return new BuildSetting<>(future.join(), new TypeReference<>() {
-        });
+    public CompletableFuture<BuildSetting<Position>> getFuture() {
+        return future.thenApply(position -> new BuildSetting<>(position, new TypeReference<>() {}));
     }
+
 }

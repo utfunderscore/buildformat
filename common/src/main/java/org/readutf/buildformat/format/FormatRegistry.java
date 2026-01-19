@@ -6,8 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.readutf.buildformat.BuildFormatManager;
 import org.readutf.buildformat.requirement.Requirement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
@@ -18,13 +16,12 @@ import java.util.Map;
 public record FormatRegistry(BuildFormatManager buildFormatManager, File directory) {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger log = LoggerFactory.getLogger(FormatRegistry.class);
 
     public FormatRegistry(BuildFormatManager buildFormatManager, File directory) {
         this.buildFormatManager = buildFormatManager;
         this.directory = new File(directory, "formats");
         if (!this.directory.exists() && this.directory.mkdirs()) {
-            log.info("Created formats directory at: {}", this.directory.getAbsolutePath());
+            System.out.println("Created formats directory at: " + this.directory.getAbsolutePath());
         }
     }
 
@@ -43,9 +40,9 @@ public record FormatRegistry(BuildFormatManager buildFormatManager, File directo
                 String name = file.getName().substring(0, file.getName().lastIndexOf('.'));
 
                 formats.put(name, requirements);
-                log.info("Loaded format: {} with {} requirements", file.getName(), requirements.size());
+                System.out.printf("Loaded format: %s with %s requirements%n", file.getName(), requirements.size());
             } catch (Exception e) {
-                log.error("Failed to read format file: {}", file.getName(), e);
+                e.printStackTrace();
             }
         }
         return formats;

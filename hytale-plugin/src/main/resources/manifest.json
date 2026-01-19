@@ -1,0 +1,17 @@
+{
+  "Group": "dev.solarion",
+  "Name": "Lobby",
+  "Version": "1.0.0",
+  "Description": "Solarfall Lobby Plugin",
+  "Authors": [
+    {
+      "Name": "Solarion Interactive"
+    }
+  ],
+  "ServerVersion": "*",
+  "DisabledByDefault": false,
+  "Main": "org.readutf.buildformat.hytale.BuildFormatPlugin",
+  "Dependencies": {
+  },
+  "IncludesAssetPack": true
+}

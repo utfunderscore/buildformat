@@ -75,8 +75,7 @@ public class BuildCuboidCollector implements RequirementCollector<Cuboid> {
     }
 
     @Override
-    public BuildSetting<Cuboid> awaitBlocking() {
-        return new BuildSetting<>(future.join(), new TypeReference<>() {
-        });
+    public CompletableFuture<BuildSetting<Cuboid>> getFuture() {
+        return future.thenApply(cuboid -> new BuildSetting<>(cuboid, new TypeReference<Cuboid>() {}));
     }
 }

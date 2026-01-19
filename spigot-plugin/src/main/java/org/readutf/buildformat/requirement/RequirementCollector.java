@@ -6,12 +6,14 @@ import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface RequirementCollector<T> {
 
     void start(@NotNull Player player, @NotNull Cuboid bounds, @NotNull Position origin);
 
     void cleanup(Player player);
 
-    BuildSetting<T> awaitBlocking();
+    CompletableFuture<BuildSetting<T>> getFuture();
 
 }

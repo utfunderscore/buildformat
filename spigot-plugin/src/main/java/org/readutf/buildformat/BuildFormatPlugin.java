@@ -5,14 +5,13 @@ import com.zaxxer.hikari.HikariDataSource;
 import dev.rollczi.litecommands.bukkit.LiteBukkitFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.flywaydb.core.Flyway;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.SQLDialect;
 import org.readutf.buildformat.commands.BuildCommand;
 import org.readutf.buildformat.format.FormatRegistry;
 import org.readutf.buildformat.postgres.SQLBuildMetaStore;
-import org.readutf.buildformat.session.SessionManager;
+import org.readutf.buildformat.session.SpigotSessionManager;
 import org.readutf.buildformat.requirement.collectors.text.BuildNameCollector;
 import org.readutf.buildformat.requirement.collectors.text.TextInputCollector;
 import org.readutf.buildformat.s3.S3BuildDataStore;
@@ -45,11 +44,11 @@ public class BuildFormatPlugin extends JavaPlugin {
         HikariDataSource dataSource = getDatabase();
         S3BuildDataStore buildDataStore = new S3BuildDataStore(this.getAwsClient(), "builds");
         SQLBuildMetaStore buildMetaStore = new SQLBuildMetaStore(dataSource, SQLDialect.POSTGRES);
-        SessionManager sessionManager = new SessionManager(new BuildManager(buildMetaStore, buildDataStore));
+        SpigotSessionManager spigotSessionManager = new SpigotSessionManager(new BuildManager(buildMetaStore, buildDataStore));
         FormatRegistry formatRegistry = new FormatRegistry(BuildFormatManager.getInstance(), getDataFolder());
 
         LiteBukkitFactory.builder(this)
-                .commands(new BuildCommand(sessionManager, formatRegistry))
+                .commands(new BuildCommand(spigotSessionManager, formatRegistry))
                 .build();
 
 //        Flyway.configure()
@@ -67,13 +66,6 @@ public class BuildFormatPlugin extends JavaPlugin {
     }
 
     private @NotNull HikariDataSource getDatabase() {
-
-
-
-
-
-
-
 
         String host = getConfigValue("DATABASE_HOST", "database.host");
         String port = getConfigValue("DATABASE_PORT", "database.port");

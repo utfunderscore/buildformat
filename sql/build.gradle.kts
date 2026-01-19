@@ -37,9 +37,6 @@ dependencies {
 
     implementation(project(":common"))
 
-    implementation("org.tinylog:tinylog-impl:2.7.0")
-    implementation("org.tinylog:slf4j-tinylog:2.7.0")
-
     implementation("org.jetbrains:annotations:26.0.2")
     api("org.jooq:jooq:3.20.8")
     api("com.zaxxer:HikariCP:7.0.2")
