@@ -44,7 +44,9 @@ public class BuildFormatPlugin extends JavaPlugin {
     }
 
     @Override
-    protected void setup() {}
+    protected void setup() {
+        this.getEntityStoreRegistry().registerSystem(new PositionTool.PlayerInteractionListener());
+    }
 
     @Override
     protected void start() {

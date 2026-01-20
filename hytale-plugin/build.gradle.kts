@@ -2,9 +2,6 @@ plugins {
     id("java")
 }
 
-group = "org.readutf.buildformat"
-version = "dev"
-
 repositories {
     mavenCentral()
     maven("https://mvn.utf.lol/releases")

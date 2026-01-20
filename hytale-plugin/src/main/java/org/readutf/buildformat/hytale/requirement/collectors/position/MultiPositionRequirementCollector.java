@@ -10,10 +10,8 @@ import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.hytale.utils.PlatformUtils;
-import org.readutf.buildformat.requirement.Requirement;
 import org.readutf.buildformat.hytale.requirement.RequirementCollector;
 import org.readutf.buildformat.hytale.tools.PositionTool;
-import org.readutf.buildformat.requirement.types.list.PositionListRequirement;
 import org.readutf.buildformat.settings.BuildSetting;
 import org.readutf.buildformat.types.Cuboid;
 import org.readutf.buildformat.types.Position;
@@ -28,19 +26,16 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class MultiPositionRequirementCollector implements RequirementCollector<List<Position>> {
 
-    private final String name;
-    private final int stepNumber;
+    private final @NotNull Message message;
+    private final @NotNull String markerName;
 
     private final CompletableFuture<List<Position>> future;
     private final List<String> toolIds = new ArrayList<>();
 
-    public MultiPositionRequirementCollector(@NotNull Requirement requirement, int stepNumber) {
-        if (!(requirement instanceof PositionListRequirement positionListRequirement)) {
-            throw new IllegalArgumentException("Requirement must be a PositionRequirement");
-        }
-        this.name = requirement.name();
-        this.stepNumber = stepNumber;
+    public MultiPositionRequirementCollector(@NotNull Message message, @NotNull String markerName) {
         this.future = new CompletableFuture<>();
+        this.message = message;
+        this.markerName = markerName;
     }
 
     @Override
@@ -48,12 +43,12 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
         Player player = playerRef.getComponent(Player.getComponentType());
         if (player == null) throw new IllegalStateException("Player should not be null");
 
-        playerRef.sendMessage(Message.raw("Multi position"));
+        playerRef.sendMessage(message);
         AtomicInteger currentId = new AtomicInteger(1);
 
         List<Position> positions = new ArrayList<>();
 
-        AtomicReference<Pair<ItemStack, String>> toolData = new AtomicReference<>(PositionTool.getTool(name));
+        AtomicReference<Pair<ItemStack, String>> toolData = new AtomicReference<>(PositionTool.getTool(markerName));
         toolIds.add(toolData.get().right());
 
 
@@ -87,7 +82,7 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
                 positions.add(new Position(position.x, position.y, position.z).relative(origin));
             }
 
-            toolData.set(PositionTool.getTool(name));
+            toolData.set(PositionTool.getTool(markerName));
             toolIds.add(toolData.get().right());
 
 
@@ -96,16 +91,11 @@ public class MultiPositionRequirementCollector implements RequirementCollector<L
                     .setItemStackForSlot((short) 0, toolData.get().left());
         });
 
-        try {
-            PlatformUtils.setItem(player, 0, toolData.get().first());
-            PlatformUtils.setItem(player, 7, addPosition);
-            PlatformUtils.setItem(player, 8, confirmItem);
+        PlatformUtils.setItem(player, 0, toolData.get().first());
+        PlatformUtils.setItem(player, 7, addPosition);
+        PlatformUtils.setItem(player, 8, confirmItem);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        player.sendMessage(Message.raw("Test123"));
     }
 
     @Override

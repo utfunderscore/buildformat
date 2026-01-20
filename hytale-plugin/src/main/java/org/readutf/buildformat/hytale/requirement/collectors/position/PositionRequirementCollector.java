@@ -61,7 +61,7 @@ public class PositionRequirementCollector implements RequirementCollector<Positi
         });
 
         PlatformUtils.setItem(player, 8, confirmItem);
-        PlatformUtils.setItem(player, 1, toolData.first());
+        PlatformUtils.setItem(player, 0, toolData.first());
     }
 
     @Override

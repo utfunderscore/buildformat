@@ -43,6 +43,8 @@ public class PositionTool implements Listener {
 
     public static void clearTool(@Nullable UUID toolId) {
         PositionHighlight remove = positions.remove(toolId);
+        toolNames.remove(toolId);
+
         if(remove == null) return;
 
         for (Player viewerPlayer : remove.getTextDisplay().getViewerPlayers()) {

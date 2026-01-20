@@ -5,10 +5,6 @@ import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.EntityEventSystem;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
-import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
-import com.hypixel.hytale.server.core.asset.type.item.config.Item;
-import com.hypixel.hytale.server.core.asset.type.model.config.Model;
-import com.hypixel.hytale.server.core.asset.type.model.config.ModelAsset;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.BlockEntity;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -20,7 +16,6 @@ import com.hypixel.hytale.server.core.modules.entity.item.ItemComponent;
 import com.hypixel.hytale.server.core.modules.entity.item.PreventItemMerging;
 import com.hypixel.hytale.server.core.modules.entity.item.PreventPickup;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
-import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -32,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 
 public class PositionTool {
@@ -55,7 +49,9 @@ public class PositionTool {
     }
 
     public static void cleanup(String toolId) {
-        MarkerData data = entityStore.get(toolId);
+        toolPositions.remove(toolId);
+        toolNames.remove(toolId);
+        MarkerData data = entityStore.remove(toolId);
         if (data == null) return;
         if (!data.ref.isValid()) return;
 
@@ -82,7 +78,7 @@ public class PositionTool {
     public static class PlayerInteractionListener extends EntityEventSystem<EntityStore, PlaceBlockEvent> {
 
 
-        protected PlayerInteractionListener() {
+        public PlayerInteractionListener() {
             super(PlaceBlockEvent.class);
         }
 
