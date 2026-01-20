@@ -41,11 +41,8 @@ class S3BuildDataStoreTest {
 
     @Test
     void save() throws IOException {
-
-        dataStore.save("test123", 1, new BuildData("schematic-data".getBytes(), "polar-data".getBytes()));
-
+        dataStore.save("test123", 1, new BuildData("build-data".getBytes()));
         BuildData downloaded = dataStore.get("test123", 1);
-        assertArrayEquals("polar-data".getBytes(), downloaded.polarData());
-        assertArrayEquals("schematic-data".getBytes(), downloaded.schematicData());
+        assertArrayEquals("build-data".getBytes(), downloaded.data());
     }
 }

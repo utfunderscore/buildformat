@@ -3,12 +3,11 @@ version: '3.8'
 services:
   rustfs:
     image: rustfs/rustfs:latest
-    container_name: rustfs
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - rustfs:/data
+      - rustfs_buildformat:/data
 
   postgres:
     # Use a specific minor version for stability, e.g., postgres:18.1
@@ -19,18 +18,19 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_DB: devdb
-      POSTGRES_USER: devuser
-      POSTGRES_PASSWORD: devpassword
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
       # Changed from /var/lib/postgresql/data to /var/lib/postgresql
       # This is the new requirement for PostgreSQL 18+
-      - postgres_data:/var/lib/postgresql
+      - postgres_data_buildformat:/var/lib/postgresql
+      - ./docker-init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devuser -d devdb"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d devdb"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 volumes:
-  rustfs:
-  postgres_data:
+  rustfs_buildformat:
+  postgres_data_buildformat:

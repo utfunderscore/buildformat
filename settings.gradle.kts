@@ -8,5 +8,6 @@ pluginManagement {
 rootProject.name = "buildformat"
 include("common")
 include("sql")
-include("plugin")
 include("s3")
+include("spigot-plugin")
+include("hytale-plugin")

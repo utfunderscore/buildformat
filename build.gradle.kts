@@ -59,3 +59,4 @@ java {
 tasks.test {
     useJUnitPlatform()
 }
+

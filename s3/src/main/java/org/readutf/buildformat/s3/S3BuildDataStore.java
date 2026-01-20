@@ -22,8 +22,7 @@ import java.util.concurrent.CompletionException;
 
 public class S3BuildDataStore implements BuildDataStore {
 
-    private static final String polarKeyFormat = "%s/%d/polar.dat";
-    private static final String schematicKeyFormat = "%s/%d/schematic.dat";
+    private static final String pathFormat = "%s/%d/build.dat";
     private static final Logger log = LoggerFactory.getLogger(S3BuildDataStore.class);
 
     @NotNull
@@ -41,26 +40,20 @@ public class S3BuildDataStore implements BuildDataStore {
 
     @Override
     public void save(String buildName, int version, @NotNull BuildData buildData) {
-        byte[] polarData = buildData.polarData();
-        byte[] schemData = buildData.schematicData();
 
-        String polarKey = String.format(polarKeyFormat, buildName, version);
-        String schemKey = String.format(schematicKeyFormat, buildName, version);
+        String path = String.format(pathFormat, buildName, version);
 
-        uploadBytesToS3(polarData, bucketName, polarKey);
-        uploadBytesToS3(schemData, bucketName, schemKey);
+        uploadBytesToS3(buildData.data(), bucketName, path);
     }
 
     @Override
     public BuildData get(String buildName, int version) throws IOException {
 
-        String polarKey = String.format(polarKeyFormat, buildName, version);
-        String schemKey = String.format(schematicKeyFormat, buildName, version);
+        String path = String.format(pathFormat, buildName, version);
 
-        byte[] polarData = downloadBytesFromS3(polarKey);
-        byte[] schemData = downloadBytesFromS3(schemKey);
+        byte[] buildData = downloadBytesFromS3(path);
 
-        return new BuildData(schemData, polarData);
+        return new BuildData(buildData);
     }
 
     private void uploadBytesToS3(byte[] bytes, String bucket, String key) {
